@@ -1,0 +1,27 @@
+name: Database Backup
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Backup PostgreSQL to R2
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.HOSTINGER_HOST }}
+          username: ${{ secrets.HOSTINGER_USER }}
+          key: ${{ secrets.HOSTINGER_SSH_KEY }}
+          script: |
+            BACKUP_FILE="intonavio_$(date +%Y%m%d_%H%M%S).sql.gz"
+            docker exec intonavio-postgres-1 pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB" | gzip > "/tmp/$BACKUP_FILE"
+            # Upload to R2 using rclone (configured on server)
+            rclone copy "/tmp/$BACKUP_FILE" r2:intonavio-backups/db/
+            rm "/tmp/$BACKUP_FILE"
+            # Retain last 30 backups
+            rclone delete r2:intonavio-backups/db/ --min-age 30d

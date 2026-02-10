@@ -1,0 +1,173 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────
+
+enum AuthProviderType {
+  APPLE
+  GOOGLE
+  EMAIL
+}
+
+enum SongStatus {
+  QUEUED
+  DOWNLOADING
+  SPLITTING
+  ANALYZING
+  READY
+  FAILED
+}
+
+enum ExerciseCategory {
+  SCALES
+  ARPEGGIOS
+  INTERVALS
+  SUSTAINED
+  VIBRATO
+  CUSTOM
+}
+
+enum StemType {
+  VOCALS
+  INSTRUMENTAL
+  DRUMS
+  BASS
+  OTHER
+}
+
+// ─── Models ──────────────────────────────────────────
+
+model User {
+  id          String   @id @default(cuid())
+  email       String?  @unique
+  displayName String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  authProviders    AuthProvider[]
+  songs            Song[]
+  sessions         Session[]
+  exerciseAttempts ExerciseAttempt[]
+}
+
+model AuthProvider {
+  id           String           @id @default(cuid())
+  userId       String
+  provider     AuthProviderType
+  providerId   String
+  passwordHash String?
+  createdAt    DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerId])
+  @@index([userId])
+}
+
+model Song {
+  id            String     @id @default(cuid())
+  userId        String
+  videoId       String     @unique
+  title         String
+  thumbnailUrl  String
+  duration      Int
+  status        SongStatus @default(QUEUED)
+  externalJobId String?
+  errorMessage  String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stems     Stem[]
+  pitchData PitchData?
+  sessions  Session[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model Stem {
+  id         String   @id @default(cuid())
+  songId     String
+  type       StemType
+  storageKey String
+  format     String   @default("mp3")
+  fileSize   Int
+  createdAt  DateTime @default(now())
+
+  song Song @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@unique([songId, type])
+}
+
+model PitchData {
+  id          String   @id @default(cuid())
+  songId      String?  @unique
+  exerciseId  String?  @unique
+  storageKey  String
+  frameCount  Int
+  hopDuration Float
+  createdAt   DateTime @default(now())
+
+  song     Song?     @relation(fields: [songId], references: [id], onDelete: Cascade)
+  exercise Exercise? @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  songId       String
+  duration     Int
+  loopStart    Float?
+  loopEnd      Float?
+  speed        Float    @default(1.0)
+  overallScore Float
+  pitchLog     Json
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  song Song @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([songId])
+  @@index([createdAt])
+}
+
+model Exercise {
+  id          String           @id @default(cuid())
+  name        String
+  category    ExerciseCategory
+  key         String
+  startOctave Int              @default(4)
+  tempo       Float            @default(60.0)
+  notes       Json
+  createdAt   DateTime         @default(now())
+
+  pitchData PitchData?
+  attempts  ExerciseAttempt[]
+
+  @@unique([name, key, startOctave])
+}
+
+model ExerciseAttempt {
+  id           String   @id @default(cuid())
+  userId       String
+  exerciseId   String
+  speed        Float    @default(1.0)
+  overallScore Float
+  pitchLog     Json
+  createdAt    DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([exerciseId])
+  @@index([createdAt])
+}

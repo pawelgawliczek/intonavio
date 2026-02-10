@@ -1,0 +1,113 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: intonavio_test
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Format check
+        run: pnpm format:check
+
+      - name: Build
+        run: pnpm build
+
+      - name: Test
+        run: pnpm test
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/intonavio_test
+          REDIS_URL: redis://localhost:6379
+
+  python-lint-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        working-directory: workers/pitch-analyzer
+        run: |
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Lint with ruff
+        working-directory: workers/pitch-analyzer
+        run: ruff check src/
+
+      - name: Type check with mypy
+        working-directory: workers/pitch-analyzer
+        run: mypy src/
+
+      - name: Test
+        working-directory: workers/pitch-analyzer
+        run: pytest
+
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: [lint-and-test, python-lint-and-test]
+
+    strategy:
+      matrix:
+        service:
+          - { name: api, dockerfile: apps/api/Dockerfile }
+          - { name: web, dockerfile: apps/web/Dockerfile }
+          - { name: worker, dockerfile: workers/pitch-analyzer/Dockerfile }
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build ${{ matrix.service.name }} image
+        run: docker build -f ${{ matrix.service.dockerfile }} .
