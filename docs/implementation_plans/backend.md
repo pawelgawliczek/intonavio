@@ -77,20 +77,19 @@ Installed: `bcrypt`, `@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner`, `nes
 
 ---
 
-## Phase 2: Storage Module (External Adapter)
+## Phase 2: Storage Module (External Adapter) ✅ COMPLETE
 
 Dependency of Stems, Webhooks, and Jobs. Must be built before them.
 
-**Create (2 files):**
+**Status:** All files implemented. Build, lint, and 9 tests pass.
 
-| File                               | Contents                                                                                                                                                                                                                              |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/storage/storage.interface.ts` | `StorageAdapter` interface: `upload(key, body, contentType)`, `getPresignedUrl(key, expiresIn)`, `delete(key)`, `headObject(key)`                                                                                                     |
-| `src/storage/storage.service.ts`   | R2 implementation using `@aws-sdk/client-s3`. Configures S3 client for R2 endpoint (`https://{R2_ACCOUNT_ID}.r2.cloudflarestorage.com`). Sets `Cache-Control: public, max-age=31536000, immutable` on stems. 15min presigned URL TTL. |
+**Created:** `src/storage/storage.interface.ts` — `StorageAdapter` interface with `upload(key, body, contentType, cacheControl?)`, `getPresignedUrl(key, expiresIn?)`, `delete(key)`, `headObject(key)` returning `HeadObjectResult | null`.
 
-**Modify:** `src/storage/storage.module.ts` — `@Global()` module, provides + exports `StorageService`
+**Created:** `src/storage/storage.service.ts` — R2 implementation using `@aws-sdk/client-s3`. S3Client configured for R2 endpoint (`https://{accountId}.r2.cloudflarestorage.com`), region `auto`. Auto-applies `Cache-Control: public, max-age=31536000, immutable` on `stems/` keys. Default 15min presigned URL TTL. `headObject` returns `null` for NotFound/NoSuchKey errors.
 
-**Tests:** Mock `@aws-sdk/client-s3`, verify correct PutObject/GetObject commands with proper keys and content types.
+**Modified:** `src/storage/storage.module.ts` — `@Global()` module, provides + exports `StorageService`.
+
+**Created:** `src/storage/storage.service.spec.ts` — 9 tests with mocked S3Client and getSignedUrl. Covers upload (normal, auto-cache-control for stems, explicit cache-control), presigned URLs (default and custom TTL), delete, headObject (exists, not found, rethrow other errors).
 
 ---
 
