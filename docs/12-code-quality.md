@@ -83,6 +83,8 @@ All linters run in CI as a pre-merge gate. No warnings allowed — treat warning
 - Structured logging with context: `this.logger.error('Stem download failed', { songId, jobId, error })`.
 - All endpoints return consistent error shape: `{ statusCode, error, message }`.
 - Validate all webhook payloads (StemSplit) against expected schema before processing.
+- Environment variables validated at startup via Zod schema in `common/config/env.validation.ts`, wired into `ConfigModule.forRoot({ validate })`. Missing or invalid vars fail fast on boot.
+- Every request gets a `traceId` via `TraceIdInterceptor` — reads from `X-Trace-ID` header or generates `trc_{hex}`. Attached to request context and response header for cross-service correlation.
 
 ### Prisma (Database)
 
@@ -91,6 +93,7 @@ All linters run in CI as a pre-merge gate. No warnings allowed — treat warning
 - Every new query pattern must have a corresponding index. Check `EXPLAIN ANALYZE` for queries over 10ms.
 - Foreign keys always have `onDelete` behavior defined (usually `Cascade`).
 - CUIDs for primary keys (not UUIDs or auto-increment).
+- Slow query detection via `PrismaService.$extends({ query })` — warns on queries >100ms. Note: Prisma 6 removed the `$use` middleware API; use `$extends` instead.
 
 ### BullMQ (Jobs)
 

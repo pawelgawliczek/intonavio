@@ -100,3 +100,10 @@ export interface AuthProvider {
   providerId: string;
   createdAt: string;
 }
+
+export interface UserSongLibrary {
+  id: string;
+  userId: string;
+  songId: string;
+  addedAt: string;
+}

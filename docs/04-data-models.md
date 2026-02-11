@@ -5,7 +5,9 @@
 ```mermaid
 erDiagram
     USER ||--o{ AUTH_PROVIDER : "authenticates via"
-    USER ||--o{ SONG : "adds"
+    USER ||--o{ SONG : "submits"
+    USER ||--o{ USER_SONG_LIBRARY : "has in library"
+    SONG ||--o{ USER_SONG_LIBRARY : "shared via"
     USER ||--o{ SESSION : "records"
     SONG ||--o{ STEM : "has"
     SONG ||--o| PITCH_DATA : "has"
@@ -53,9 +55,16 @@ erDiagram
         datetime updatedAt
     }
 
+    USER_SONG_LIBRARY {
+        string id PK "CUID"
+        string userId FK
+        string songId FK
+        datetime addedAt
+    }
+
     SONG {
         string id PK "CUID"
-        string userId FK "owner"
+        string userId FK "original submitter"
         string videoId UK "YouTube video ID"
         string title
         string thumbnailUrl
@@ -162,6 +171,7 @@ model User {
   songs            Song[]
   sessions         Session[]
   exerciseAttempts ExerciseAttempt[]
+  userSongLibrary  UserSongLibrary[]
 }
 
 model AuthProvider {
@@ -180,7 +190,7 @@ model AuthProvider {
 
 model Song {
   id            String     @id @default(cuid())
-  userId        String
+  userId        String     // Original submitter (who triggered processing)
   videoId       String     @unique
   title         String
   thumbnailUrl  String
@@ -191,13 +201,30 @@ model Song {
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
 
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  stems     Stem[]
-  pitchData PitchData?
-  sessions  Session[]
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stems           Stem[]
+  pitchData       PitchData?
+  sessions        Session[]
+  userSongLibrary UserSongLibrary[]
 
   @@index([userId])
   @@index([status])
+}
+
+// Join table: tracks which users have a song in their library.
+// Enables "process once, serve many" — multiple users share the same processed song.
+model UserSongLibrary {
+  id     String   @id @default(cuid())
+  userId String
+  songId String
+  addedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  song Song @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, songId])
+  @@index([userId])
+  @@index([songId])
 }
 
 model Stem {

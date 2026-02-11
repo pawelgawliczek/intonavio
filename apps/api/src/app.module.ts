@@ -1,5 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { LoggerModule } from 'nestjs-pino';
+import { validate } from './common/config/env.validation';
+import { createLoggerConfig } from './common/logger/logger.config';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { SongsModule } from './songs/songs.module';
@@ -11,7 +14,8 @@ import { StorageModule } from './storage/storage.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true, validate }),
+    LoggerModule.forRoot(createLoggerConfig()),
     PrismaModule,
     AuthModule,
     SongsModule,

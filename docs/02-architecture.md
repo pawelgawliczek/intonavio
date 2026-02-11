@@ -165,14 +165,15 @@ Disaster recovery rule: if Redis is wiped, the system recovers. If PostgreSQL is
 
 Every piece of state has exactly one source of truth:
 
-| State                  | Owner                     | Consumers                                            |
-| ---------------------- | ------------------------- | ---------------------------------------------------- |
-| Song processing status | PostgreSQL `song.status`  | API reads from DB, clients poll API                  |
-| Job position in queue  | BullMQ (Redis)            | API reads for ETA estimates                          |
-| Stem files             | R2                        | Clients download via presigned URL                   |
-| Pitch reference data   | R2                        | Clients download, API generates URL                  |
-| User session (auth)    | JWT token (stateless)     | API validates, clients store                         |
-| Auth credentials       | PostgreSQL `AuthProvider` | Password hashes (EMAIL), provider IDs (APPLE/GOOGLE) |
+| State                   | Owner                        | Consumers                                             |
+| ----------------------- | ---------------------------- | ----------------------------------------------------- |
+| Song processing status  | PostgreSQL `song.status`     | API reads from DB, clients poll API                   |
+| Job position in queue   | BullMQ (Redis)               | API reads for ETA estimates                           |
+| Stem files              | R2                           | Clients download via presigned URL                    |
+| Pitch reference data    | R2                           | Clients download, API generates URL                   |
+| User session (auth)     | JWT token (stateless)        | API validates, clients store                          |
+| Auth credentials        | PostgreSQL `AuthProvider`    | Password hashes (EMAIL), provider IDs (APPLE/GOOGLE)  |
+| Song library membership | PostgreSQL `UserSongLibrary` | API reads for user's library, clients display library |
 
 Never cache state in a second location and treat the cache as authoritative. If you cache `song.status` in Redis for faster polling, the DB remains the source of truth — stale cache must never cause wrong behavior.
 
