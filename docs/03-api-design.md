@@ -292,26 +292,32 @@ sequenceDiagram
     },
     {
       "id": "stem_2",
-      "type": "INSTRUMENTAL",
-      "url": "https://r2.intonavio.com/stems/song_xyz789/instrumental.mp3",
-      "format": "mp3"
-    },
-    {
-      "id": "stem_3",
       "type": "DRUMS",
       "url": "https://r2.intonavio.com/stems/song_xyz789/drums.mp3",
       "format": "mp3"
     },
     {
-      "id": "stem_4",
+      "id": "stem_3",
       "type": "BASS",
       "url": "https://r2.intonavio.com/stems/song_xyz789/bass.mp3",
       "format": "mp3"
     },
     {
-      "id": "stem_5",
+      "id": "stem_4",
       "type": "OTHER",
       "url": "https://r2.intonavio.com/stems/song_xyz789/other.mp3",
+      "format": "mp3"
+    },
+    {
+      "id": "stem_5",
+      "type": "PIANO",
+      "url": "https://r2.intonavio.com/stems/song_xyz789/piano.mp3",
+      "format": "mp3"
+    },
+    {
+      "id": "stem_6",
+      "type": "GUITAR",
+      "url": "https://r2.intonavio.com/stems/song_xyz789/guitar.mp3",
       "format": "mp3"
     }
   ],

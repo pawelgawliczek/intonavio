@@ -35,10 +35,11 @@ enum ExerciseCategory {
 
 enum StemType {
   VOCALS
-  INSTRUMENTAL
   DRUMS
   BASS
   OTHER
+  PIANO
+  GUITAR
 }
 
 // ─── Models ──────────────────────────────────────────

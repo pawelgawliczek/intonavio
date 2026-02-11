@@ -26,10 +26,11 @@ export class StemSplitService implements StemSplitAdapter {
         Authorization: `Bearer ${this.apiKey}`,
       },
       body: JSON.stringify({
-        youtube_url: youtubeUrl,
-        split_type: '5stems',
-        output_format: 'mp3',
-        webhook_url: webhookUrl,
+        youtubeUrl,
+        outputType: 'SIX_STEMS',
+        outputFormat: 'MP3',
+        quality: 'BEST',
+        webhookUrl,
       }),
     });
 

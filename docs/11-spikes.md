@@ -97,7 +97,7 @@ Does the StemSplit API produce stems of sufficient quality for practice purposes
 
 1. Create a minimal Node.js script that calls the StemSplit API
 2. Submit 5 diverse YouTube URLs (pop, rock, ballad, hip-hop, classical)
-3. Use 5-stem split mode with MP3 output
+3. Use 6-stem split mode (`SIX_STEMS`) with MP3 output
 4. Measure processing time for each
 5. Download stems and evaluate quality (vocals isolation, artifact levels)
 6. Test webhook delivery reliability

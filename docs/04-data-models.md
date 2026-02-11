@@ -152,10 +152,11 @@ enum ExerciseCategory {
 
 enum StemType {
   VOCALS
-  INSTRUMENTAL
   DRUMS
   BASS
   OTHER
+  PIANO
+  GUITAR
 }
 
 // ─── Models ──────────────────────────────────────────
@@ -335,13 +336,14 @@ A user can have multiple auth providers linked (e.g., sign up with email, later 
 
 ### StemType
 
-| Value          | Description                                  |
-| -------------- | -------------------------------------------- |
-| `VOCALS`       | Isolated vocal track                         |
-| `INSTRUMENTAL` | Everything except vocals                     |
-| `DRUMS`        | Isolated percussion                          |
-| `BASS`         | Isolated bass line                           |
-| `OTHER`        | Remaining instruments (keys, guitar, synths) |
+| Value    | Description                             |
+| -------- | --------------------------------------- |
+| `VOCALS` | Isolated vocal track                    |
+| `DRUMS`  | Isolated percussion                     |
+| `BASS`   | Isolated bass line                      |
+| `OTHER`  | Remaining instruments (synths, strings) |
+| `PIANO`  | Isolated piano/keys track               |
+| `GUITAR` | Isolated guitar track                   |
 
 ### ExerciseCategory
 

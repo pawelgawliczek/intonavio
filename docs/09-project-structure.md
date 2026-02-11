@@ -12,6 +12,7 @@ intonavio/
 │   │   │   │   ├── dto/           # Request/response DTOs
 │   │   │   │   └── utils/         # YouTube URL parsing
 │   │   │   ├── stems/              # Stem records, R2 presigned URLs
+│   │   │   │   └── dto/           # Stem response DTOs
 │   │   │   ├── sessions/           # Practice session CRUD
 │   │   │   ├── jobs/               # BullMQ producers, job state
 │   │   │   │   ├── adapters/      # External service adapters (StemSplit)

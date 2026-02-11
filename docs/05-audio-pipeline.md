@@ -82,25 +82,27 @@ flowchart TD
 ### Job Creation
 
 ```
-POST https://api.stemsplit.io/api/v1/youtube-jobs
+POST https://stemsplit.io/api/v1/youtube-jobs
 Authorization: Bearer <STEMSPLIT_API_KEY>
 Content-Type: application/json
 
 {
-  "youtube_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-  "split_type": "5stems",
-  "output_format": "mp3",
-  "webhook_url": "https://api.intonavio.com/v1/webhooks/stemsplit"
+  "youtubeUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+  "outputType": "SIX_STEMS",
+  "outputFormat": "MP3",
+  "quality": "BEST",
+  "webhookUrl": "https://api.intonavio.com/v1/webhooks/stemsplit"
 }
 ```
 
-### Split Types
+### Output Types
 
-| Type     | Stems Produced                           | Use Case                  |
-| -------- | ---------------------------------------- | ------------------------- |
-| `2stems` | vocals, instrumental                     | Basic vocal/backing split |
-| `4stems` | vocals, drums, bass, other               | Standard separation       |
-| `5stems` | vocals, instrumental, drums, bass, other | Full separation (default) |
+| Type         | Stems Produced                            | Use Case                  |
+| ------------ | ----------------------------------------- | ------------------------- |
+| `VOCALS`     | vocals only                               | Vocal isolation           |
+| `BOTH`       | vocals, instrumental                      | Basic vocal/backing split |
+| `FOUR_STEMS` | vocals, drums, bass, other                | Standard separation       |
+| `SIX_STEMS`  | vocals, drums, bass, other, piano, guitar | Full separation (default) |
 
 ### Webhook Payload
 
@@ -110,10 +112,11 @@ Content-Type: application/json
   "status": "completed",
   "stems": [
     { "type": "vocals", "download_url": "https://cdn.stemsplit.io/..." },
-    { "type": "instrumental", "download_url": "https://cdn.stemsplit.io/..." },
     { "type": "drums", "download_url": "https://cdn.stemsplit.io/..." },
     { "type": "bass", "download_url": "https://cdn.stemsplit.io/..." },
-    { "type": "other", "download_url": "https://cdn.stemsplit.io/..." }
+    { "type": "other", "download_url": "https://cdn.stemsplit.io/..." },
+    { "type": "piano", "download_url": "https://cdn.stemsplit.io/..." },
+    { "type": "guitar", "download_url": "https://cdn.stemsplit.io/..." }
   ]
 }
 ```

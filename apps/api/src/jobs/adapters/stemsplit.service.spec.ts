@@ -9,7 +9,7 @@ global.fetch = mockFetch;
 const mockConfig = {
   getOrThrow: jest.fn((key: string) => {
     const values: Record<string, string> = {
-      STEMSPLIT_API_URL: 'https://api.stemsplit.io',
+      STEMSPLIT_API_URL: 'https://stemsplit.io',
       STEMSPLIT_API_KEY: 'test-api-key',
     };
     return values[key];
@@ -43,7 +43,7 @@ describe('StemSplitService', () => {
 
       expect(jobId).toBe('ss_job_789');
       expect(mockFetch).toHaveBeenCalledWith(
-        'https://api.stemsplit.io/api/v1/youtube-jobs',
+        'https://stemsplit.io/api/v1/youtube-jobs',
         expect.objectContaining({
           method: 'POST',
           headers: {
@@ -51,10 +51,11 @@ describe('StemSplitService', () => {
             Authorization: 'Bearer test-api-key',
           },
           body: JSON.stringify({
-            youtube_url: 'https://youtube.com/watch?v=abc',
-            split_type: '5stems',
-            output_format: 'mp3',
-            webhook_url: 'https://api.intonavio.com/v1/webhooks/stemsplit',
+            youtubeUrl: 'https://youtube.com/watch?v=abc',
+            outputType: 'SIX_STEMS',
+            outputFormat: 'MP3',
+            quality: 'BEST',
+            webhookUrl: 'https://api.intonavio.com/v1/webhooks/stemsplit',
           }),
         }),
       );

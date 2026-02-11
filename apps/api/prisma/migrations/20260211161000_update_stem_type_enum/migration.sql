@@ -1,0 +1,3 @@
+-- AlterEnum: Remove INSTRUMENTAL, add PIANO and GUITAR to StemType
+ALTER TYPE "StemType" ADD VALUE 'PIANO';
+ALTER TYPE "StemType" ADD VALUE 'GUITAR';

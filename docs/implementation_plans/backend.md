@@ -144,7 +144,7 @@ Must exist before Songs (which enqueues jobs) and Webhooks (which processes resu
 | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `src/jobs/interfaces/job-data.interface.ts`   | `StemSplitJobData { songId, videoId, youtubeUrl, traceId }`, `PitchAnalysisJobData { songId, vocalStemKey, traceId }`                                                   |
 | `src/jobs/adapters/stemsplit.interface.ts`    | `StemSplitAdapter` interface: `createJob(youtubeUrl, webhookUrl): Promise<string>`, `downloadStem(downloadUrl): Promise<Buffer>`                                        |
-| `src/jobs/adapters/stemsplit.service.ts`      | HTTP adapter using `fetch`. POST to StemSplit API with `{ youtube_url, split_type: '5stems', output_format: 'mp3', webhook_url }`. Bearer auth.                         |
+| `src/jobs/adapters/stemsplit.service.ts`      | HTTP adapter using `fetch`. POST to StemSplit API with `{ youtubeUrl, outputType: 'SIX_STEMS', outputFormat: 'MP3', quality: 'BEST', webhookUrl }`. Bearer auth.        |
 | `src/jobs/processors/stem-split.processor.ts` | `@Processor('stem-split')`: calls StemSplit API, updates song status to SPLITTING, saves externalJobId. 3 retries exponential backoff. On error: FAILED + errorMessage. |
 | `src/jobs/jobs.service.ts`                    | Queue producers: `enqueueStemSplit(data)`, `enqueuePitchAnalysis(data)` with retry config `{ attempts: 3, backoff: { type: 'exponential', delay: 5000 } }`              |
 
@@ -199,7 +199,7 @@ Must exist before Songs (which enqueues jobs) and Webhooks (which processes resu
 
 ---
 
-## Phase 6: Stems Module
+## Phase 6: Stems Module ✅ COMPLETE
 
 **Create (4 files):**
 
