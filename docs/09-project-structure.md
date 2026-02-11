@@ -14,6 +14,7 @@ intonavio/
 │   │   │   ├── stems/              # Stem records, R2 presigned URLs
 │   │   │   │   └── dto/           # Stem response DTOs
 │   │   │   ├── sessions/           # Practice session CRUD
+│   │   │   │   └── dto/           # Session request/response DTOs
 │   │   │   ├── jobs/               # BullMQ producers, job state
 │   │   │   │   ├── adapters/      # External service adapters (StemSplit)
 │   │   │   │   ├── interfaces/    # Job data types

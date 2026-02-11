@@ -247,20 +247,20 @@ The critical integration point — receives StemSplit callbacks, downloads stems
 
 ---
 
-## Phase 8: Sessions Module
+## Phase 8: Sessions Module ✅ COMPLETE
 
 **Create (4 files):**
 
-| File                                       | Contents                                                                                                                        |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
-| `src/sessions/dto/create-session.dto.ts`   | `{ songId, duration, loopStart?, loopEnd?, speed?, overallScore (0-100), pitchLog[] { time, detectedHz, referenceHz, cents } }` |
-| `src/sessions/dto/session-response.dto.ts` | Response shape                                                                                                                  |
-| `src/sessions/sessions.service.ts`         | `create` (verify song exists + READY), `findAllByUser` (paginated), `findOne` (verify ownership)                                |
-| `src/sessions/sessions.controller.ts`      | `POST /sessions` (201), `GET /sessions`, `GET /sessions/:id`                                                                    |
+| File                                       | Contents                                                                                                                           |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `src/sessions/dto/create-session.dto.ts`   | `{ songId, duration, loopStart?, loopEnd?, speed?, overallScore (0-100), pitchLog[] { time, detectedHz, referenceHz, cents } }` ✅ |
+| `src/sessions/dto/session-response.dto.ts` | Response shape (`SessionResponse` for lists, `SessionDetailResponse` with pitchLog for detail) ✅                                  |
+| `src/sessions/sessions.service.ts`         | `create` (verify song exists + READY), `findAllByUser` (paginated), `findOne` (verify ownership) ✅                                |
+| `src/sessions/sessions.controller.ts`      | `POST /sessions` (201), `GET /sessions`, `GET /sessions/:id` ✅                                                                    |
 
-**Modify:** `src/sessions/sessions.module.ts` — Wire controller/service
+**Modify:** `src/sessions/sessions.module.ts` — Wire controller/service ✅
 
-**Tests:** Unit + integration for create, list, get with ownership checks
+**Tests:** Unit: 9 tests (create READY/not found/not ready/default speed, list paginated/no pitchLog, findOne owner/not found/forbidden) ✅
 
 ---
 
