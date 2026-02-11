@@ -366,6 +366,8 @@ sequenceDiagram
 }
 ```
 
+**Validation:** `duration` >= 1, `speed` 0.25–2.0 (default 1.0), `overallScore` 0–100. Song must exist and be in `READY` status.
+
 **Response (201):**
 
 ```json
@@ -373,7 +375,59 @@ sequenceDiagram
   "id": "sess_abc",
   "songId": "song_xyz789",
   "duration": 45,
+  "loopStart": 30.5,
+  "loopEnd": 55.2,
+  "speed": 0.75,
   "overallScore": 72.5,
+  "createdAt": "2025-06-01T12:30:00Z"
+}
+```
+
+#### `GET /sessions`
+
+**Query params:** `page` (default 1), `limit` (default 20, max 100)
+
+**Response (200):**
+
+```json
+{
+  "data": [
+    {
+      "id": "sess_abc",
+      "songId": "song_xyz789",
+      "duration": 45,
+      "loopStart": 30.5,
+      "loopEnd": 55.2,
+      "speed": 0.75,
+      "overallScore": 72.5,
+      "createdAt": "2025-06-01T12:30:00Z"
+    }
+  ],
+  "meta": { "page": 1, "limit": 20, "total": 1, "totalPages": 1 }
+}
+```
+
+Note: List response excludes `pitchLog` for payload efficiency.
+
+#### `GET /sessions/:id`
+
+**Response (200):**
+
+Same shape as list item, plus `pitchLog` array. Returns `403` if session belongs to another user.
+
+```json
+{
+  "id": "sess_abc",
+  "songId": "song_xyz789",
+  "duration": 45,
+  "loopStart": 30.5,
+  "loopEnd": 55.2,
+  "speed": 0.75,
+  "overallScore": 72.5,
+  "pitchLog": [
+    { "time": 30.5, "detectedHz": 440.0, "referenceHz": 440.0, "cents": 0 },
+    { "time": 30.55, "detectedHz": 442.1, "referenceHz": 440.0, "cents": 8.3 }
+  ],
   "createdAt": "2025-06-01T12:30:00Z"
 }
 ```
