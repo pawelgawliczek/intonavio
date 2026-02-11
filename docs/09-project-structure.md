@@ -9,6 +9,8 @@ intonavio/
 │   │   ├── src/
 │   │   │   ├── auth/               # Apple Sign In, JWT, guards
 │   │   │   ├── songs/              # Song CRUD, YouTube metadata
+│   │   │   │   ├── dto/           # Request/response DTOs
+│   │   │   │   └── utils/         # YouTube URL parsing
 │   │   │   ├── stems/              # Stem records, R2 presigned URLs
 │   │   │   ├── sessions/           # Practice session CRUD
 │   │   │   ├── jobs/               # BullMQ producers, job state
