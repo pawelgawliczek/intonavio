@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { BullModule } from '@nestjs/bullmq';
 import { LoggerModule } from 'nestjs-pino';
 import { validate } from './common/config/env.validation';
 import { createLoggerConfig } from './common/logger/logger.config';
@@ -16,6 +17,12 @@ import { StorageModule } from './storage/storage.module';
   imports: [
     ConfigModule.forRoot({ isGlobal: true, validate }),
     LoggerModule.forRoot(createLoggerConfig()),
+    BullModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        connection: { url: config.getOrThrow<string>('REDIS_URL') },
+      }),
+    }),
     PrismaModule,
     AuthModule,
     SongsModule,

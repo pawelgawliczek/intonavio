@@ -12,6 +12,9 @@ intonavio/
 │   │   │   ├── stems/              # Stem records, R2 presigned URLs
 │   │   │   ├── sessions/           # Practice session CRUD
 │   │   │   ├── jobs/               # BullMQ producers, job state
+│   │   │   │   ├── adapters/      # External service adapters (StemSplit)
+│   │   │   │   ├── interfaces/    # Job data types
+│   │   │   │   └── processors/    # Job processors (stem-split)
 │   │   │   ├── webhooks/           # StemSplit webhook handler
 │   │   │   ├── storage/            # R2 upload/download service
 │   │   │   ├── common/             # Shared guards, filters, pipes
