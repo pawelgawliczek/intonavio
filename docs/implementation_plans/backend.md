@@ -216,28 +216,34 @@ Must exist before Songs (which enqueues jobs) and Webhooks (which processes resu
 
 ---
 
-## Phase 7: Webhooks Module
+## Phase 7: Webhooks Module ✅ COMPLETE
 
 The critical integration point — receives StemSplit callbacks, downloads stems, uploads to R2, enqueues pitch analysis.
 
-**Create (4 files):**
+**Created (5 files):**
 
-| File                                          | Contents                                                                                                                                                                                                                                                                               |
-| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/webhooks/dto/stemsplit-webhook.dto.ts`   | `{ job_id, status ('completed'\|'failed'), error_message?, stems[]? { type, download_url } }`                                                                                                                                                                                          |
-| `src/webhooks/guards/webhook-secret.guard.ts` | Validates `x-webhook-secret` header against `STEMSPLIT_WEBHOOK_SECRET`                                                                                                                                                                                                                 |
-| `src/webhooks/webhooks.service.ts`            | `handleStemSplitWebhook`: find song by externalJobId, if failed: mark FAILED. If completed: download each stem → upload to R2 (`stems/{songId}/{TYPE}.mp3`) → create Stem records → update status to ANALYZING → enqueue pitch-analysis job. Idempotent (skip if stems already exist). |
-| `src/webhooks/webhooks.controller.ts`         | `POST /webhooks/stemsplit` — `@Public()` + `@UseGuards(WebhookSecretGuard)`                                                                                                                                                                                                            |
+| File                                          | Contents                                                                                                                                                                                                                                               |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `src/webhooks/dto/stemsplit-webhook.dto.ts`   | `{ job_id, status ('completed'\|'failed'), error_message?, stems[]? { type, download_url } }` with class-validator decorators                                                                                                                          |
+| `src/webhooks/guards/webhook-secret.guard.ts` | Validates `x-webhook-secret` header against `STEMSPLIT_WEBHOOK_SECRET`                                                                                                                                                                                 |
+| `src/webhooks/stem-download.service.ts`       | Downloads stems from StemSplit URLs, uploads to R2, maps stem types. Also enqueues pitch analysis for vocal stem.                                                                                                                                      |
+| `src/webhooks/webhooks.service.ts`            | `handleStemSplitWebhook`: find song by externalJobId, if failed: mark FAILED. If completed: delegate to StemDownloadService → create Stem records → update status to ANALYZING → enqueue pitch-analysis job. Idempotent (skip if stems already exist). |
+| `src/webhooks/webhooks.controller.ts`         | `POST /webhooks/stemsplit` — `@Public()` + `@UseGuards(WebhookSecretGuard)`, returns `{ received: true }`                                                                                                                                              |
 
-**Modify:** `src/webhooks/webhooks.module.ts` — Import StemsModule, JobsModule, SongsModule
+**Modified:**
 
-**Tests:**
+- `src/webhooks/webhooks.module.ts` — Import StemsModule, JobsModule, SongsModule; register StemDownloadService
+- `src/jobs/jobs.module.ts` — Export STEMSPLIT_ADAPTER for use by WebhooksModule
 
-- Unit: completed webhook flow (download, upload, create records, enqueue)
-- Unit: failed webhook flow (mark FAILED)
-- Unit: idempotency (second webhook doesn't duplicate)
-- Unit: WebhookSecretGuard (valid/invalid/missing)
-- Integration: POST /v1/webhooks/stemsplit with valid payload
+**Tests (12 total):**
+
+- Unit: completed webhook flow (download, upload, create records, enqueue) ✅
+- Unit: failed webhook flow (mark FAILED) ✅
+- Unit: idempotency (second webhook doesn't duplicate) ✅
+- Unit: completed with no stems marks FAILED ✅
+- Unit: WebhookSecretGuard (valid/invalid/missing — 3 tests) ✅
+- Unit: StemDownloadService download/upload (2 tests) ✅
+- Unit: StemDownloadService pitch enqueue with/without vocals (2 tests) ✅
 
 ---
 

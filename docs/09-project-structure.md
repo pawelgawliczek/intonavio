@@ -19,6 +19,8 @@ intonavio/
 │   │   │   │   ├── interfaces/    # Job data types
 │   │   │   │   └── processors/    # Job processors (stem-split)
 │   │   │   ├── webhooks/           # StemSplit webhook handler
+│   │   │   │   ├── dto/           # Webhook payload DTOs
+│   │   │   │   └── guards/        # Webhook secret guard
 │   │   │   ├── storage/            # R2 upload/download service
 │   │   │   ├── common/             # Shared guards, filters, pipes
 │   │   │   ├── prisma/             # Prisma service, module

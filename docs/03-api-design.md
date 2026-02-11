@@ -110,8 +110,7 @@ sequenceDiagram
     Note over SS: Processing (1-5 min)
 
     SS->>API: POST /webhooks/stemsplit { job_id, status, stems[] }
-    API->>SS: GET stem download URLs
-    API->>R2: Upload stems (vocals.mp3, instrumental.mp3, ...)
+    API->>R2: Upload stems (vocals.mp3, drums.mp3, bass.mp3, ...)
     API->>DB: Create Stem records, update song (status: ANALYZING)
     API->>Queue: Enqueue pitch-analysis job
 
@@ -383,9 +382,34 @@ sequenceDiagram
 
 ### Webhooks (Internal)
 
-| Method | Path                  | Description                       | Auth           |
-| ------ | --------------------- | --------------------------------- | -------------- |
-| `POST` | `/webhooks/stemsplit` | StemSplit job completion callback | Webhook secret |
+| Method | Path                  | Description                       | Auth                                 |
+| ------ | --------------------- | --------------------------------- | ------------------------------------ |
+| `POST` | `/webhooks/stemsplit` | StemSplit job completion callback | `x-webhook-secret` header validation |
+
+**Webhook Payload (from StemSplit):**
+
+```json
+{
+  "job_id": "ss_job_123",
+  "status": "completed",
+  "stems": [
+    { "type": "vocals", "download_url": "https://cdn.stemsplit.io/..." },
+    { "type": "drums", "download_url": "https://cdn.stemsplit.io/..." },
+    { "type": "bass", "download_url": "https://cdn.stemsplit.io/..." },
+    { "type": "other", "download_url": "https://cdn.stemsplit.io/..." },
+    { "type": "piano", "download_url": "https://cdn.stemsplit.io/..." },
+    { "type": "guitar", "download_url": "https://cdn.stemsplit.io/..." }
+  ]
+}
+```
+
+**Webhook Response:** `200 { "received": true }`
+
+**Behavior:**
+
+- Completed: download stems → upload to R2 → create Stem records → status ANALYZING → enqueue pitch analysis
+- Failed: mark song as FAILED with error message
+- Idempotent: skips if stems already exist for the song
 
 ---
 

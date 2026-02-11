@@ -14,6 +14,6 @@ import { StemSplitProcessor } from './processors/stem-split.processor';
     StemSplitProcessor,
     { provide: STEMSPLIT_ADAPTER, useClass: StemSplitService },
   ],
-  exports: [JobsService],
+  exports: [JobsService, STEMSPLIT_ADAPTER],
 })
 export class JobsModule {}
