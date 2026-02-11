@@ -434,6 +434,61 @@ Same shape as list item, plus `pitchLog` array. Returns `403` if session belongs
 
 ---
 
+### Health
+
+| Method | Path               | Description                                   | Auth |
+| ------ | ------------------ | --------------------------------------------- | ---- |
+| `GET`  | `/health`          | Basic health check (database + Redis)         | No   |
+| `GET`  | `/health/detailed` | Detailed health check with BullMQ queue stats | No   |
+
+#### `GET /health`
+
+**Response (200):**
+
+```json
+{
+  "status": "ok",
+  "info": {
+    "database": { "status": "up" },
+    "redis": { "status": "up" }
+  }
+}
+```
+
+**Response (503) — when unhealthy:**
+
+```json
+{
+  "status": "error",
+  "info": {
+    "database": { "status": "up" }
+  },
+  "error": {
+    "redis": { "status": "down" }
+  }
+}
+```
+
+#### `GET /health/detailed`
+
+**Response (200):** Same shape as `/health`, plus `queues` array:
+
+```json
+{
+  "status": "ok",
+  "info": {
+    "database": { "status": "up" },
+    "redis": { "status": "up" }
+  },
+  "queues": [
+    { "name": "stem-split", "waiting": 3, "active": 1, "failed": 0, "delayed": 0 },
+    { "name": "pitch-analysis", "waiting": 0, "active": 0, "failed": 0, "delayed": 0 }
+  ]
+}
+```
+
+---
+
 ### Webhooks (Internal)
 
 | Method | Path                  | Description                       | Auth                                 |

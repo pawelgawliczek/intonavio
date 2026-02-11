@@ -264,18 +264,21 @@ The critical integration point — receives StemSplit callbacks, downloads stems
 
 ---
 
-## Phase 9: Health Checks
+## Phase 9: Health Checks ✅ COMPLETE
 
-**Create (4 files):**
+**Created (5 files):**
 
-| File                                     | Contents                                                                                                                   |
-| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `src/health/health.module.ts`            | Module with TerminusModule                                                                                                 |
-| `src/health/health.controller.ts`        | `GET /health` (Prisma + Redis ping), `GET /health/detailed` (queue depth, failed count, oldest pending) — both `@Public()` |
-| `src/health/indicators/prisma.health.ts` | `PrismaHealthIndicator` — runs `$queryRaw(SELECT 1)`                                                                       |
-| `src/health/indicators/redis.health.ts`  | `RedisHealthIndicator` — runs Redis PING                                                                                   |
+| File                                     | Contents                                                                                       |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `src/health/health.module.ts`            | Module with TerminusModule + BullMQ queue registration                                         |
+| `src/health/health.controller.ts`        | `GET /health` (Prisma + Redis ping), `GET /health/detailed` (+ queue stats) — both `@Public()` |
+| `src/health/indicators/prisma.health.ts` | `PrismaHealthIndicator` — runs `$queryRawUnsafe('SELECT 1')`                                   |
+| `src/health/indicators/redis.health.ts`  | `RedisHealthIndicator` — runs Redis PING via ioredis                                           |
+| `src/health/queue-stats.service.ts`      | `QueueStatsService` — extracts queue depth/active/failed/delayed counts                        |
 
-**Modify:** `src/app.module.ts` — Add `HealthModule` to imports
+**Modified:** `src/app.module.ts` — Added `HealthModule` to imports
+
+**Tests:** `src/health/health.controller.spec.ts` — 2 tests (basic check, detailed with queue stats)
 
 ---
 

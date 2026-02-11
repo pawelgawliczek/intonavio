@@ -22,6 +22,8 @@ intonavio/
 │   │   │   ├── webhooks/           # StemSplit webhook handler
 │   │   │   │   ├── dto/           # Webhook payload DTOs
 │   │   │   │   └── guards/        # Webhook secret guard
+│   │   │   ├── health/              # Health check endpoints
+│   │   │   │   └── indicators/    # Prisma + Redis health indicators
 │   │   │   ├── storage/            # R2 upload/download service
 │   │   │   ├── common/             # Shared guards, filters, pipes
 │   │   │   ├── prisma/             # Prisma service, module
