@@ -18,11 +18,10 @@ RUN cd packages/shared && pnpm build
 RUN cd apps/api && npx prisma generate && pnpm build
 
 FROM base AS prod-deps
-ENV HUSKY=0
 COPY --from=deps /app/pnpm-lock.yaml /app/pnpm-workspace.yaml /app/package.json ./
 COPY --from=deps /app/apps/api/package.json ./apps/api/
 COPY --from=deps /app/packages/shared/package.json ./packages/shared/
-RUN pnpm install --frozen-lockfile --prod --filter @intonavio/api...
+RUN pnpm install --frozen-lockfile --prod --ignore-scripts --filter @intonavio/api...
 
 FROM base AS runner
 ENV NODE_ENV=production
