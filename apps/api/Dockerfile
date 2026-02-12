@@ -16,17 +16,14 @@ COPY packages/shared ./packages/shared
 COPY apps/api ./apps/api
 RUN cd packages/shared && pnpm build
 RUN cd apps/api && npx prisma generate && pnpm build
-RUN pnpm prune --prod --ignore-scripts
+RUN pnpm --filter @intonavio/api deploy --prod /app/deploy
 
 FROM base AS runner
 ENV NODE_ENV=production
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/apps/api/node_modules ./apps/api/node_modules
-COPY --from=builder /app/apps/api/dist ./apps/api/dist
-COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
-COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
-COPY --from=builder /app/packages/shared/package.json ./packages/shared/
+WORKDIR /app
+COPY --from=builder /app/deploy/node_modules ./node_modules
+COPY --from=builder /app/deploy/dist ./dist
+COPY --from=builder /app/deploy/prisma ./prisma
 
-WORKDIR /app/apps/api
 EXPOSE 3000
 CMD ["node", "dist/main.js"]
