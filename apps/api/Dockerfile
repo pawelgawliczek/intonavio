@@ -3,6 +3,7 @@ RUN corepack enable && corepack prepare pnpm@10.26.1 --activate
 WORKDIR /app
 
 FROM base AS deps
+ENV HUSKY=0
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY apps/api/package.json ./apps/api/
 COPY packages/shared/package.json ./packages/shared/
@@ -17,6 +18,7 @@ RUN cd packages/shared && pnpm build
 RUN cd apps/api && npx prisma generate && pnpm build
 
 FROM base AS prod-deps
+ENV HUSKY=0
 COPY --from=deps /app/pnpm-lock.yaml /app/pnpm-workspace.yaml /app/package.json ./
 COPY --from=deps /app/apps/api/package.json ./apps/api/
 COPY --from=deps /app/packages/shared/package.json ./packages/shared/
