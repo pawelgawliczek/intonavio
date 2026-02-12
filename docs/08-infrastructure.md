@@ -138,39 +138,28 @@ Caddy runs as a shared reverse proxy at `/opt/caddy` on the Hostinger KVM, servi
 
 ## Docker Compose Overview
 
+The production compose file lives at `/opt/intonavio/docker-compose.yml` on Hostinger. Source code is at `/opt/intonavio-src` (shallow clone, pulled before each build).
+
+Currently deployed: **API + PostgreSQL + Redis** (web and worker not yet implemented).
+
 ```yaml
-# docker-compose.prod.yml (simplified)
+# /opt/intonavio/docker-compose.yml (current)
 services:
   api:
     build:
-      context: .
+      context: /opt/intonavio-src
       dockerfile: apps/api/Dockerfile
     env_file: .env.production
-    depends_on: [postgres, redis]
+    depends_on:
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
     restart: unless-stopped
     networks: [default, stack_appnet]
 
-  web:
-    build:
-      context: .
-      dockerfile: apps/web/Dockerfile
-    env_file: .env.production
-    depends_on: [api]
-    restart: unless-stopped
-    networks: [default, stack_appnet]
-
-  worker:
-    build:
-      context: .
-      dockerfile: workers/pitch-analyzer/Dockerfile
-    env_file: .env.production
-    depends_on: [postgres, redis]
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          cpus: '2.0'
-          memory: 2G
+  # web: not yet implemented
+  # worker: not yet implemented
 
   postgres:
     image: postgres:16-alpine
@@ -192,6 +181,22 @@ volumes:
   postgres_data:
   redis_data:
 ```
+
+### API Dockerfile
+
+The API Dockerfile uses a multi-stage build optimized for pnpm workspaces:
+
+1. **deps** — installs all dependencies with `pnpm install --frozen-lockfile`
+2. **builder** — copies source, builds shared package + API, generates Prisma client
+3. **runner** — copies `node_modules` (with generated Prisma client), `dist`, and `prisma` from builder
+
+Key details:
+
+- `HUSKY=0` in deps stage to skip Git hooks in Docker
+- `tsconfig.base.json` must be copied (both API and shared extend it)
+- Full `node_modules` copied to runner (pnpm deploy doesn't work well with Prisma generated client in the virtual store)
+- `prisma generate` runs before `pnpm build` (TypeScript needs generated types)
+- `WORKDIR /app/apps/api` in runner so `dist/main.js` resolves correctly
 
 ---
 

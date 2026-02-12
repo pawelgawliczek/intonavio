@@ -42,13 +42,15 @@ For deployment infrastructure details, see `docs/08-infrastructure.md`.
 
 ### Deploy workflow (`deploy.yml`) — runs on merge to `main`
 
-1. Build Docker images for `api`, `web`, `worker`
-2. Push images to GitHub Container Registry (ghcr.io)
-3. SSH into Hostinger KVM
-4. Pull latest images
-5. `docker compose -f docker-compose.prod.yml up -d`
-6. Run database migrations (`prisma migrate deploy`)
-7. Health check verification
+Currently builds API only (web and worker not yet implemented):
+
+1. Build Docker image for `api` and push to GitHub Container Registry (ghcr.io)
+2. SSH into Hostinger KVM
+3. Pull latest image and restart containers
+4. Run database migrations (`prisma migrate deploy`)
+5. Health check verification (`GET /v1/health`)
+
+Note: GHCR auth on the server requires a PAT with `read:packages` scope. As an alternative, the server currently builds from source (`/opt/intonavio-src`) via `docker compose build`.
 
 ### Backup workflow (`backup.yml`) — scheduled daily
 
