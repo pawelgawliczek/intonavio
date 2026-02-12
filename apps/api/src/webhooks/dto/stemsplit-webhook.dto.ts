@@ -1,7 +1,7 @@
 import { Type } from 'class-transformer';
 import { IsArray, IsEnum, IsOptional, IsString, IsUrl, ValidateNested } from 'class-validator';
 
-enum StemSplitStatus {
+export enum StemSplitStatus {
   COMPLETED = 'completed',
   FAILED = 'failed',
 }

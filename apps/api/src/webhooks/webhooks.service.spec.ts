@@ -4,7 +4,7 @@ import { Test } from '@nestjs/testing';
 import { PrismaService } from '../prisma/prisma.service';
 import { SongsService } from '../songs/songs.service';
 import { StemsService } from '../stems/stems.service';
-import type { StemSplitWebhookDto } from './dto/stemsplit-webhook.dto';
+import { StemSplitStatus, type StemSplitWebhookDto } from './dto/stemsplit-webhook.dto';
 import { StemDownloadService } from './stem-download.service';
 import { WebhooksService } from './webhooks.service';
 
@@ -41,7 +41,7 @@ describe('WebhooksService', () => {
 
   const completedPayload: StemSplitWebhookDto = {
     job_id: 'ss_job_123',
-    status: 'completed' as const,
+    status: StemSplitStatus.COMPLETED,
     stems: [
       { type: 'vocals', download_url: 'https://cdn.stemsplit.io/vocals.mp3' },
       { type: 'drums', download_url: 'https://cdn.stemsplit.io/drums.mp3' },
@@ -50,7 +50,7 @@ describe('WebhooksService', () => {
 
   const failedPayload: StemSplitWebhookDto = {
     job_id: 'ss_job_123',
-    status: 'failed' as const,
+    status: StemSplitStatus.FAILED,
     error_message: 'Audio too short',
   };
 
@@ -121,7 +121,7 @@ describe('WebhooksService', () => {
 
     const noStemsPayload: StemSplitWebhookDto = {
       job_id: 'ss_job_123',
-      status: 'completed' as const,
+      status: StemSplitStatus.COMPLETED,
       stems: [],
     };
 

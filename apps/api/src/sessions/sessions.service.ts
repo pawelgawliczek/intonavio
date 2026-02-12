@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import type { Session } from '@prisma/client';
+import type { Prisma, Session } from '@prisma/client';
 
 import type { PaginatedResponse } from '../common/dto/pagination.dto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -34,7 +34,7 @@ export class SessionsService {
         loopEnd: dto.loopEnd ?? null,
         speed: dto.speed ?? 1.0,
         overallScore: dto.overallScore,
-        pitchLog: dto.pitchLog as unknown as Record<string, unknown>[],
+        pitchLog: dto.pitchLog as unknown as Prisma.InputJsonValue,
       },
     });
 
