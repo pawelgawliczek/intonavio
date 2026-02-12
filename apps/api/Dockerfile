@@ -17,7 +17,7 @@ COPY apps/api ./apps/api
 RUN cd packages/shared && pnpm build
 RUN cd apps/api && npx prisma generate && pnpm build
 RUN pnpm --filter @intonavio/api deploy --prod --legacy /app/deploy
-RUN npx prisma generate --schema=/app/deploy/prisma/schema.prisma
+RUN /app/deploy/node_modules/.bin/prisma generate --schema=/app/deploy/prisma/schema.prisma
 
 FROM base AS runner
 ENV NODE_ENV=production
