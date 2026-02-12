@@ -15,7 +15,7 @@ COPY tsconfig.base.json ./tsconfig.base.json
 COPY packages/shared ./packages/shared
 COPY apps/api ./apps/api
 RUN cd packages/shared && pnpm build
-RUN cd apps/api && pnpm build
+RUN cd apps/api && npx prisma generate && pnpm build
 RUN pnpm --filter @intonavio/api deploy --prod --legacy /app/deploy
 RUN cd /app/deploy && npx prisma generate --schema=./prisma/schema.prisma
 
