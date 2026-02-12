@@ -27,11 +27,16 @@ intonavio/
 │   │   │   ├── storage/            # R2 upload/download service
 │   │   │   ├── common/             # Shared guards, filters, pipes
 │   │   │   ├── prisma/             # Prisma service, module
+│   │   │   ├── test/               # Shared test utilities
+│   │   │   │   ├── test-utils.ts   # App builder, JWT generator, mock factories
+│   │   │   │   └── fixtures/       # Test data (songs, webhooks)
 │   │   │   └── main.ts
 │   │   ├── prisma/
 │   │   │   ├── schema.prisma
 │   │   │   └── migrations/
-│   │   ├── test/
+│   │   ├── test/                    # E2E tests
+│   │   │   ├── app.e2e-spec.ts     # Full API integration tests
+│   │   │   └── jest-e2e.json
 │   │   ├── Dockerfile
 │   │   └── package.json
 │   │

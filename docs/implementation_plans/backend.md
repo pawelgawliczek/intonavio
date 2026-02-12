@@ -282,15 +282,20 @@ The critical integration point — receives StemSplit callbacks, downloads stems
 
 ---
 
-## Phase 10: Integration Testing & Polish
+## Phase 10: Integration Testing & Polish ✅ COMPLETE
 
 **Create:**
 
 - `src/test/test-utils.ts` — Helper to build NestJS testing module with mocks, JWT generator, test user factory
-- `src/test/fixtures/` — JSON fixtures for songs, stems, webhook payloads
-- `test/app.e2e-spec.ts` — Full E2E flow: register → create song → simulate webhook → get READY song → presigned URL → create session → list sessions → delete account
+- `src/test/fixtures/songs.fixture.ts` — Song and stem fixtures (QUEUED, READY states, presigned URL)
+- `src/test/fixtures/webhook.fixture.ts` — StemSplit webhook payloads (completed, failed)
+- `test/app.e2e-spec.ts` — Full E2E flow covering all endpoints: auth (register, login, delete account), songs (create, list, get, delete), stems (list, presigned URL), webhooks (valid, missing/invalid secret), sessions (create, list, detail), health (basic, detailed)
 
-**Modify:** `src/app.module.ts` — Final assembly ensuring BullModule root, LoggerModule, HealthModule, env validation all wired
+**Modify:** `test/jest-e2e.json` — Added moduleNameMapper for `@/` path alias
+
+**No changes needed:** `src/app.module.ts` — Already correctly wired with BullModule root, LoggerModule, HealthModule, env validation from previous phases
+
+**Tests:** `test/app.e2e-spec.ts` — 23 e2e tests covering all API endpoints, request validation, auth guards, webhook security, and response shapes
 
 ---
 
