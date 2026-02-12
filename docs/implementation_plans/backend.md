@@ -299,33 +299,37 @@ The critical integration point — receives StemSplit callbacks, downloads stems
 
 ---
 
-## Phase 11: Documentation Updates
+## Phase 11: Documentation Updates ✅ COMPLETE
 
-Update all affected docs to reflect implementation decisions made during backend development:
+Updated all docs to reflect implementation decisions:
 
-**Modify:** `docs/04-data-models.md`
+**Modified:** `docs/03-api-design.md`
 
-- Add `UserSongLibrary` model definition with fields, constraints, and relations
-- Update Song model description to clarify `userId` = original submitter, library membership via join table
-- Document the deduplication strategy (process once, share via library)
+- Updated `POST /songs` with deduplication behavior (existing READY → add to library, existing FAILED → re-queue, new → create + enqueue)
+- Clarified `POST /songs` always returns 202 (flow diagram and endpoint docs)
+- Updated `GET /songs` to clarify queries via UserSongLibrary
+- Updated `GET /songs/:id` to note 404 if not in user's library
+- Updated `DELETE /songs/:id` description (removes from library, not deletes song)
+- Fixed response shapes: stems return `storageKey` (not `url`), pitchData returns `storageKey` (not `url`)
+- Fixed ID format in examples from prefixed (`song_xyz`, `sess_abc`) to plain CUIDs
+- Added `traceId` field to error response format
 
-**Modify:** `docs/03-api-design.md`
+**Modified:** `docs/02-architecture.md`
 
-- Update `POST /songs` description to explain deduplication + library addition behavior
-- Update `DELETE /songs/:id` to clarify it removes from library, not deletes the song
-- Update `GET /songs` to clarify it queries user's library (via UserSongLibrary)
-- Add any new response fields or status codes discovered during implementation
+- Fixed ID format rule: plain CUIDs (no type prefix), matching Prisma `@default(cuid())`
+- Updated Module Boundary Rules with actual module names and cross-module dependencies (SongsModule → JobsModule, WebhooksModule → StemsModule + JobsModule)
+- Added WebhookSecretGuard and global modules note
 
-**Modify:** `docs/02-architecture.md`
+**Verified (already up to date):** `docs/04-data-models.md`
 
-- Add `UserSongLibrary` to the State Ownership table
-- Update the Module Boundary table with actual exports and dependencies
+- UserSongLibrary model was already documented with fields, constraints, and relations
+- Song model already shows `userId` as "Original submitter"
+- Dedup strategy already documented in schema comments
 
-**Modify:** `docs/12-code-quality.md`
+**Verified (already up to date):** `docs/12-code-quality.md`
 
-- Add env validation approach (Zod in ConfigModule)
-- Document the traceId interceptor pattern
-- Add any new conventions established during implementation
+- Zod env validation approach was already documented (line 86)
+- TraceIdInterceptor pattern was already documented (line 87)
 
 ---
 

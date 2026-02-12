@@ -94,11 +94,16 @@ sequenceDiagram
 
     Client->>API: POST /songs { youtubeUrl }
     API->>DB: Check if song exists (by videoId)
-    alt Song already processed
+    alt Song already processed (READY)
+        API->>DB: Add to UserSongLibrary (upsert)
         DB-->>API: Existing song with stems
-        API-->>Client: 200 { song, stems }
+        API-->>Client: 202 { song }
+    else Song exists but FAILED
+        API->>DB: Add to UserSongLibrary + reset to QUEUED
+        API->>Queue: Re-enqueue stem-split job
+        API-->>Client: 202 { song (status: QUEUED) }
     else New song
-        API->>DB: Create song (status: QUEUED)
+        API->>DB: Create song + add to UserSongLibrary
         API->>Queue: Enqueue stem-split job
         API-->>Client: 202 { song (status: QUEUED) }
     end
@@ -188,7 +193,7 @@ sequenceDiagram
   "accessToken": "eyJ...",
   "refreshToken": "rt_...",
   "user": {
-    "id": "usr_abc123",
+    "id": "cm7user1abcdefghijklmnop",
     "email": "jane@icloud.com",
     "displayName": "Jane D."
   }
@@ -239,14 +244,18 @@ sequenceDiagram
 
 ### Songs
 
-| Method   | Path         | Description                            |
-| -------- | ------------ | -------------------------------------- |
-| `POST`   | `/songs`     | Submit a YouTube URL for processing    |
-| `GET`    | `/songs/:id` | Get song details with stems and status |
-| `GET`    | `/songs`     | List user's songs (paginated)          |
-| `DELETE` | `/songs/:id` | Remove song from user's library        |
+| Method   | Path         | Description                                                              |
+| -------- | ------------ | ------------------------------------------------------------------------ |
+| `POST`   | `/songs`     | Submit YouTube URL — deduplicates by videoId, adds to user's library     |
+| `GET`    | `/songs/:id` | Get song details (must be in user's library)                             |
+| `GET`    | `/songs`     | List user's library songs via UserSongLibrary (paginated)                |
+| `DELETE` | `/songs/:id` | Remove song from user's library (does not delete the shared song record) |
 
 #### `POST /songs`
+
+Deduplicates by YouTube `videoId`. If the song already exists and is `READY`, it is added to the user's library immediately. If it exists but is `FAILED`, it is re-queued for processing. New songs are created with `QUEUED` status and enqueued for stem splitting.
+
+Always returns `202` regardless of whether the song is new or existing.
 
 **Request:**
 
@@ -256,73 +265,97 @@ sequenceDiagram
 }
 ```
 
-**Response (202):**
+**Response (202) — new or re-queued song:**
 
 ```json
 {
-  "id": "song_xyz789",
+  "id": "cm7abc123def456ghijklmnop",
   "videoId": "dQw4w9WgXcQ",
-  "title": "Rick Astley - Never Gonna Give You Up",
+  "title": "dQw4w9WgXcQ",
   "thumbnailUrl": "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
-  "duration": 213,
+  "duration": 0,
   "status": "QUEUED",
   "stems": [],
+  "pitchData": null,
   "createdAt": "2025-06-01T12:00:00Z"
 }
 ```
 
+**Response (202) — existing READY song added to library:**
+
+```json
+{
+  "id": "cm7abc123def456ghijklmnop",
+  "videoId": "dQw4w9WgXcQ",
+  "title": "Rick Astley - Never Gonna Give You Up",
+  "thumbnailUrl": "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
+  "duration": 213,
+  "status": "READY",
+  "stems": [
+    { "id": "...", "type": "VOCALS", "storageKey": "stems/.../vocals.mp3", "format": "mp3" }
+  ],
+  "pitchData": { "id": "...", "storageKey": "pitch/.../reference.json" },
+  "createdAt": "2025-06-01T12:00:00Z"
+}
+```
+
+Note: The `title` field is initially set to the `videoId` at creation time. It is updated to the actual YouTube title once metadata is fetched during processing.
+
 #### `GET /songs/:id`
+
+Returns song details only if it exists in the authenticated user's library (via `UserSongLibrary`). Returns `404` if the song is not in the user's library.
 
 **Response (200) — when READY:**
 
 ```json
 {
-  "id": "song_xyz789",
+  "id": "cm7abc123def456ghijklmnop",
   "videoId": "dQw4w9WgXcQ",
   "title": "Rick Astley - Never Gonna Give You Up",
+  "thumbnailUrl": "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
   "duration": 213,
   "status": "READY",
   "stems": [
     {
-      "id": "stem_1",
+      "id": "cm7stem1abcdefghijklmnop",
       "type": "VOCALS",
-      "url": "https://r2.intonavio.com/stems/song_xyz789/vocals.mp3",
+      "storageKey": "stems/cm7abc123def456ghijklmnop/vocals.mp3",
       "format": "mp3"
     },
     {
-      "id": "stem_2",
+      "id": "cm7stem2abcdefghijklmnop",
       "type": "DRUMS",
-      "url": "https://r2.intonavio.com/stems/song_xyz789/drums.mp3",
+      "storageKey": "stems/cm7abc123def456ghijklmnop/drums.mp3",
       "format": "mp3"
     },
     {
-      "id": "stem_3",
+      "id": "cm7stem3abcdefghijklmnop",
       "type": "BASS",
-      "url": "https://r2.intonavio.com/stems/song_xyz789/bass.mp3",
+      "storageKey": "stems/cm7abc123def456ghijklmnop/bass.mp3",
       "format": "mp3"
     },
     {
-      "id": "stem_4",
+      "id": "cm7stem4abcdefghijklmnop",
       "type": "OTHER",
-      "url": "https://r2.intonavio.com/stems/song_xyz789/other.mp3",
+      "storageKey": "stems/cm7abc123def456ghijklmnop/other.mp3",
       "format": "mp3"
     },
     {
-      "id": "stem_5",
+      "id": "cm7stem5abcdefghijklmnop",
       "type": "PIANO",
-      "url": "https://r2.intonavio.com/stems/song_xyz789/piano.mp3",
+      "storageKey": "stems/cm7abc123def456ghijklmnop/piano.mp3",
       "format": "mp3"
     },
     {
-      "id": "stem_6",
+      "id": "cm7stem6abcdefghijklmnop",
       "type": "GUITAR",
-      "url": "https://r2.intonavio.com/stems/song_xyz789/guitar.mp3",
+      "storageKey": "stems/cm7abc123def456ghijklmnop/guitar.mp3",
       "format": "mp3"
     }
   ],
   "pitchData": {
-    "id": "pitch_1",
-    "url": "https://r2.intonavio.com/pitch/song_xyz789/reference.json"
+    "id": "cm7pitch1abcdefghijklmno",
+    "storageKey": "pitch/cm7abc123def456ghijklmnop/reference.json"
   },
   "createdAt": "2025-06-01T12:00:00Z"
 }
@@ -353,7 +386,7 @@ sequenceDiagram
 
 ```json
 {
-  "songId": "song_xyz789",
+  "songId": "cm7abc123def456ghijklmnop",
   "duration": 45,
   "loopStart": 30.5,
   "loopEnd": 55.2,
@@ -372,8 +405,8 @@ sequenceDiagram
 
 ```json
 {
-  "id": "sess_abc",
-  "songId": "song_xyz789",
+  "id": "cm7sess1abcdefghijklmnop",
+  "songId": "cm7abc123def456ghijklmnop",
   "duration": 45,
   "loopStart": 30.5,
   "loopEnd": 55.2,
@@ -393,8 +426,8 @@ sequenceDiagram
 {
   "data": [
     {
-      "id": "sess_abc",
-      "songId": "song_xyz789",
+      "id": "cm7sess1abcdefghijklmnop",
+      "songId": "cm7abc123def456ghijklmnop",
       "duration": 45,
       "loopStart": 30.5,
       "loopEnd": 55.2,
@@ -417,8 +450,8 @@ Same shape as list item, plus `pitchLog` array. Returns `403` if session belongs
 
 ```json
 {
-  "id": "sess_abc",
-  "songId": "song_xyz789",
+  "id": "cm7sess1abcdefghijklmnop",
+  "songId": "cm7abc123def456ghijklmnop",
   "duration": 45,
   "loopStart": 30.5,
   "loopEnd": 55.2,
@@ -524,13 +557,14 @@ Same shape as list item, plus `pitchLog` array. Returns `403` if session belongs
 
 ## Error Responses
 
-All errors follow a consistent format:
+All errors follow a consistent format with a `traceId` for debugging:
 
 ```json
 {
   "statusCode": 404,
   "error": "Not Found",
-  "message": "Song not found"
+  "message": "Song not found in your library",
+  "traceId": "trc_a1b2c3d4e5f6a1b2c3d4e5f6"
 }
 ```
 

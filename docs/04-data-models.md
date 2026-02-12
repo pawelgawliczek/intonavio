@@ -409,7 +409,7 @@ The pitch data file stored in R2 contains frame-by-frame pitch information. For 
 
 ```json
 {
-  "songId": "song_xyz789",
+  "songId": "cm7abc123def456ghijklmnop",
   "sampleRate": 44100,
   "hopSize": 512,
   "hopDuration": 0.0116,
