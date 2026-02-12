@@ -23,8 +23,8 @@ jobs:
       matrix:
         service:
           - { name: api, dockerfile: apps/api/Dockerfile }
-          - { name: web, dockerfile: apps/web/Dockerfile }
-          - { name: worker, dockerfile: workers/pitch-analyzer/Dockerfile }
+          # - { name: web, dockerfile: apps/web/Dockerfile }        # Not yet implemented
+          # - { name: worker, dockerfile: workers/pitch-analyzer/Dockerfile }  # Not yet implemented
 
     steps:
       - uses: actions/checkout@v4
@@ -58,8 +58,9 @@ jobs:
           key: ${{ secrets.HOSTINGER_SSH_KEY }}
           script: |
             cd /opt/intonavio
-            docker compose pull
+            docker compose pull api
             docker compose up -d
+            sleep 10
             docker exec intonavio-api-1 npx prisma migrate deploy
             sleep 5
             curl -sf https://api.intonavio.pawelgawliczek.cloud/v1/health || exit 1
