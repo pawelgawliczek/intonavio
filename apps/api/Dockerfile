@@ -16,17 +16,17 @@ COPY packages/shared ./packages/shared
 COPY apps/api ./apps/api
 RUN cd packages/shared && pnpm build
 RUN cd apps/api && npx prisma generate && pnpm build
-RUN pnpm --filter @intonavio/api deploy --prod --legacy /app/deploy
-# Copy generated Prisma client into deploy's pnpm store
-RUN PRISMA_CLIENT_DIR=$(find /app/deploy/node_modules/.pnpm -path "*/@prisma+client*/node_modules" -type d | head -1) \
-    && cp -r /app/node_modules/.pnpm/@prisma+client*/node_modules/.prisma "$PRISMA_CLIENT_DIR/.prisma"
 
 FROM base AS runner
 ENV NODE_ENV=production
 WORKDIR /app
-COPY --from=builder /app/deploy/node_modules ./node_modules
-COPY --from=builder /app/deploy/dist ./dist
-COPY --from=builder /app/deploy/prisma ./prisma
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/apps/api/node_modules ./apps/api/node_modules
+COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
+COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
+COPY --from=builder /app/packages/shared/package.json ./packages/shared/
 
+WORKDIR /app/apps/api
 EXPOSE 3000
 CMD ["node", "dist/main.js"]
