@@ -9,21 +9,29 @@ COPY packages/shared/package.json ./packages/shared/
 RUN pnpm install --frozen-lockfile --filter @intonavio/api...
 
 FROM base AS builder
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
-COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
+COPY --from=deps /app ./
 COPY tsconfig.base.json ./tsconfig.base.json
 COPY packages/shared ./packages/shared
 COPY apps/api ./apps/api
 RUN cd packages/shared && pnpm build
 RUN cd apps/api && npx prisma generate && pnpm build
 
+FROM base AS prod-deps
+COPY --from=deps /app/pnpm-lock.yaml /app/pnpm-workspace.yaml /app/package.json ./
+COPY --from=deps /app/apps/api/package.json ./apps/api/
+COPY --from=deps /app/packages/shared/package.json ./packages/shared/
+RUN pnpm install --frozen-lockfile --prod --filter @intonavio/api...
+
 FROM base AS runner
 ENV NODE_ENV=production
-COPY --from=builder /app/apps/api/dist ./dist
-COPY --from=builder /app/apps/api/prisma ./prisma
-COPY --from=builder /app/apps/api/node_modules ./node_modules
-COPY --from=builder /app/packages/shared/dist ./node_modules/@intonavio/shared/dist
+COPY --from=prod-deps /app/node_modules ./node_modules
+COPY --from=prod-deps /app/apps/api/node_modules ./apps/api/node_modules
+COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
+COPY --from=builder /app/apps/api/node_modules/.prisma ./apps/api/node_modules/.prisma
+COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
+COPY --from=builder /app/packages/shared/package.json ./packages/shared/
 
+WORKDIR /app/apps/api
 EXPOSE 3000
 CMD ["node", "dist/main.js"]
