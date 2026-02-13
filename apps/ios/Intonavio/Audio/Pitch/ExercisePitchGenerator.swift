@@ -28,7 +28,8 @@ enum ExercisePitchGenerator {
                         time: time,
                         frequency: nil,
                         isVoiced: false,
-                        midiNote: nil
+                        midiNote: nil,
+                        rms: nil
                     ))
                     continue
                 }
@@ -52,7 +53,8 @@ enum ExercisePitchGenerator {
                     time: time,
                     frequency: frequency,
                     isVoiced: true,
-                    midiNote: Double(note.midiNote)
+                    midiNote: Double(note.midiNote),
+                    rms: nil
                 ))
             }
 

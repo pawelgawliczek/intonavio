@@ -13,7 +13,8 @@ final class ScoringEngineTests: XCTestCase {
                 time: Double(i) * 0.01,
                 frequency: 440.0,
                 isVoiced: true,
-                midiNote: 69.0
+                midiNote: 69.0,
+                rms: nil
             )
         }
         let data = ReferencePitchData(
@@ -106,7 +107,8 @@ final class ScoringEngineTests: XCTestCase {
             time: 0,
             frequency: nil,
             isVoiced: false,
-            midiNote: nil
+            midiNote: nil,
+            rms: nil
         )]
         let data = ReferencePitchData(
             songId: nil, sampleRate: 44100, hopSize: 256,

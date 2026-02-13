@@ -78,6 +78,7 @@
 		B399BBAFDD9AE402663522BA /* IntonavioTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B763937F90150633F0562A /* IntonavioTests.swift */; };
 		B42263E63AAAC35CDC135864 /* LibraryViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F914111CFFB02B01007B15DA /* LibraryViewModelTests.swift */; };
 		B71DCC9D91AF341C853CFC1E /* LoopControlsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97DAF027FB67310C5B30599B /* LoopControlsView.swift */; };
+		A1B2C3D4E5F60718293A4B5C /* LoopScoreToastView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4E5F6A7B8C9D0E1F2A3B4C5 /* LoopScoreToastView.swift */; };
 		B74CE9669226A57359D41A6B /* ReferencePitchFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82B75BB4DBC464BA99E6D810 /* ReferencePitchFrame.swift */; };
 		BBAC6A2DA9F98CBDF4B1700E /* CodableModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60B2C125F8F2F63801D9E99 /* CodableModelTests.swift */; };
 		BCC5E694ABE36F8492440B4C /* TokenManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7A10D37B355161804C8D491 /* TokenManager.swift */; };
@@ -183,6 +184,7 @@
 		96771944D29E6114AD258E69 /* AddSongSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddSongSheet.swift; sourceTree = "<group>"; };
 		97CBE0920EF935138DF6FC7C /* MetronomeTick.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetronomeTick.swift; sourceTree = "<group>"; };
 		97DAF027FB67310C5B30599B /* LoopControlsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopControlsView.swift; sourceTree = "<group>"; };
+		D4E5F6A7B8C9D0E1F2A3B4C5 /* LoopScoreToastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopScoreToastView.swift; sourceTree = "<group>"; };
 		99505EB7FE1F165FDAB396BB /* PianoRollRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PianoRollRenderer.swift; sourceTree = "<group>"; };
 		A557DCB3FEB614983FAE453E /* ExercisePitchGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExercisePitchGenerator.swift; sourceTree = "<group>"; };
 		A60B2C125F8F2F63801D9E99 /* CodableModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodableModelTests.swift; sourceTree = "<group>"; };
@@ -311,6 +313,7 @@
 				15D584CD202B8D0825C5C689 /* ExercisePracticeView.swift */,
 				C682B6234C631299654F8E6B /* ExercisePracticeViewModel.swift */,
 				97DAF027FB67310C5B30599B /* LoopControlsView.swift */,
+				D4E5F6A7B8C9D0E1F2A3B4C5 /* LoopScoreToastView.swift */,
 				5BDF7BCFBF727E3EDB26BFAA /* LoopState.swift */,
 				7CE79DBF676DB40ABC0BF92A /* PlaybackControlsView.swift */,
 				41DF42E8DDEB37A70C265320 /* PracticeLayoutMode.swift */,
@@ -623,6 +626,7 @@
 				3542BD3F32FE3A60186475BD /* LibraryViewModel.swift in Sources */,
 				18239F3DCE0A3FD281D951F4 /* Logger.swift in Sources */,
 				B71DCC9D91AF341C853CFC1E /* LoopControlsView.swift in Sources */,
+				A1B2C3D4E5F60718293A4B5C /* LoopScoreToastView.swift in Sources */,
 				34E29EE0F322BE2D369E4694 /* LoopState.swift in Sources */,
 				948A90A78B8988F73C2C6D4E /* MetronomeTick.swift in Sources */,
 				8D09205FA0E70F989F2F07F6 /* MockAPIClient.swift in Sources */,

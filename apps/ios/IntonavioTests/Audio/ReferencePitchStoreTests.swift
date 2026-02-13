@@ -119,7 +119,8 @@ private extension ReferencePitchStoreTests {
                 time: Double(i) * hopDuration,
                 frequency: 440.0,
                 isVoiced: true,
-                midiNote: 69.0
+                midiNote: 69.0,
+                rms: nil
             )
         }
         return ReferencePitchData(
