@@ -52,28 +52,25 @@ Switching between original YouTube audio and separated stems.
 stateDiagram-v2
     [*] --> OriginalAudio: Default (stems not ready)
 
-    OriginalAudio --> StemAudio: Stems ready + user toggles
-    StemAudio --> OriginalAudio: User toggles back
-
-    state StemAudio {
-        [*] --> AllStems: Default mix
-        AllStems --> VocalsOnly: Solo vocals
-        AllStems --> InstrumentalOnly: Mute vocals
-        VocalsOnly --> AllStems: Reset
-        InstrumentalOnly --> AllStems: Reset
-        VocalsOnly --> InstrumentalOnly: Toggle
-        InstrumentalOnly --> VocalsOnly: Toggle
-    }
+    OriginalAudio --> VocalsOnly: Tap mic button
+    OriginalAudio --> InstrumentalOnly: Tap guitars button
+    VocalsOnly --> OriginalAudio: Tap speaker button
+    VocalsOnly --> InstrumentalOnly: Tap guitars button
+    InstrumentalOnly --> OriginalAudio: Tap speaker button
+    InstrumentalOnly --> VocalsOnly: Tap mic button
 ```
 
 ### Audio Modes
 
-| Mode                  | YouTube Audio | Stem Playback           | Use Case                                         |
-| --------------------- | ------------- | ----------------------- | ------------------------------------------------ |
-| **Original Audio**    | Unmuted       | None                    | Before stems are ready, or user prefers original |
-| **All Stems**         | Muted         | All stems mixed         | Default stem mode — sounds like original         |
-| **Vocals Only**       | Muted         | Vocals stem only        | Listen to reference vocal isolated               |
-| **Instrumental Only** | Muted         | All stems except vocals | Sing along without competing vocal               |
+| Mode                  | YouTube Audio | Stem Playback           | Use Case                                         | UI Control             |
+| --------------------- | ------------- | ----------------------- | ------------------------------------------------ | ---------------------- |
+| **Original Audio**    | Unmuted       | None                    | Before stems are ready, or user prefers original | Speaker icon button    |
+| **Vocals Only**       | Muted         | Vocals stem only        | Listen to reference vocal isolated               | Microphone icon button |
+| **Instrumental Only** | Muted         | All stems except vocals | Sing along without competing vocal               | Guitars icon button    |
+
+Audio source buttons appear inline in the controls bar (next to A-B loop controls) once stems are downloaded. Before stems are ready, YouTube original plays by default with no source buttons shown.
+
+**Mode switching uses pause-switch-resume:** stop sync → stop stems → change mode/volumes → restart stems from current YouTube time → restart sync. This prevents race conditions where the sync system sees inconsistent state during transitions.
 
 ---
 
@@ -92,15 +89,15 @@ sequenceDiagram
     Bridge->>YT: player.playVideo()
     Swift->>Swift: Start stem playback at t=0
 
-    Note over Swift,YT: Periodic sync check (every 1s)
-    loop Every 1 second
+    Note over Swift,YT: Periodic sync check (every 2s)
+    loop Every 2 seconds
         Swift->>Bridge: evaluateJavaScript("player.getCurrentTime()")
         Bridge-->>Swift: ytTime = 45.2
-        Swift->>Swift: stemTime = 45.35
+        Swift->>Swift: stemTime = 44.9
         Swift->>Swift: drift = |ytTime - stemTime|
-        alt drift > 0.15s
-            Swift->>Bridge: evaluateJavaScript("player.seekTo(stemTime)")
-            Note over Swift,YT: Correct YouTube position
+        alt drift > 0.3s
+            Swift->>Swift: stemPlayer.seek(to: ytTime)
+            Note over Swift,YT: Correct stem position to match YouTube
         end
     end
 
@@ -115,10 +112,12 @@ sequenceDiagram
 
 ### Sync Rules
 
-- **Stem audio is the master clock** — YouTube video follows it
-- Drift tolerance: **±150ms**. Beyond this, the YouTube player seeks to match stem time.
-- Speed changes are applied to both stem playback (AVAudioEngine rate) and YouTube player simultaneously.
+- **YouTube is the master clock** — stem audio follows it. This prevents stems restarting at time 0 from pulling the video back to the beginning during mode switches.
+- Drift tolerance: **±300ms**. Beyond this, stems seek to match YouTube time. The 300ms threshold prevents constant micro-corrections (150ms triggered corrections every cycle due to inherent JS bridge latency).
+- Sync poll interval: **2 seconds**. Frequent polling (1s) caused excessive corrections without improving perceived sync.
+- Speed changes are applied to both stem playback (`AVAudioUnitTimePitch.rate`) and YouTube player (`setPlaybackRate()`) simultaneously.
 - On loop restart (B→A), both stem and video seek to marker A.
+- `AVAudioSession` uses `.mixWithOthers` option so YouTube WebView and AVAudioEngine coexist without triggering interruption notifications that would stop the engine.
 
 ---
 

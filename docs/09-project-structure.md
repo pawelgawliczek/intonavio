@@ -57,36 +57,96 @@ intonavio/
 │   │   ├── public/
 │   │   └── package.json
 │   │
-│   └── ios/                        # SwiftUI iOS/macOS app
+│   └── ios/                        # SwiftUI iOS app
+│       ├── project.yml             # XcodeGen project definition
+│       ├── .swiftlint.yml          # SwiftLint strict config
 │       ├── Intonavio/
-│       │   ├── App/                # App entry, tab navigation
+│       │   ├── Info.plist
+│       │   ├── App/
+│       │   │   ├── IntonavioApp.swift      # @main, AVAudioSession (.mixWithOthers)
+│       │   │   ├── ContentView.swift       # TabView (Library, Sessions, Settings)
+│       │   │   ├── AppState.swift          # @Observable: auth state, selected tab
+│       │   │   └── AppTheme.swift          # Theme management (@AppStorage)
 │       │   ├── Features/
-│       │   │   ├── Auth/           # Sign In, Sign Up views
-│       │   │   ├── Library/        # Home (song grid + exercises)
-│       │   │   │   ├── HomeView.swift
-│       │   │   │   ├── AddSongSheet.swift
-│       │   │   │   └── ExerciseBrowserView.swift
-│       │   │   ├── Practice/       # Song + exercise practice screens
-│       │   │   │   ├── SongPracticeView.swift
-│       │   │   │   ├── ExercisePracticeView.swift
-│       │   │   │   ├── PianoRollView.swift
-│       │   │   │   ├── LoopControlsView.swift
-│       │   │   │   └── StemMixerView.swift
-│       │   │   ├── Sessions/       # Session history + detail
-│       │   │   └── Settings/       # Settings, Profile/Community
+│       │   │   ├── Auth/
+│       │   │   │   ├── SignInView.swift         # Apple Sign In + email login
+│       │   │   │   ├── SignUpView.swift          # Email registration
+│       │   │   │   ├── AppleSignInButton.swift   # ASAuthorizationController wrapper
+│       │   │   │   └── AuthViewModel.swift       # Sign-in/up flows
+│       │   │   ├── Library/
+│       │   │   │   ├── HomeView.swift            # Song grid + exercise sections
+│       │   │   │   ├── AddSongSheet.swift        # YouTube URL input + submit
+│       │   │   │   ├── SongGridItemView.swift    # Thumbnail, title, status badge
+│       │   │   │   ├── SongStatusBadge.swift     # Color-coded processing status
+│       │   │   │   ├── ExerciseBrowserView.swift # Exercise categories
+│       │   │   │   ├── ExerciseSectionView.swift # Horizontal scroll section
+│       │   │   │   └── LibraryViewModel.swift    # Fetch songs, add song, poll status
+│       │   │   ├── Practice/
+│       │   │   │   ├── SongPracticeView.swift         # YouTube video + controls + loading overlay
+│       │   │   │   ├── ExercisePracticeView.swift     # Exercise practice (stub)
+│       │   │   │   ├── PracticeViewModel.swift        # Playback state, loop machine, sync coordination
+│       │   │   │   ├── PracticeViewModel+Audio.swift  # Audio mode switching (pause-switch-resume)
+│       │   │   │   ├── ControlsBarView.swift          # Layout: timeline + transport + source/loop + speed
+│       │   │   │   ├── PlaybackControlsView.swift     # Skip back, play/pause, skip forward
+│       │   │   │   ├── LoopControlsView.swift         # A/B markers, clear loop, loop count
+│       │   │   │   ├── TimelineBarView.swift          # Scrubber with A/B markers
+│       │   │   │   ├── SpeedSelectorView.swift        # 0.25x–2.0x discrete speed steps
+│       │   │   │   └── LoopState.swift                # Enum: idle, playing, settingA, settingAB, looping, paused
+│       │   │   ├── Sessions/
+│       │   │   │   ├── SessionHistoryView.swift  # List with infinite scroll
+│       │   │   │   ├── SessionDetailView.swift   # Score, duration, loop points
+│       │   │   │   ├── SessionRowView.swift      # Date, song, duration, score
+│       │   │   │   └── SessionsViewModel.swift   # Fetch + paginate sessions
+│       │   │   └── Settings/
+│       │   │       ├── SettingsView.swift         # Account, audio, theme, about
+│       │   │       ├── SettingsViewModel.swift    # Account management
+│       │   │       ├── ProfileView.swift          # Read-only profile display
+│       │   │       └── DeveloperView.swift        # Debug tools (dev builds only)
 │       │   ├── Audio/
-│       │   │   ├── PitchDetector.swift      # YIN implementation
-│       │   │   ├── AudioEngineManager.swift # AVAudioEngine setup
-│       │   │   └── StemPlayer.swift         # Multi-stem playback
+│       │   │   ├── StemPlayer.swift        # AVAudioEngine graph, engine recovery
+│       │   │   ├── StemDownloader.swift    # Presigned URL fetch + cache to disk
+│       │   │   ├── VideoAudioSync.swift   # YouTube-as-master sync (300ms/2s)
+│       │   │   └── AudioMode.swift        # Enum: original, vocalsOnly, instrumental
 │       │   ├── YouTube/
-│       │   │   ├── YouTubePlayerView.swift  # WKWebView wrapper
-│       │   │   └── youtube-player.html      # IFrame API template
+│       │   │   ├── YouTubePlayerView.swift      # SwiftUI WKWebView wrapper
+│       │   │   ├── YouTubePlayerController.swift # Playback control via JS bridge
+│       │   │   ├── YouTubeBridge.swift           # WKScriptMessageHandler (ytEvent)
+│       │   │   ├── YouTubeHTML.swift             # IFrame API HTML template
+│       │   │   ├── YouTubeLocalServer.swift      # WKURLSchemeHandler for local HTML
+│       │   │   ├── VideoPlayerProtocol.swift     # Protocol for player abstraction
+│       │   │   └── WebViewPrewarmer.swift        # Pre-warm WKWebView with canvas keep-alive
 │       │   ├── Networking/
-│       │   │   ├── APIClient.swift
-│       │   │   └── Models/         # Codable API models
+│       │   │   ├── APIClientProtocol.swift  # Protocol for all API endpoints
+│       │   │   ├── APIClient.swift          # URLSession implementation, auto 401 refresh
+│       │   │   ├── APIEndpoint.swift        # Endpoint enum (path, method, body)
+│       │   │   ├── APIError.swift           # Backend error shape
+│       │   │   ├── TokenManager.swift       # Keychain JWT storage
+│       │   │   ├── MockAPIClient.swift      # Fixture data for previews/tests
+│       │   │   └── Models/
+│       │   │       ├── AuthModels.swift          # AuthResponse, AuthUser, request DTOs
+│       │   │       ├── SongModels.swift          # SongResponse, StemResponse, enums
+│       │   │       ├── SessionModels.swift       # SessionResponse, CreateSessionRequest
+│       │   │       └── PaginatedResponse.swift   # Generic PaginatedResponse<T>
 │       │   └── Utilities/
+│       │       ├── Logger.swift              # os.Logger wrapper (AppLogger)
+│       │       ├── DriftLogger.swift         # Debug-build sync drift logging
+│       │       └── YouTubeURLValidator.swift # YouTube URL regex validation
 │       ├── IntonavioTests/
-│       └── Intonavio.xcodeproj
+│       │   ├── Audio/
+│       │   │   ├── StemPlayerTests.swift
+│       │   │   └── VideoAudioSyncTests.swift
+│       │   ├── Auth/
+│       │   │   └── AuthViewModelTests.swift
+│       │   ├── Library/
+│       │   │   └── LibraryViewModelTests.swift
+│       │   ├── Networking/
+│       │   │   ├── APIClientTests.swift
+│       │   │   └── CodableModelTests.swift
+│       │   ├── Sessions/
+│       │   │   └── SessionsViewModelTests.swift
+│       │   └── Utilities/
+│       │       └── YouTubeURLValidatorTests.swift
+│       └── Intonavio.xcodeproj        # Generated by XcodeGen
 │
 ├── packages/
 │   └── shared/                     # Shared TypeScript types
@@ -125,7 +185,7 @@ intonavio/
 ├── docs/                           # This documentation
 │   ├── 01-overview.md
 │   ├── ...
-│   └── 11-spikes.md
+│   └── 16-ui-views-flow.md
 │
 ├── docker-compose.dev.yml          # Local dev: PostgreSQL + Redis only
 ├── docker-compose.prod.yml         # Production: all services
@@ -230,6 +290,9 @@ graph TD
 
 ### iOS Development
 
+- Project managed by XcodeGen (`apps/ios/project.yml`)
+- Run `cd apps/ios && xcodegen generate` after adding/removing files
 - Open `apps/ios/Intonavio.xcodeproj` in Xcode
 - Requires Xcode 15+ and iOS 17+ simulator or device
+- SwiftLint runs as a build phase (strict: 300 lines/file, 40 lines/function)
 - No Turborepo integration — developed separately in Xcode

@@ -1,0 +1,79 @@
+excluded:
+  - .build
+  - DerivedData
+
+disabled_rules:
+  - trailing_comma
+  - blanket_disable_command
+
+opt_in_rules:
+  - closure_body_length
+  - closure_end_indentation
+  - closure_spacing
+  - collection_alignment
+  - contains_over_filter_count
+  - contains_over_first_not_nil
+  - convenience_type
+  - discouraged_optional_boolean
+  - empty_collection_literal
+  - empty_count
+  - empty_string
+  - enum_case_associated_values_count
+  - fatal_error_message
+  - first_where
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - last_where
+  - literal_expression_end_indentation
+  - multiline_arguments
+  - multiline_parameters
+  - operator_usage_whitespace
+  - overridden_super_call
+  - prefer_self_in_static_references
+  - prefer_zero_over_explicit_init
+  - redundant_nil_coalescing
+  - redundant_type_annotation
+  - sorted_first_last
+  - toggle_bool
+  - unneeded_parentheses_in_closure_argument
+  - vertical_parameter_alignment_on_call
+
+file_length:
+  warning: 300
+  error: 350
+
+function_body_length:
+  warning: 40
+  error: 50
+
+type_body_length:
+  warning: 200
+  error: 250
+
+cyclomatic_complexity:
+  warning: 10
+  error: 15
+
+nesting:
+  type_level: 3
+  function_level: 3
+
+line_length:
+  warning: 120
+  error: 150
+  ignores_urls: true
+  ignores_comments: false
+
+identifier_name:
+  min_length:
+    warning: 2
+  excluded:
+    - id
+    - a
+    - b
+    - x
+    - y
+    - i
+    - js
+    - vm
+    - dt

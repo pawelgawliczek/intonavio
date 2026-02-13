@@ -1,0 +1,65 @@
+name: Intonavio
+options:
+  bundleIdPrefix: com.intonavio
+  deploymentTarget:
+    iOS: '17.0'
+  generateEmptyDirectories: true
+  groupSortPosition: top
+
+settings:
+  base:
+    SWIFT_VERSION: '5.9'
+    SWIFT_STRICT_CONCURRENCY: complete
+    DEVELOPMENT_TEAM: BSDVBGN72H
+    CODE_SIGN_STYLE: Automatic
+
+targets:
+  Intonavio:
+    type: application
+    platform: iOS
+    sources:
+      - path: Intonavio
+    info:
+      path: Intonavio/Info.plist
+      properties:
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: true
+          UISceneConfigurations: {}
+        NSMicrophoneUsageDescription: 'Intonavio needs microphone access to detect your singing pitch in real-time.'
+        NSLocalNetworkUsageDescription: 'Intonavio uses a local server to load the YouTube player.'
+    entitlements:
+      path: Intonavio/Intonavio.entitlements
+      properties:
+        com.apple.developer.applesignin:
+          - Default
+    settings:
+      base:
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: 'UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight'
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: 'UIInterfaceOrientationPortrait'
+        PRODUCT_BUNDLE_IDENTIFIER: com.intonavio.app
+        MARKETING_VERSION: '1.0.0'
+        CURRENT_PROJECT_VERSION: 1
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        SUPPORTED_PLATFORMS: 'iphoneos iphonesimulator'
+        SUPPORTS_MACCATALYST: false
+        SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: false
+      configs:
+        Debug:
+          API_BASE_URL: 'https://api.intonavio.pawelgawliczek.cloud/v1'
+        Release:
+          API_BASE_URL: 'https://api.intonavio.pawelgawliczek.cloud/v1'
+
+  IntonavioTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: IntonavioTests
+    dependencies:
+      - target: Intonavio
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: true
+        PRODUCT_BUNDLE_IDENTIFIER: com.intonavio.app.tests
+        TEST_HOST: '$(BUILT_PRODUCTS_DIR)/Intonavio.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Intonavio'
+        BUNDLE_LOADER: '$(TEST_HOST)'

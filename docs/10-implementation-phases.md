@@ -181,34 +181,46 @@ graph LR
 
 ---
 
-### Phase 4: iOS Core
+### Phase 4: iOS Core ✅ COMPLETE
 
-**Goal:** iOS app with authentication, song library, YouTube playback, and A-B looping.
+**Goal:** iOS app with authentication, song library, YouTube playback, A-B looping, and stem playback.
+
+> **Status:** All 11 sub-phases implemented and verified. 58 unit tests passing, SwiftLint strict clean (0 warnings), all files under 300 lines. Xcode project managed via XcodeGen (`project.yml`). Deployed to device, verified: Apple Sign In, song add + processing, YouTube playback with A-B looping, stem download + vocals/instrumental switching, session auto-save. See `docs/implementation_plans/ios-core.md` for detailed sub-phase breakdown.
 
 **Deliverables:**
 
-- SwiftUI app with 3-tab navigation (Library, Sessions, Settings), MVVM architecture (see `docs/12-code-quality.md` — SwiftUI rules, `docs/16-ui-views-flow.md` for all 11 views)
+- SwiftUI app with 3-tab navigation (Library, Sessions, Settings), MVVM architecture (see `docs/12-code-quality.md` — SwiftUI rules, `docs/16-ui-views-flow.md`)
+- XcodeGen-managed project (`project.yml`) with development team, Info.plist keys, and signing all persisted across regenerations
 - `@Observable` macro (iOS 17+) for all ViewModels, not `ObservableObject`
-- Auth views: Sign In (Apple/Google/Email) and Sign Up
-- Home view with song library grid + exercises section (horizontal scrollable categories)
-- Add Song sheet with URL input, validation, and processing progress
-- Exercise Browser for community exercises with category/difficulty filters
+- Auth views: Sign In (Apple/Email) and Sign Up. Google Sign In deferred (requires SDK + web redirect)
+- Home view with song library grid + exercises placeholder section
+- Add Song sheet with YouTube URL validation and processing progress polling
 - Apple Sign In integration with backend JWT via `APIClientProtocol` (protocol-oriented for testability)
-- YouTube player in WKWebView with JS bridge via `VideoPlayerProtocol` adapter (see `docs/02-architecture.md` — External Service Isolation)
-- A-B loop controls with visual markers on timeline (see `docs/07-youtube-looping.md`)
-- Stem playback via AVAudioEngine with audio mode toggle
-- Video-audio sync mechanism with drift logging (see `docs/13-observability.md` — iOS Client debugging)
-- `AVAudioSession` configured once at app startup with interruption handling
+- Token refresh flow: intercept 401 → refresh → retry once → on failure clear Keychain + sign out
+- YouTube player in WKWebView with JS bridge via `VideoPlayerProtocol` adapter, served from local NWListener HTTP server
+- WKWebView pre-warming at app launch via shared `WKProcessPool` with canvas keep-alive page to prevent GPU/WebContent IdleExit
+- A-B loop controls with draggable markers on timeline (translation-based drag to prevent feedback loops)
+- Stem playback via AVAudioEngine graph: `AVAudioPlayerNode` per stem → `AVAudioMixerNode` → `AVAudioUnitTimePitch` → output
+- Three audio source buttons inline in controls bar: speaker (YouTube original), mic (vocals only), guitars (instrumental only)
+- `AVAudioSession` configured with `.playAndRecord`, `.measurement`, `.mixWithOthers` to prevent YouTube/AVAudioEngine interruption conflicts
+- `StemPlayer` with automatic engine restart on audio session interruption via `ensureEngineRunning()`
+- Pause-switch-resume pattern for audio mode transitions to prevent sync race conditions
+- Video-audio sync: YouTube is master clock, stems follow. 300ms drift threshold, 2s poll interval (see `docs/07-youtube-looping.md`)
+- Stem download with local cache (`Caches/stems/{songId}/`) — persists across app launches
+- Session auto-save on practice exit after 10s+ of playback
+- Loading overlay ("Preparing player...") shown until YouTube IFrame fires `onReady`
+- DEBUG-only Developer Tools screen in Settings: API status, token inspection, quick add song, force refresh
 - `Codable` structs mirroring API response shapes, no manual JSON parsing
 - `async/await` and `Task` for all async work, tasks cancelled when views disappear
 - SwiftUI previews for every view with mock data
-- Network request logging in debug builds
+- Network request logging in debug builds via `os.Logger` wrappers
 
 **Quality gates:**
 
-- SwiftLint strict passes, no warnings
-- Max 150 lines per View, 40 lines per method, cyclomatic complexity ≤ 10
-- Audio thread (`installTap` callback): no allocation, no locks, no UI updates
+- SwiftLint strict passes, no warnings (file_length: 300, function_body_length: 40, type_body_length: 200, cyclomatic_complexity: 10, nesting: 3)
+- 58 unit tests: APIClient, Codable models, Auth, Library, YouTube URL validator, StemPlayer, VideoAudioSync, Sessions
+- No `print()` — all logging via `AppLogger` (`os.Logger` subsystem)
+- Audio thread safety: `installTap` callback — no allocation, no locks, no UI updates
 
 ---
 

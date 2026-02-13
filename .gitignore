@@ -39,7 +39,8 @@ venv/
 *.egg-info/
 
 # iOS
-*.xcuserdata
+xcuserdata/
+*.xcuserstate
 DerivedData/
 *.ipa
 *.dSYM.zip
