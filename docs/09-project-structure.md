@@ -30,6 +30,7 @@ intonavio/
 │   │   │   ├── test/               # Shared test utilities
 │   │   │   │   ├── test-utils.ts   # App builder, JWT generator, mock factories
 │   │   │   │   └── fixtures/       # Test data (songs, webhooks)
+│   │   │   ├── instrument.ts       # Sentry init (before NestJS boot)
 │   │   │   └── main.ts
 │   │   ├── prisma/
 │   │   │   ├── schema.prisma
@@ -104,6 +105,7 @@ intonavio/
 │       │   ├── models.py           # Pydantic models (job data, output)
 │       │   ├── consumer.py         # BullMQ Worker wrapper + heartbeat
 │       │   ├── analyzer.py         # pYIN pitch extraction via librosa
+│       │   ├── sentry_setup.py     # Sentry init + job exception capture
 │       │   ├── storage.py          # R2 download/upload via boto3
 │       │   ├── db.py               # PostgreSQL upserts via psycopg2
 │       │   └── worker.py           # Job orchestrator + main()

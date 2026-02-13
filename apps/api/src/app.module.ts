@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { BullModule } from '@nestjs/bullmq';
+import { SentryModule } from '@sentry/nestjs/setup';
 import { LoggerModule } from 'nestjs-pino';
 import { validate } from './common/config/env.validation';
 import { createLoggerConfig } from './common/logger/logger.config';
@@ -16,6 +17,7 @@ import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
+    SentryModule.forRoot(),
     ConfigModule.forRoot({ isGlobal: true, validate }),
     LoggerModule.forRoot(createLoggerConfig()),
     BullModule.forRootAsync({

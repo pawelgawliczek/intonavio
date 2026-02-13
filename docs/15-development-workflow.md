@@ -4,8 +4,8 @@
 
 ### Repository
 
-- Remote: GitHub (`github.com/<org>/intonavio`)
-- Default branch: `main` (protected — requires PR with passing CI)
+- Remote: GitHub (`github.com/pawelgawliczek/intonavio`)
+- Default branch: `main` — squash merge only, auto-delete branches on merge. Branch protection rules (required CI checks) pending GitHub Pro upgrade for private repos.
 - Branch naming: `feat/description`, `fix/description`, `spike/description`
 
 ### Commits

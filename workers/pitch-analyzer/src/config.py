@@ -26,6 +26,9 @@ class WorkerConfig(BaseSettings):
     # Validation thresholds
     max_unvoiced_ratio: float = 0.9
 
+    # Sentry (empty = disabled)
+    sentry_dsn: str = ""
+
     # Worker behavior
     heartbeat_interval_seconds: int = 60
     queue_name: str = "pitch-analysis"

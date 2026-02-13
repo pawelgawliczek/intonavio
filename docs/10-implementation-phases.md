@@ -157,25 +157,27 @@ graph LR
 
 ---
 
-### Phase 3: Infrastructure & CI/CD
+### Phase 3: Infrastructure & CI/CD ✅ COMPLETE
 
 **Goal:** Automated build/test/deploy pipeline and production infrastructure.
 
+> **Status:** All deliverables implemented. CI workflow (lint + test + Docker build for api/web/worker), deploy workflow (builds and pushes api + worker images to ghcr.io, deploys to Hostinger with health checks), backup workflow (daily pg_dump to R2). Sentry error monitoring integrated in API (`@sentry/nestjs` with 5xx capture and traceId/userId tags) and worker (`sentry-sdk` with job exception capture and traceId/songId tags). Docker build contexts configured correctly for worker (uses `./workers/pitch-analyzer` context). Repo configured for squash-merge only with auto-delete branches. Branch protection rules (required status checks) require GitHub Pro for private repos — not yet enabled.
+
 **Deliverables:**
 
-- CI workflow (`ci.yml`): pnpm install → lint → test → coverage check → build → Docker image build on every PR (see `docs/15-development-workflow.md`)
-- Deploy workflow (`deploy.yml`): build images → push to ghcr.io → SSH to Hostinger → pull + up → migrate → health check on merge to `main`
+- CI workflow (`ci.yml`): pnpm install → lint → test → coverage check → build → Docker image build (api, web, worker with correct build contexts) on every PR (see `docs/15-development-workflow.md`)
+- Deploy workflow (`deploy.yml`): build api + worker images → push to ghcr.io → SSH to Hostinger → pull + up → migrate → health check on merge to `main`
 - Backup workflow (`backup.yml`): daily pg_dump → R2, retain 30 days
 - Docker Compose production setup with all containers: api, web, worker, postgres, redis on `stack_appnet` network (see `docs/08-infrastructure.md`)
 - Caddy reverse proxy with automatic TLS (shared instance at `/opt/caddy` on Hostinger)
-- Sentry integration for API, worker, iOS, and web with `traceId` tags (see `docs/13-observability.md` — Error Reporting)
+- Sentry integration for API and worker with `traceId` tags — no-op when `SENTRY_DSN` is empty (see `docs/13-observability.md` — Error Reporting)
 - Coverage thresholds enforced in CI: 80% overall, 95% algorithmic, 80% new code in PR (see `docs/12-code-quality.md`)
 - All linter configs: ESLint strict + sonarjs, SwiftLint strict, Ruff + mypy strict — warnings treated as errors
 
 **Quality gates:**
 
-- `main` branch protected: requires PR with passing CI
-- Squash merge only for clean history
+- Repo configured for squash merge only, auto-delete branches on merge
+- Branch protection (required CI checks before merge) pending GitHub Pro upgrade
 
 ---
 

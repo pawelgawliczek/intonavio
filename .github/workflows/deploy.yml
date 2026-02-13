@@ -22,9 +22,13 @@ jobs:
     strategy:
       matrix:
         service:
-          - { name: api, dockerfile: apps/api/Dockerfile }
-          # - { name: web, dockerfile: apps/web/Dockerfile }        # Not yet implemented
-          # - { name: worker, dockerfile: workers/pitch-analyzer/Dockerfile }  # Not yet implemented
+          - { name: api, context: '.', dockerfile: apps/api/Dockerfile }
+          - {
+              name: worker,
+              context: './workers/pitch-analyzer',
+              dockerfile: workers/pitch-analyzer/Dockerfile,
+            }
+          # - { name: web, context: '.', dockerfile: apps/web/Dockerfile }  # Not yet implemented
 
     steps:
       - uses: actions/checkout@v4
@@ -39,7 +43,7 @@ jobs:
       - name: Build and push ${{ matrix.service.name }}
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ${{ matrix.service.context }}
           file: ${{ matrix.service.dockerfile }}
           push: true
           tags: ${{ env.IMAGE_PREFIX }}/${{ matrix.service.name }}:latest,${{ env.IMAGE_PREFIX }}/${{ matrix.service.name }}:${{ github.sha }}
@@ -58,9 +62,10 @@ jobs:
           key: ${{ secrets.HOSTINGER_SSH_KEY }}
           script: |
             cd /opt/intonavio
-            docker compose pull api
+            docker compose pull api worker
             docker compose up -d
             sleep 10
             docker exec intonavio-api-1 npx prisma migrate deploy
             sleep 5
             curl -sf https://api.intonavio.pawelgawliczek.cloud/v1/health || exit 1
+            docker logs --tail 5 intonavio-worker-1 2>&1 || echo "Warning: could not read worker logs"

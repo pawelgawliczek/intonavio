@@ -18,6 +18,7 @@ from src.consumer import create_worker, run_heartbeat
 from src.db import complete_pitch_analysis, create_connection, mark_song_failed
 from src.logger import get_logger, log_with_context
 from src.models import PitchAnalysisJobData, PitchAnalysisOutput
+from src.sentry_setup import capture_job_exception, init_sentry
 from src.storage import create_s3_client, download_stem, upload_pitch_json
 
 logger = get_logger(__name__)
@@ -103,6 +104,7 @@ async def handle_job(job: Job[Any], token: str | None = None) -> None:
     try:
         await loop.run_in_executor(executor, _process_job, job_data, config)
     except Exception as exc:
+        capture_job_exception(exc, job_data.trace_id, job_data.song_id)
         log_with_context(
             logger,
             logging.ERROR,
@@ -141,6 +143,7 @@ async def handle_job(job: Job[Any], token: str | None = None) -> None:
 async def main() -> None:
     """Start the worker, heartbeat, and wait for shutdown signal."""
     config = WorkerConfig()
+    init_sentry(config)
     stop_event = asyncio.Event()
 
     log_with_context(

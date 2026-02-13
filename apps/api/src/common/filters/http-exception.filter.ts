@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
+import * as Sentry from '@sentry/nestjs';
 import type { Request, Response } from 'express';
 
 interface ErrorResponseBody {
@@ -42,6 +43,23 @@ export class HttpExceptionFilter implements ExceptionFilter {
         path: request.url,
         method: request.method,
         error: exception instanceof Error ? exception.stack : undefined,
+      });
+
+      Sentry.withScope((scope) => {
+        scope.setTag('traceId', traceId ?? 'unknown');
+        scope.setTag('path', request.url);
+        scope.setTag('method', request.method);
+
+        const user = (request as Record<string, unknown>)['user'] as { id?: string } | undefined;
+        if (user?.id) {
+          scope.setTag('userId', user.id);
+        }
+
+        if (exception instanceof Error) {
+          Sentry.captureException(exception);
+        } else {
+          Sentry.captureMessage(message, 'error');
+        }
       });
     } else {
       this.logger.warn(message, {

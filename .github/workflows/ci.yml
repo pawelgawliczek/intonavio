@@ -102,12 +102,16 @@ jobs:
     strategy:
       matrix:
         service:
-          - { name: api, dockerfile: apps/api/Dockerfile }
-          - { name: web, dockerfile: apps/web/Dockerfile }
-          - { name: worker, dockerfile: workers/pitch-analyzer/Dockerfile }
+          - { name: api, context: '.', dockerfile: apps/api/Dockerfile }
+          - { name: web, context: '.', dockerfile: apps/web/Dockerfile }
+          - {
+              name: worker,
+              context: './workers/pitch-analyzer',
+              dockerfile: workers/pitch-analyzer/Dockerfile,
+            }
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Build ${{ matrix.service.name }} image
-        run: docker build -f ${{ matrix.service.dockerfile }} .
+        run: docker build -f ${{ matrix.service.dockerfile }} ${{ matrix.service.context }}
