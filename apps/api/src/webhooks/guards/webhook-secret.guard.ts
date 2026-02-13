@@ -1,5 +1,8 @@
+import { createHmac, timingSafeEqual } from 'node:crypto';
+
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import type { RawBodyRequest } from '@nestjs/common';
 import type { Request } from 'express';
 
 @Injectable()
@@ -11,11 +14,25 @@ export class WebhookSecretGuard implements CanActivate {
   }
 
   canActivate(context: ExecutionContext): boolean {
-    const request = context.switchToHttp().getRequest<Request>();
-    const headerSecret = request.headers['x-webhook-secret'];
+    const request = context.switchToHttp().getRequest<RawBodyRequest<Request>>();
+    const signature = request.headers['x-webhook-signature'];
 
-    if (!headerSecret || headerSecret !== this.secret) {
-      throw new UnauthorizedException('Invalid webhook secret');
+    if (!signature || typeof signature !== 'string') {
+      throw new UnauthorizedException('Missing X-Webhook-Signature header');
+    }
+
+    const rawBody = request.rawBody;
+    if (!rawBody) {
+      throw new UnauthorizedException('Missing raw body for signature verification');
+    }
+
+    const expectedSignature = `sha256=${createHmac('sha256', this.secret).update(rawBody).digest('hex')}`;
+
+    const sigBuffer = Buffer.from(signature);
+    const expectedBuffer = Buffer.from(expectedSignature);
+
+    if (sigBuffer.length !== expectedBuffer.length || !timingSafeEqual(sigBuffer, expectedBuffer)) {
+      throw new UnauthorizedException('Invalid webhook signature');
     }
 
     return true;

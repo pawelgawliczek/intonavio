@@ -1,5 +1,4 @@
 import { Inject, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Processor, WorkerHost, OnWorkerEvent } from '@nestjs/bullmq';
 import type { Job } from 'bullmq';
 
@@ -12,15 +11,12 @@ import { STEM_SPLIT_QUEUE } from '../jobs.constants';
 @Processor(STEM_SPLIT_QUEUE)
 export class StemSplitProcessor extends WorkerHost {
   private readonly logger = new Logger(StemSplitProcessor.name);
-  private readonly webhookUrl: string;
 
   constructor(
     private readonly prisma: PrismaService,
     @Inject(STEMSPLIT_ADAPTER) private readonly stemSplit: StemSplitAdapter,
-    config: ConfigService,
   ) {
     super();
-    this.webhookUrl = config.getOrThrow<string>('STEMSPLIT_WEBHOOK_URL');
   }
 
   async process(job: Job<StemSplitJobData>): Promise<string> {
@@ -41,7 +37,7 @@ export class StemSplitProcessor extends WorkerHost {
       return song.externalJobId;
     }
 
-    const externalJobId = await this.stemSplit.createJob(youtubeUrl, this.webhookUrl);
+    const externalJobId = await this.stemSplit.createJob(youtubeUrl);
 
     await this.prisma.song.update({
       where: { id: songId },

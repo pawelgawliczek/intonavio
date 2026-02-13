@@ -1,5 +1,5 @@
 export interface StemSplitAdapter {
-  createJob(youtubeUrl: string, webhookUrl: string): Promise<string>;
+  createJob(youtubeUrl: string): Promise<string>;
   downloadStem(downloadUrl: string): Promise<Buffer>;
 }
 

@@ -1,5 +1,4 @@
 import { Test } from '@nestjs/testing';
-import { ConfigService } from '@nestjs/config';
 
 import { PrismaService } from '../../prisma/prisma.service';
 import { STEMSPLIT_ADAPTER } from '../adapters/stemsplit.interface';
@@ -15,10 +14,6 @@ const mockPrisma = {
 const mockStemSplit = {
   createJob: jest.fn(),
   downloadStem: jest.fn(),
-};
-
-const mockConfig = {
-  getOrThrow: jest.fn().mockReturnValue('https://api.intonavio.com/v1/webhooks/stemsplit'),
 };
 
 function createJob(overrides: Record<string, unknown> = {}): Record<string, unknown> {
@@ -47,7 +42,6 @@ describe('StemSplitProcessor', () => {
         StemSplitProcessor,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: STEMSPLIT_ADAPTER, useValue: mockStemSplit },
-        { provide: ConfigService, useValue: mockConfig },
       ],
     }).compile();
 
@@ -68,10 +62,7 @@ describe('StemSplitProcessor', () => {
       const result = await processor.process(job as never);
 
       expect(result).toBe('ss_ext_123');
-      expect(mockStemSplit.createJob).toHaveBeenCalledWith(
-        'https://youtube.com/watch?v=abc123',
-        'https://api.intonavio.com/v1/webhooks/stemsplit',
-      );
+      expect(mockStemSplit.createJob).toHaveBeenCalledWith('https://youtube.com/watch?v=abc123');
       expect(mockPrisma.song.update).toHaveBeenCalledWith({
         where: { id: 'song-1' },
         data: { status: 'SPLITTING', externalJobId: 'ss_ext_123' },

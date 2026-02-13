@@ -18,7 +18,7 @@ export class StemSplitService implements StemSplitAdapter {
     this.apiKey = this.config.getOrThrow<string>('STEMSPLIT_API_KEY');
   }
 
-  async createJob(youtubeUrl: string, webhookUrl: string): Promise<string> {
+  async createJob(youtubeUrl: string): Promise<string> {
     const response = await fetch(`${this.apiUrl}/api/v1/youtube-jobs`, {
       method: 'POST',
       headers: {
@@ -30,7 +30,6 @@ export class StemSplitService implements StemSplitAdapter {
         outputType: 'SIX_STEMS',
         outputFormat: 'MP3',
         quality: 'BEST',
-        webhookUrl,
       }),
     });
 

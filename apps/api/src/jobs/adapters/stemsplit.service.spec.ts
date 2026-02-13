@@ -36,10 +36,7 @@ describe('StemSplitService', () => {
         json: async () => ({ job_id: 'ss_job_789' }),
       });
 
-      const jobId = await service.createJob(
-        'https://youtube.com/watch?v=abc',
-        'https://api.intonavio.com/v1/webhooks/stemsplit',
-      );
+      const jobId = await service.createJob('https://youtube.com/watch?v=abc');
 
       expect(jobId).toBe('ss_job_789');
       expect(mockFetch).toHaveBeenCalledWith(
@@ -55,7 +52,6 @@ describe('StemSplitService', () => {
             outputType: 'SIX_STEMS',
             outputFormat: 'MP3',
             quality: 'BEST',
-            webhookUrl: 'https://api.intonavio.com/v1/webhooks/stemsplit',
           }),
         }),
       );
@@ -68,9 +64,9 @@ describe('StemSplitService', () => {
         text: async () => 'Invalid YouTube URL',
       });
 
-      await expect(
-        service.createJob('bad-url', 'https://api.intonavio.com/v1/webhooks/stemsplit'),
-      ).rejects.toThrow('StemSplit API returned 422: Invalid YouTube URL');
+      await expect(service.createJob('bad-url')).rejects.toThrow(
+        'StemSplit API returned 422: Invalid YouTube URL',
+      );
     });
   });
 
