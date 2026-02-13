@@ -205,7 +205,7 @@ Worker fails → Job marked FAILED in DB → song.errorMessage set
 - One module = one domain aggregate. `SongsModule` owns songs and library membership. `StemsModule` owns stems and presigned URLs. `SessionsModule` owns practice sessions. `JobsModule` owns BullMQ producers and processors. `StorageModule` owns R2 interactions. `HealthModule` owns health checks.
 - Cross-module communication via exported services only. `SongsModule` imports `JobsModule` (for enqueuing stem-split). `WebhooksModule` imports `StemsModule` and `JobsModule`. Never import a repository or entity from another module directly.
 - No circular dependencies. If A needs B and B needs A, extract the shared concern into a new module C.
-- Webhook module is a thin router. It validates the payload with `WebhookSecretGuard` (checks `x-webhook-secret` header) and delegates to `WebhooksService`. No business logic in webhook handlers.
+- Webhook module is a thin router. It validates the payload with `WebhookSecretGuard` (HMAC-SHA256 via `X-Webhook-Signature` header) and delegates to `WebhooksService`. No business logic in webhook handlers.
 - `PrismaModule` and `ConfigModule` are global — available to all modules without explicit imports.
 
 ### Client Architecture Rules (iOS + Web)

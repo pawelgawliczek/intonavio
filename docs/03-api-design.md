@@ -108,14 +108,14 @@ sequenceDiagram
         API-->>Client: 202 { song (status: QUEUED) }
     end
 
-    Queue->>SS: POST /api/v1/youtube-jobs { youtube_url, split_type }
-    SS-->>Queue: { job_id }
+    Queue->>SS: POST /api/v1/youtube-jobs { youtubeUrl, outputFormat, quality }
+    SS-->>Queue: { id }
     Queue->>DB: Update song (status: SPLITTING, externalJobId)
 
-    Note over SS: Processing (1-5 min)
+    Note over SS: Processing (1-2 min)
 
-    SS->>API: POST /webhooks/stemsplit { job_id, status, stems[] }
-    API->>R2: Upload stems (vocals.mp3, drums.mp3, bass.mp3, ...)
+    SS->>API: POST /webhooks/stemsplit { event, data: { jobId, outputs } }
+    API->>R2: Upload stems (vocals.mp3, instrumental.mp3)
     API->>DB: Create Stem records, update song (status: ANALYZING)
     API->>Queue: Enqueue pitch-analysis job
 

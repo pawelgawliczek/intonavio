@@ -140,13 +140,13 @@ Must exist before Songs (which enqueues jobs) and Webhooks (which processes resu
 
 **Create (5 files):**
 
-| File                                          | Contents                                                                                                                                                                |
-| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/jobs/interfaces/job-data.interface.ts`   | `StemSplitJobData { songId, videoId, youtubeUrl, traceId }`, `PitchAnalysisJobData { songId, vocalStemKey, traceId }`                                                   |
-| `src/jobs/adapters/stemsplit.interface.ts`    | `StemSplitAdapter` interface: `createJob(youtubeUrl, webhookUrl): Promise<string>`, `downloadStem(downloadUrl): Promise<Buffer>`                                        |
-| `src/jobs/adapters/stemsplit.service.ts`      | HTTP adapter using `fetch`. POST to StemSplit API with `{ youtubeUrl, outputType: 'SIX_STEMS', outputFormat: 'MP3', quality: 'BEST', webhookUrl }`. Bearer auth.        |
-| `src/jobs/processors/stem-split.processor.ts` | `@Processor('stem-split')`: calls StemSplit API, updates song status to SPLITTING, saves externalJobId. 3 retries exponential backoff. On error: FAILED + errorMessage. |
-| `src/jobs/jobs.service.ts`                    | Queue producers: `enqueueStemSplit(data)`, `enqueuePitchAnalysis(data)` with retry config `{ attempts: 3, backoff: { type: 'exponential', delay: 5000 } }`              |
+| File                                          | Contents                                                                                                                                                                  |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/jobs/interfaces/job-data.interface.ts`   | `StemSplitJobData { songId, videoId, youtubeUrl, traceId }`, `PitchAnalysisJobData { songId, vocalStemKey, traceId }`                                                     |
+| `src/jobs/adapters/stemsplit.interface.ts`    | `StemSplitAdapter` interface: `createJob(youtubeUrl): Promise<string>`, `downloadStem(downloadUrl): Promise<Buffer>`                                                      |
+| `src/jobs/adapters/stemsplit.service.ts`      | HTTP adapter using `fetch`. POST to StemSplit API with `{ youtubeUrl, outputFormat: 'MP3', quality: 'BEST' }`. Bearer auth. Webhooks registered separately via dashboard. |
+| `src/jobs/processors/stem-split.processor.ts` | `@Processor('stem-split')`: calls StemSplit API, updates song status to SPLITTING, saves externalJobId. 3 retries exponential backoff. On error: FAILED + errorMessage.   |
+| `src/jobs/jobs.service.ts`                    | Queue producers: `enqueueStemSplit(data)`, `enqueuePitchAnalysis(data)` with retry config `{ attempts: 3, backoff: { type: 'exponential', delay: 5000 } }`                |
 
 **Modify:** `src/jobs/jobs.module.ts` — Register BullMQ queues (`stem-split`, `pitch-analysis`), wire processors/services
 
@@ -224,8 +224,8 @@ The critical integration point — receives StemSplit callbacks, downloads stems
 
 | File                                          | Contents                                                                                                                                                                                                                                               |
 | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `src/webhooks/dto/stemsplit-webhook.dto.ts`   | `{ job_id, status ('completed'\|'failed'), error_message?, stems[]? { type, download_url } }` with class-validator decorators                                                                                                                          |
-| `src/webhooks/guards/webhook-secret.guard.ts` | Validates `x-webhook-secret` header against `STEMSPLIT_WEBHOOK_SECRET`                                                                                                                                                                                 |
+| `src/webhooks/dto/stemsplit-webhook.dto.ts`   | `{ event ('job.completed'\|'job.failed'), timestamp, data: { jobId, status, input?, outputs?, error? } }` with class-validator decorators                                                                                                              |
+| `src/webhooks/guards/webhook-secret.guard.ts` | Validates HMAC-SHA256 signature from `X-Webhook-Signature` header against `STEMSPLIT_WEBHOOK_SECRET` using raw request body                                                                                                                            |
 | `src/webhooks/stem-download.service.ts`       | Downloads stems from StemSplit URLs, uploads to R2, maps stem types. Also enqueues pitch analysis for vocal stem.                                                                                                                                      |
 | `src/webhooks/webhooks.service.ts`            | `handleStemSplitWebhook`: find song by externalJobId, if failed: mark FAILED. If completed: delegate to StemDownloadService → create Stem records → update status to ANALYZING → enqueue pitch-analysis job. Idempotent (skip if stems already exist). |
 | `src/webhooks/webhooks.controller.ts`         | `POST /webhooks/stemsplit` — `@Public()` + `@UseGuards(WebhookSecretGuard)`, returns `{ received: true }`                                                                                                                                              |
