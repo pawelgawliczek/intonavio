@@ -19,7 +19,6 @@ struct ControlsBarView: View {
                 Spacer()
                 LoopControlsView(viewModel: viewModel)
             }
-            SpeedSelectorView(viewModel: viewModel)
         }
     }
 }

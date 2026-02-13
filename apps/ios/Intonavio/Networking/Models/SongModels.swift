@@ -40,6 +40,7 @@ struct SongResponse: Codable, Sendable, Identifiable {
     let id: String
     let videoId: String
     let title: String
+    let artist: String?
     let thumbnailUrl: String
     let duration: Int
     let status: SongStatus

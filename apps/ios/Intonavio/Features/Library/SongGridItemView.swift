@@ -50,6 +50,12 @@ private extension SongGridItemView {
             Text(song.title)
                 .font(.caption)
                 .lineLimit(2)
+            if let artist = song.artist, !artist.isEmpty {
+                Text(artist)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
             if song.duration > 0 {
                 Text(formatDuration(song.duration))
                     .font(.caption2)

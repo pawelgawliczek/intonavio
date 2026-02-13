@@ -16,6 +16,7 @@ export interface SongResponse {
   readonly id: string;
   readonly videoId: string;
   readonly title: string;
+  readonly artist?: string;
   readonly thumbnailUrl: string;
   readonly duration: number;
   readonly status: SongStatus;

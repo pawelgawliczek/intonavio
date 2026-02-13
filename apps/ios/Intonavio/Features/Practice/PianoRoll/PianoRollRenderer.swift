@@ -16,7 +16,7 @@ enum PianoRollRenderer {
         let midiSpan = midiRange.upperBound - midiRange.lowerBound
         guard timeSpan > 0, midiSpan > 0 else { return }
 
-        for frame in frames where frame.isVoiced {
+        for frame in frames where frame.isVoiced && frame.isAudible {
             guard let midiNote = frame.midiNote else { continue }
             let midi = Float(midiNote) + transposeOffset
             guard midi >= midiRange.lowerBound, midi <= midiRange.upperBound else { continue }
@@ -46,7 +46,7 @@ enum PianoRollRenderer {
     ) {
         let path = buildPath(
             frames: frames.compactMap { frame -> (Double, Float)? in
-                guard frame.isVoiced, let midi = frame.midiNote else { return nil }
+                guard frame.isVoiced, frame.isAudible, let midi = frame.midiNote else { return nil }
                 return (frame.time, Float(midi) + transposeOffset)
             },
             rect: rect,

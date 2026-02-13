@@ -1,5 +1,13 @@
 import Foundation
 
+// MARK: - Score Change
+
+enum ScoreChange {
+    case better(Double)
+    case worse(Double)
+    case same
+}
+
 // MARK: - Loop Logic
 
 extension PracticeViewModel {
@@ -29,11 +37,43 @@ extension PracticeViewModel {
         }
 
         if currentTime >= b - 0.05 {
+            captureLoopScore()
+
             controller.seek(to: a)
             if isInStemMode {
                 stemPlayer.seek(to: a)
             }
             loopCount += 1
+        }
+    }
+
+    private func captureLoopScore() {
+        guard let engine = scoringEngine else { return }
+        let score = engine.overallScore
+        let previousScore = lastLoopScore
+
+        loopScores.append(score)
+        lastLoopScore = score
+
+        if let previous = previousScore {
+            let delta = score - previous
+            if abs(delta) < 0.5 {
+                loopScoreImprovement = .same
+            } else if delta > 0 {
+                loopScoreImprovement = .better(delta)
+            } else {
+                loopScoreImprovement = .worse(abs(delta))
+            }
+        } else {
+            loopScoreImprovement = nil
+        }
+
+        isShowingLoopScore = true
+        engine.reset()
+
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            self.isShowingLoopScore = false
         }
     }
 }

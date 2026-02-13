@@ -64,13 +64,24 @@ private extension SongPracticeView {
     /// Layout when pitch detection is active: video + piano roll split.
     func pitchLayout(_ vm: PracticeViewModel) -> some View {
         GeometryReader { geometry in
-            VStack(spacing: 0) {
-                videoPlayer(vm)
-                    .frame(height: geometry.size.height * vm.layoutMode.videoFraction)
-                Divider()
-                PianoRollSection(viewModel: vm)
-                Divider()
-                controlsSection(vm)
+            ZStack(alignment: .top) {
+                VStack(spacing: 0) {
+                    videoPlayer(vm)
+                        .frame(height: geometry.size.height * vm.layoutMode.videoFraction)
+                    Divider()
+                    PianoRollSection(viewModel: vm)
+                    Divider()
+                    controlsSection(vm)
+                }
+
+                if vm.isShowingLoopScore, let score = vm.lastLoopScore {
+                    LoopScoreToastView(
+                        score: score,
+                        change: vm.loopScoreImprovement
+                    )
+                    .padding(.top, geometry.size.height * vm.layoutMode.videoFraction + 12)
+                    .animation(.easeInOut(duration: 0.3), value: vm.isShowingLoopScore)
+                }
             }
         }
     }

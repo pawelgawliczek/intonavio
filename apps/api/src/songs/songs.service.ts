@@ -5,7 +5,7 @@ import type { PaginatedResponse } from '../common/dto/pagination.dto';
 import { JobsService } from '../jobs/jobs.service';
 import { PrismaService } from '../prisma/prisma.service';
 import type { SongResponse } from './dto/song-response.dto';
-import { buildThumbnailUrl, extractVideoId } from './utils/youtube.util';
+import { extractVideoId, fetchBestThumbnailUrl, fetchYouTubeMetadata } from './utils/youtube.util';
 
 type SongWithRelations = Prisma.SongGetPayload<{
   include: { stems: true; pitchData: true };
@@ -122,12 +122,16 @@ export class SongsService {
     videoId: string,
     youtubeUrl: string,
   ): Promise<SongResponse> {
+    const metadata = await fetchYouTubeMetadata(videoId);
+    const thumbnailUrl = metadata?.thumbnailUrl ?? (await fetchBestThumbnailUrl(videoId));
+
     const song = await this.prisma.song.create({
       data: {
         userId,
         videoId,
-        title: videoId,
-        thumbnailUrl: buildThumbnailUrl(videoId),
+        title: metadata?.title ?? videoId,
+        artist: metadata?.artist || null,
+        thumbnailUrl,
         duration: 0,
       },
       include: { stems: true, pitchData: true },
@@ -162,6 +166,7 @@ export class SongsService {
       id: song.id,
       videoId: song.videoId,
       title: song.title,
+      artist: song.artist ?? undefined,
       thumbnailUrl: song.thumbnailUrl,
       duration: song.duration,
       status: song.status,

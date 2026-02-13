@@ -23,6 +23,7 @@ def hz_to_midi(hz: float) -> float:
 def build_frames(
     f0: NDArray[np.float64],
     voiced_flag: NDArray[np.bool_],
+    rms_values: NDArray[np.float64],
     sample_rate: int,
     hop_length: int,
 ) -> list[PitchFrame]:
@@ -33,13 +34,14 @@ def build_frames(
     for i in range(len(f0)):
         t = round(i * hop_duration, 4)
         is_voiced = bool(voiced_flag[i]) and not np.isnan(f0[i])
+        rms_val = round(float(rms_values[i]), 6) if i < len(rms_values) else None
 
         if is_voiced:
             hz_val = float(f0[i])
             midi_val = round(hz_to_midi(hz_val), 1)
-            frames.append(PitchFrame(t=t, hz=hz_val, midi=midi_val, voiced=True))
+            frames.append(PitchFrame(t=t, hz=hz_val, midi=midi_val, voiced=True, rms=rms_val))
         else:
-            frames.append(PitchFrame(t=t, hz=None, midi=None, voiced=False))
+            frames.append(PitchFrame(t=t, hz=None, midi=None, voiced=False, rms=rms_val))
 
     return frames
 
@@ -114,9 +116,12 @@ def extract_pitch(
         hop_length=config.pyin_hop_length,
     )
 
+    rms = librosa.feature.rms(y=y, hop_length=config.pyin_hop_length)[0]
+
     frames = build_frames(
         f0,
         voiced_flag,
+        rms,
         config.pyin_sample_rate,
         config.pyin_hop_length,
     )

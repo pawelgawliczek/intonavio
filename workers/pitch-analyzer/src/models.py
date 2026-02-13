@@ -20,6 +20,7 @@ class PitchFrame(BaseModel):
     hz: float | None
     midi: float | None
     voiced: bool
+    rms: float | None = None
 
 
 class PitchAnalysisOutput(BaseModel):

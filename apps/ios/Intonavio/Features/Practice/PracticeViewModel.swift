@@ -30,8 +30,23 @@ final class PracticeViewModel {
     var lastDetectedMidi: Float = 0
     var lastDetectionTimestamp: TimeInterval = 0
 
-    var transposedMidiMin: Float { referenceStore.midiMin + Float(transposeSemitones) }
-    var transposedMidiMax: Float { referenceStore.midiMax + Float(transposeSemitones) }
+    // Loop scoring
+    var loopScores: [Double] = []
+    var lastLoopScore: Double?
+    var loopScoreImprovement: ScoreChange?
+    var isShowingLoopScore = false
+    private var loopMidiMin: Float?
+    private var loopMidiMax: Float?
+
+    var transposedMidiMin: Float {
+        let base = (loopState == .looping ? loopMidiMin : nil) ?? referenceStore.midiMin
+        return base + Float(transposeSemitones)
+    }
+
+    var transposedMidiMax: Float {
+        let base = (loopState == .looping ? loopMidiMax : nil) ?? referenceStore.midiMax
+        return base + Float(transposeSemitones)
+    }
 
     // MARK: - Song Info
 
@@ -191,11 +206,21 @@ final class PracticeViewModel {
     }
 
     func setMarkerB() {
-        guard markerA != nil else { return }
-        guard currentTime > (markerA ?? 0) else { return }
+        guard let a = markerA else { return }
+        guard currentTime > a else { return }
         markerB = currentTime
         loopState = .looping
         loopCount = 0
+        loopScores = []
+        lastLoopScore = nil
+        loopScoreImprovement = nil
+
+        if let range = referenceStore.midiRange(from: a, to: currentTime) {
+            loopMidiMin = range.min
+            loopMidiMax = range.max
+        }
+
+        scoringEngine?.reset()
         startLoopCheck()
     }
 
@@ -213,6 +238,12 @@ final class PracticeViewModel {
         markerA = nil
         markerB = nil
         loopCount = 0
+        loopScores = []
+        lastLoopScore = nil
+        loopScoreImprovement = nil
+        isShowingLoopScore = false
+        loopMidiMin = nil
+        loopMidiMax = nil
         stopLoopCheck()
         if loopState == .looping || loopState == .settingA {
             loopState = .playing

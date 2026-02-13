@@ -49,7 +49,7 @@ final class ReferencePitchStore {
 
     private func computeMidiRange() {
         let voicedMidi = frames.compactMap { frame -> Float? in
-            guard frame.isVoiced, let midi = frame.midiNote else { return nil }
+            guard frame.isVoiced, frame.isAudible, let midi = frame.midiNote else { return nil }
             return Float(midi)
         }
         guard let minVal = voicedMidi.min(),
@@ -76,5 +76,17 @@ final class ReferencePitchStore {
         let endIndex = min(frames.count - 1, Int(endTime / hopDuration))
         guard startIndex <= endIndex else { return [] }
         return frames[startIndex...endIndex]
+    }
+
+    /// Compute the MIDI range for a specific time range (used for loop recalibration).
+    func midiRange(from startTime: Double, to endTime: Double) -> (min: Float, max: Float)? {
+        let sectionFrames = frames(from: startTime, to: endTime)
+        let voicedMidi = sectionFrames.compactMap { frame -> Float? in
+            guard frame.isVoiced, frame.isAudible, let midi = frame.midiNote else { return nil }
+            return Float(midi)
+        }
+        guard let minVal = voicedMidi.min(),
+              let maxVal = voicedMidi.max() else { return nil }
+        return (min: minVal - 3, max: maxVal + 3)
     }
 }
