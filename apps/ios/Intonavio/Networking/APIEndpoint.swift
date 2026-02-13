@@ -19,6 +19,9 @@ enum APIEndpoint {
     case listStems(songId: String)
     case stemDownloadURL(songId: String, stemId: String)
 
+    // Pitch
+    case pitchDownloadURL(songId: String)
+
     // Sessions
     case createSession(CreateSessionRequest)
     case listSessions(page: Int, limit: Int)
@@ -38,6 +41,8 @@ enum APIEndpoint {
         case .listStems(let songId): return "/songs/\(songId)/stems"
         case .stemDownloadURL(let songId, let stemId):
             return "/songs/\(songId)/stems/\(stemId)/url"
+        case .pitchDownloadURL(let songId):
+            return "/songs/\(songId)/pitch/url"
         case .createSession: return "/sessions"
         case .listSessions: return "/sessions"
         case .getSession(let id): return "/sessions/\(id)"
@@ -52,7 +57,8 @@ enum APIEndpoint {
         case .deleteAccount, .deleteSong:
             return "DELETE"
         case .getSong, .listSongs, .listStems,
-             .stemDownloadURL, .listSessions, .getSession:
+             .stemDownloadURL, .pitchDownloadURL,
+             .listSessions, .getSession:
             return "GET"
         }
     }

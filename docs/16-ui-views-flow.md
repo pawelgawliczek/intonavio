@@ -28,7 +28,7 @@ Defining all views, navigation, and layout decisions for the Intonavio singing p
    - **Lyrics-focused**: Video ~65%, pitch graph ~35%
    - **Pitch-focused**: Video ~25% (small strip), pitch graph ~75%
    - Swipe or tap button to toggle between layouts
-   - **Controls overlay**: Play/pause, A-B loop markers, speed slider (0.25x–2x), stem mode selector (Original / Vocals / Instrumental / All Stems)
+   - **Controls overlay**: Play/pause, A-B loop markers, speed slider (0.25x–2x), stem mode selector (Original / Vocals / Instrumental / All Stems), transpose picker (musical intervals from -2 octaves to +2 octaves)
 
 7. **Exercise Practice** — Same pitch graph as song practice but no video. Shows exercise name, target notes as reference, and tempo/metronome guide.
 
@@ -119,7 +119,7 @@ Home → Exercises → Browse Community → Search/filter → Add to library →
 │  [ref bands + user line]    │
 │          ~35%               │
 ├─────────────────────────────┤
-│ ▶ LoopA LoopB  0.8x  Stems │
+│ ▶ LoopA LoopB 0.8x Stems T │
 │      [controls bar]         │
 └─────────────────────────────┘
 ```
@@ -138,7 +138,7 @@ Home → Exercises → Browse Community → Search/filter → Add to library →
 │          ~75%               │
 │                             │
 ├─────────────────────────────┤
-│ ▶ LoopA LoopB  0.8x  Stems │
+│ ▶ LoopA LoopB 0.8x Stems T │
 │      [controls bar]         │
 └─────────────────────────────┘
 ```

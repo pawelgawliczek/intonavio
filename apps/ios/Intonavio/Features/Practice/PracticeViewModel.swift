@@ -21,6 +21,18 @@ final class PracticeViewModel {
     var isDownloadingStems = false
     var isStemsReady = false
 
+    // Pitch
+    var isPitchReady = false
+    var layoutMode: PracticeLayoutMode = .lyricsFocused
+    var visualizationMode: VisualizationMode = .zonesLine
+    var detectedPoints: [DetectedPitchPoint] = []
+    var transposeSemitones: Int = 0
+    var lastDetectedMidi: Float = 0
+    var lastDetectionTimestamp: TimeInterval = 0
+
+    var transposedMidiMin: Float { referenceStore.midiMin + Float(transposeSemitones) }
+    var transposedMidiMax: Float { referenceStore.midiMax + Float(transposeSemitones) }
+
     // MARK: - Song Info
 
     let songId: String
@@ -37,8 +49,13 @@ final class PracticeViewModel {
     private(set) var sync: VideoAudioSync?
     let sessionsViewModel: SessionsViewModel?
 
+    // Pitch dependencies
+    var pitchDetector: PitchDetector?
+    let referenceStore = ReferencePitchStore()
+    var scoringEngine: ScoringEngine?
+
     private weak var webViewRef: WKWebView?
-    private var loopCheckTask: Task<Void, Never>?
+    var loopCheckTask: Task<Void, Never>?
     var playStartTime: Date?
     var sessionSaved = false
 
@@ -70,10 +87,16 @@ final class PracticeViewModel {
     // MARK: - Setup
 
     func configure() {
+        // Configure audio session early so it's active before YouTube loads.
+        // This prevents session interruptions when PitchDetector starts later.
+        try? AudioSessionManager.configure()
+
         sync = VideoAudioSync(
             controller: controller,
             stemPlayer: stemPlayer
         )
+        scoringEngine = ScoringEngine(referenceStore: referenceStore)
+        loadPitchDataIfAvailable()
         bridge.onEvent = { [weak self] event in
             self?.handleEvent(event)
         }
@@ -107,6 +130,8 @@ final class PracticeViewModel {
             sync?.start()
         }
 
+        startPitchDetection()
+
         if markerA != nil, markerB != nil {
             loopState = .looping
             startLoopCheck()
@@ -120,6 +145,7 @@ final class PracticeViewModel {
         controller.stopTimePolling()
         loopState = .paused
         stopLoopCheck()
+        stopPitchDetection()
 
         if isInStemMode {
             stemPlayer.pause()
@@ -133,6 +159,7 @@ final class PracticeViewModel {
         loopState = .idle
         stopLoopCheck()
         clearLoop()
+        stopPitchDetection()
 
         if isInStemMode {
             stemPlayer.stop()
@@ -246,43 +273,5 @@ private extension PracticeViewModel {
         let url = server.playerURL
         AppLogger.player.debug("Loading player from \(url)")
         wk.load(URLRequest(url: url))
-    }
-}
-
-// MARK: - Loop Logic
-
-private extension PracticeViewModel {
-    func startLoopCheck() {
-        stopLoopCheck()
-        loopCheckTask = Task { [weak self] in
-            while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 50_000_000)
-                guard !Task.isCancelled else { break }
-                await MainActor.run {
-                    self?.checkLoopBoundary()
-                }
-            }
-        }
-    }
-
-    func stopLoopCheck() {
-        loopCheckTask?.cancel()
-        loopCheckTask = nil
-    }
-
-    func checkLoopBoundary() {
-        guard loopState == .looping,
-              let a = markerA,
-              let b = markerB else {
-            return
-        }
-
-        if currentTime >= b - 0.05 {
-            controller.seek(to: a)
-            if isInStemMode {
-                stemPlayer.seek(to: a)
-            }
-            loopCount += 1
-        }
     }
 }

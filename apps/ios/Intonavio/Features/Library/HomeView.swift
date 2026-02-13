@@ -75,7 +75,7 @@ private extension HomeView {
         .padding(.horizontal)
         .navigationDestination(for: String.self) { songId in
             if let song = viewModel.songs.first(where: { $0.id == songId }) {
-                SongPracticeView(songId: song.id, videoId: song.videoId, stems: song.stems)
+                SongPracticeView(songId: song.id, videoId: song.videoId, stems: song.stems, hasPitchData: song.pitchData != nil)
             }
         }
     }

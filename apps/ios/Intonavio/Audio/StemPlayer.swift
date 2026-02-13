@@ -17,6 +17,8 @@ final class StemPlayer {
     private var audioFiles: [StemType: AVAudioFile] = [:]
     private var isSetup = false
     private var interruptionObserver: NSObjectProtocol?
+    /// Offset added to playerTime so currentTime returns absolute file position.
+    private var playbackStartOffset: Double = 0
 
     var rate: Float {
         get { timePitch.rate }
@@ -56,6 +58,7 @@ final class StemPlayer {
     func play(from time: Double = 0) {
         guard isSetup else { return }
         ensureEngineRunning()
+        playbackStartOffset = time
 
         for (type, player) in playerNodes {
             guard let file = audioFiles[type] else { continue }
@@ -130,7 +133,8 @@ final class StemPlayer {
               let playerTime = player.playerTime(forNodeTime: nodeTime) else {
             return nil
         }
-        return Double(playerTime.sampleTime) / playerTime.sampleRate
+        let relativeTime = Double(playerTime.sampleTime) / playerTime.sampleRate
+        return playbackStartOffset + relativeTime
     }
 
     // MARK: - Teardown

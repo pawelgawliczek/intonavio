@@ -4,6 +4,7 @@ struct SongPracticeView: View {
     var songId: String = ""
     var videoId: String = ""
     var stems: [StemResponse] = []
+    var hasPitchData: Bool = false
 
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel: PracticeViewModel?
@@ -24,6 +25,7 @@ struct SongPracticeView: View {
             if let vm = viewModel {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Done") {
+                        vm.stopPitchDetection()
                         vm.saveSessionIfNeeded()
                         vm.server.stop()
                         dismiss()
@@ -33,6 +35,7 @@ struct SongPracticeView: View {
         }
         .onAppear { setupIfNeeded() }
         .onDisappear {
+            viewModel?.stopPitchDetection()
             viewModel?.saveSessionIfNeeded()
             viewModel?.sync?.stop()
             viewModel?.stemPlayer.teardown()
@@ -46,12 +49,10 @@ struct SongPracticeView: View {
 private extension SongPracticeView {
     func practiceContent(_ vm: PracticeViewModel) -> some View {
         ZStack {
-            VStack(spacing: 0) {
-                videoSection(vm)
-                Divider()
-                pitchPlaceholder
-                Divider()
-                controlsSection(vm)
+            if vm.isPitchReady {
+                pitchLayout(vm)
+            } else {
+                standardLayout(vm)
             }
 
             if !vm.isPlayerReady {
@@ -60,30 +61,40 @@ private extension SongPracticeView {
         }
     }
 
-    func videoSection(_ vm: PracticeViewModel) -> some View {
+    /// Layout when pitch detection is active: video + piano roll split.
+    func pitchLayout(_ vm: PracticeViewModel) -> some View {
+        GeometryReader { geometry in
+            VStack(spacing: 0) {
+                videoPlayer(vm)
+                    .frame(height: geometry.size.height * vm.layoutMode.videoFraction)
+                Divider()
+                PianoRollSection(viewModel: vm)
+                Divider()
+                controlsSection(vm)
+            }
+        }
+    }
+
+    /// Standard layout: video at natural 16:9 aspect ratio, controls below.
+    func standardLayout(_ vm: PracticeViewModel) -> some View {
+        VStack(spacing: 0) {
+            videoPlayer(vm)
+                .aspectRatio(16 / 9, contentMode: .fit)
+            Divider()
+            PianoRollSection(viewModel: vm)
+            Divider()
+            controlsSection(vm)
+        }
+    }
+
+    func videoPlayer(_ vm: PracticeViewModel) -> some View {
         YouTubePlayerView(
             videoId: vm.videoId,
             bridge: vm.bridge,
             server: vm.server,
             onWebViewReady: vm.onWebViewReady
         )
-        .aspectRatio(16 / 9, contentMode: .fit)
         .background(Color.black)
-    }
-
-    var pitchPlaceholder: some View {
-        VStack {
-            Spacer()
-            Text("Pitch Graph")
-                .font(.headline)
-                .foregroundStyle(.secondary)
-            Text("Coming in Phase 5")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
-            Spacer()
-        }
-        .frame(maxWidth: .infinity)
-        .background(Color(.systemGroupedBackground))
     }
 
     func controlsSection(_ vm: PracticeViewModel) -> some View {
@@ -106,6 +117,42 @@ private extension SongPracticeView {
     }
 }
 
+// MARK: - Piano Roll (isolated observation)
+
+/// Separate View so high-frequency @Observable access (currentTime, detectedPoints)
+/// is scoped here and doesn't trigger re-renders of the parent (controls, video).
+private struct PianoRollSection: View {
+    let viewModel: PracticeViewModel
+
+    var body: some View {
+        let windowStart = viewModel.currentTime - 4.0
+        let windowEnd = viewModel.currentTime + 4.0
+        let frames = viewModel.referenceStore.frames(from: windowStart, to: windowEnd)
+        let visiblePoints = viewModel.detectedPoints.filter {
+            $0.time >= windowStart && $0.time <= windowEnd
+        }
+
+        PianoRollView(
+            mode: Binding(
+                get: { viewModel.visualizationMode },
+                set: { viewModel.visualizationMode = $0 }
+            ),
+            referenceFrames: frames,
+            hopDuration: viewModel.referenceStore.hopDuration,
+            detectedPoints: visiblePoints,
+            currentTime: viewModel.currentTime,
+            currentNoteName: viewModel.pitchDetector?.latestResult?.noteName,
+            centsDeviation: viewModel.pitchDetector?.latestResult?.centsDeviation ?? 0,
+            accuracy: viewModel.scoringEngine?.currentAccuracy ?? .unvoiced,
+            score: viewModel.scoringEngine?.overallScore ?? 0,
+            isPitchReady: viewModel.isPitchReady,
+            midiMin: viewModel.transposedMidiMin,
+            midiMax: viewModel.transposedMidiMax,
+            transposeSemitones: viewModel.transposeSemitones
+        )
+    }
+}
+
 // MARK: - Setup
 
 private extension SongPracticeView {
@@ -115,6 +162,10 @@ private extension SongPracticeView {
         vm.stems = stems
         vm.configure()
         vm.preloadStems()
+        vm.downloadPitchDataIfNeeded(
+            hasPitchData: hasPitchData,
+            apiClient: APIClient()
+        )
         viewModel = vm
     }
 }

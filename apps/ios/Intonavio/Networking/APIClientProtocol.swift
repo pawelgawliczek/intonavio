@@ -19,6 +19,9 @@ protocol APIClientProtocol: Sendable {
     func listStems(songId: String) async throws -> [StemResponse]
     func stemDownloadURL(songId: String, stemId: String) async throws -> PresignedURLResponse
 
+    // Pitch
+    func pitchDownloadURL(songId: String) async throws -> PresignedURLResponse
+
     // Sessions
     func createSession(_ request: CreateSessionRequest) async throws -> SessionResponse
     func listSessions(page: Int, limit: Int) async throws -> PaginatedResponse<SessionResponse>

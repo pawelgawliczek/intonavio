@@ -84,6 +84,11 @@ extension MockAPIClient {
         try maybeThrow()
         return PresignedURLResponse(url: "https://example.com/stem.mp3", expiresIn: 900)
     }
+
+    func pitchDownloadURL(songId: String) async throws -> PresignedURLResponse {
+        try maybeThrow()
+        return PresignedURLResponse(url: "https://example.com/pitch.json", expiresIn: 900)
+    }
 }
 
 // MARK: - Sessions

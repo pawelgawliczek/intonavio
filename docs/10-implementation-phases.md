@@ -224,27 +224,37 @@ graph LR
 
 ---
 
-### Phase 5: iOS Pitch
+### Phase 5: iOS Pitch ✅ COMPLETE
 
 **Goal:** Real-time pitch detection, piano roll visualization, and scoring.
 
+> **Status:** All 8 sub-phases implemented and verified. 129 unit tests passing (71 new pitch tests), build clean. All files under 300 lines. Audio session uses `.voiceChat` mode for echo cancellation. Pre-detection filtering: RMS noise gate (Accelerate vDSP), confidence threshold 0.85, MIDI jump filter (>12 semitones in <50ms). Reference pitch transpose support (±2 octaves via musical intervals). See `docs/implementation_plans/ios-pitch.md` for detailed sub-phase breakdown.
+
 **Deliverables:**
 
-- YIN pitch detector running on microphone input with 95% branch coverage on detection + scoring + cents math (see `docs/14-testing-strategy.md` — Level 1)
+- YIN pitch detector running on microphone input via dedicated `AVAudioEngine` (coexists with StemPlayer)
+- `AudioSessionManager` with `.voiceChat` mode for built-in Acoustic Echo Cancellation — prevents speaker bleed into mic
+- Pre-detection filtering: RMS noise gate via `vDSP_rmsqv` (skip if <0.01 / ~-40 dB), confidence threshold 0.85, MIDI jump filter rejecting >12 semitone jumps within 50ms
 - Unit tests: known sine waves (440Hz, 261.63Hz, 329.63Hz) → detected within ±1 Hz; silence → no detection; noise → low confidence
 - Song Practice view with toggleable layout: lyrics-focused (65/35) and pitch-focused (25/75) (see `docs/16-ui-views-flow.md`)
-- Exercise Practice view with pitch graph, target notes, and tempo/metronome guide
+- Exercise Practice view with pitch graph, target notes, metronome tick, and tempo guide
 - Piano roll view with 3 visualization modes: Zones+Line, Two Lines, Zones+Glow (see `docs/16-ui-views-flow.md`)
 - Color-coded accuracy feedback (green ±10¢, yellow-green ±25¢, yellow ±50¢, red >50¢)
-- Per-session scoring: cents deviation calculation with division-by-zero protection for unvoiced frames
+- Reference pitch transpose: shift reference up/down by musical intervals (-2 oct to +2 oct) via `TransposeInterval` enum, applied to both visual rendering (reference zones/lines) and scoring (cents calculation). User's detected voice remains at actual position. Controlled via transpose picker menu in `ControlsBarView`.
+- Per-session scoring: cents deviation calculation with transpose offset and division-by-zero protection for unvoiced frames
+- `ScoringEngine` with `transposeSemitones` — adjusts reference frequency via `refHz × 2^(semitones/12)` before comparison
 - Session recording and review with `pitchLog` JSON for debug reproducibility (see `docs/13-observability.md`)
 - Pitch detection debug mode (dev settings toggle): records raw mic input + detected frequencies for "scoring feels wrong" reports
-- TestFlight beta build
+- `PracticeViewModel+Loop.swift` extracted from main ViewModel to stay under 300-line limit
+- 129 total tests passing including transpose scoring tests (octave up/down, mismatch detection, adjusted reference logging)
 
 **Quality gates:**
 
 - Scoring math: `(440, 440) → 0 cents`, `(440, 466.16) → 100 cents`, `(440, 220) → -1200 cents` all pass
+- Transpose scoring: octave up (440→880 ref) → 100 score with 880Hz detected; mismatch → poor accuracy
 - Exercise pitch generator: vibrato oscillation within ±cents, rest periods produce `hz: null`
+- Echo cancellation: song playing through speaker does not produce detected pitch when user is silent
+- 129 tests, 0 failures
 
 ---
 

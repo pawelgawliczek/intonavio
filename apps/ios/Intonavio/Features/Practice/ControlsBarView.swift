@@ -13,6 +13,10 @@ struct ControlsBarView: View {
                     audioSourceButtons
                 }
                 Spacer()
+                if viewModel.isPitchReady {
+                    pitchControls
+                }
+                Spacer()
                 LoopControlsView(viewModel: viewModel)
             }
             SpeedSelectorView(viewModel: viewModel)
@@ -46,6 +50,88 @@ private extension ControlsBarView {
                 )
         }
         .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Pitch Controls
+
+private extension ControlsBarView {
+    var pitchControls: some View {
+        HStack(spacing: 8) {
+            transposePicker
+            layoutToggle
+            vizModePicker
+        }
+    }
+
+    var transposePicker: some View {
+        let isActive = viewModel.transposeSemitones != 0
+        let buttonLabel = isActive
+            ? (viewModel.transposeSemitones > 0
+                ? "+\(viewModel.transposeSemitones)"
+                : "\(viewModel.transposeSemitones)")
+            : "T"
+
+        return Menu {
+            ForEach(TransposeInterval.allCases) { interval in
+                Button {
+                    viewModel.setTranspose(interval.rawValue)
+                } label: {
+                    HStack {
+                        Text(interval.label)
+                        if viewModel.transposeSemitones == interval.rawValue {
+                            Image(systemName: "checkmark")
+                        }
+                    }
+                }
+            }
+        } label: {
+            HStack(spacing: 2) {
+                Image(systemName: "arrow.up.arrow.down")
+                Text(buttonLabel)
+                    .font(.caption.monospacedDigit())
+            }
+            .font(.body)
+            .frame(height: 34)
+            .padding(.horizontal, 6)
+            .foregroundStyle(isActive ? .white : .secondary)
+            .background(
+                isActive ? Color.accentColor : Color(.tertiarySystemFill),
+                in: RoundedRectangle(cornerRadius: 6)
+            )
+        }
+    }
+
+    var layoutToggle: some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.25)) {
+                viewModel.layoutMode = viewModel.layoutMode == .lyricsFocused
+                    ? .pitchFocused
+                    : .lyricsFocused
+            }
+        } label: {
+            Image(systemName: viewModel.layoutMode == .pitchFocused
+                  ? "rectangle.topthird.inset.filled"
+                  : "rectangle.bottomthird.inset.filled")
+                .font(.body)
+                .frame(width: 34, height: 34)
+                .foregroundStyle(.secondary)
+                .background(
+                    Color(.tertiarySystemFill),
+                    in: RoundedRectangle(cornerRadius: 6)
+                )
+        }
+        .buttonStyle(.plain)
+    }
+
+    var vizModePicker: some View {
+        Picker("Mode", selection: $viewModel.visualizationMode) {
+            ForEach(VisualizationMode.allCases) { mode in
+                Text(mode.rawValue).tag(mode)
+            }
+        }
+        .pickerStyle(.segmented)
+        .frame(maxWidth: 160)
     }
 }
 

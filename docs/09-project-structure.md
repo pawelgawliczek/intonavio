@@ -82,16 +82,28 @@ intonavio/
 │       │   │   │   ├── ExerciseSectionView.swift # Horizontal scroll section
 │       │   │   │   └── LibraryViewModel.swift    # Fetch songs, add song, poll status
 │       │   │   ├── Practice/
-│       │   │   │   ├── SongPracticeView.swift         # YouTube video + controls + loading overlay
-│       │   │   │   ├── ExercisePracticeView.swift     # Exercise practice (stub)
-│       │   │   │   ├── PracticeViewModel.swift        # Playback state, loop machine, sync coordination
-│       │   │   │   ├── PracticeViewModel+Audio.swift  # Audio mode switching (pause-switch-resume)
-│       │   │   │   ├── ControlsBarView.swift          # Layout: timeline + transport + source/loop + speed
-│       │   │   │   ├── PlaybackControlsView.swift     # Skip back, play/pause, skip forward
-│       │   │   │   ├── LoopControlsView.swift         # A/B markers, clear loop, loop count
-│       │   │   │   ├── TimelineBarView.swift          # Scrubber with A/B markers
-│       │   │   │   ├── SpeedSelectorView.swift        # 0.25x–2.0x discrete speed steps
-│       │   │   │   └── LoopState.swift                # Enum: idle, playing, settingA, settingAB, looping, paused
+│       │   │   │   ├── SongPracticeView.swift              # YouTube video + piano roll + controls
+│       │   │   │   ├── ExercisePracticeView.swift          # Exercise practice: metronome + piano roll + scoring
+│       │   │   │   ├── ExercisePracticeViewModel.swift     # Exercise playback timer, pitch detection, scoring
+│       │   │   │   ├── PracticeViewModel.swift             # Playback state, loop machine, transpose, sync
+│       │   │   │   ├── PracticeViewModel+Audio.swift       # Audio mode switching (pause-switch-resume)
+│       │   │   │   ├── PracticeViewModel+Loop.swift        # A-B loop check task
+│       │   │   │   ├── PracticeViewModel+Pitch.swift       # Pitch detection lifecycle, jump filter, transpose
+│       │   │   │   ├── PracticeLayoutMode.swift            # Enum: lyricsFocused (65/35), pitchFocused (25/75)
+│       │   │   │   ├── ControlsBarView.swift               # Timeline + transport + source/loop + speed + transpose
+│       │   │   │   ├── PlaybackControlsView.swift          # Skip back, play/pause, skip forward
+│       │   │   │   ├── LoopControlsView.swift              # A/B markers, clear loop, loop count
+│       │   │   │   ├── TimelineBarView.swift               # Scrubber with A/B markers
+│       │   │   │   ├── SpeedSelectorView.swift             # 0.25x–2.0x discrete speed steps
+│       │   │   │   ├── LoopState.swift                     # Enum: idle, playing, settingA, settingAB, looping, paused
+│       │   │   │   └── PianoRoll/
+│       │   │   │       ├── PianoRollView.swift             # Container: mode selector, piano keys, canvas, current note
+│       │   │   │       ├── PianoRollCanvas.swift           # SwiftUI Canvas: grid, reference, detected pitch
+│       │   │   │       ├── PianoRollRenderer.swift         # Static draw helpers: zones, lines, glow, transposeOffset
+│       │   │   │       ├── CurrentNoteView.swift           # Large note name + cents deviation indicator
+│       │   │   │       ├── DetectedPitchPoint.swift        # Struct: time, midi, accuracy, cents
+│       │   │   │       ├── PitchDebugOverlay.swift         # DEBUG: Hz, confidence, MIDI, FPS, scoring
+│       │   │   │       └── VisualizationMode.swift         # Enum: zonesLine, twoLines, zonesGlow
 │       │   │   ├── Sessions/
 │       │   │   │   ├── SessionHistoryView.swift  # List with infinite scroll
 │       │   │   │   ├── SessionDetailView.swift   # Score, duration, loop points
@@ -105,8 +117,24 @@ intonavio/
 │       │   ├── Audio/
 │       │   │   ├── StemPlayer.swift        # AVAudioEngine graph, engine recovery
 │       │   │   ├── StemDownloader.swift    # Presigned URL fetch + cache to disk
-│       │   │   ├── VideoAudioSync.swift   # YouTube-as-master sync (300ms/2s)
-│       │   │   └── AudioMode.swift        # Enum: original, vocalsOnly, instrumental
+│       │   │   ├── VideoAudioSync.swift    # YouTube-as-master sync (300ms/2s)
+│       │   │   ├── AudioMode.swift         # Enum: original, vocalsOnly, instrumental
+│       │   │   ├── MetronomeTick.swift     # Click sound for exercise tempo
+│       │   │   └── Pitch/
+│       │   │       ├── AudioSessionManager.swift     # AVAudioSession: .voiceChat (AEC), interruptions
+│       │   │       ├── PitchTypes.swift              # PitchResult, PitchConstants (thresholds, RMS, jump)
+│       │   │       ├── NoteMapper.swift              # Hz↔MIDI↔cents conversions
+│       │   │       ├── YINDetector.swift             # 5-step YIN with Accelerate vDSP
+│       │   │       ├── PitchDetector.swift           # @Observable: mic engine, ring buffer, RMS gate
+│       │   │       ├── PitchAccuracy.swift           # Enum: excellent/good/fair/poor/unvoiced
+│       │   │       ├── ScoringEngine.swift           # Cents comparison + transpose offset + score accumulation
+│       │   │       ├── TransposeInterval.swift       # Enum: musical intervals (-24 to +24 semitones)
+│       │   │       ├── ReferencePitchFrame.swift     # Codable frame struct matching pYIN output
+│       │   │       ├── ReferencePitchStore.swift     # O(1) frame lookup by time, range queries
+│       │   │       ├── PitchDataDownloader.swift     # R2 presigned URL fetch + cache
+│       │   │       ├── ExercisePitchGenerator.swift  # Client-side reference from exercise definitions
+│       │   │       ├── ExerciseDefinitions.swift     # Bundled scales, arpeggios, intervals
+│       │   │       └── PitchRecorder.swift           # DEBUG: raw mic + detected pitch to disk
 │       │   ├── YouTube/
 │       │   │   ├── YouTubePlayerView.swift      # SwiftUI WKWebView wrapper
 │       │   │   ├── YouTubePlayerController.swift # Playback control via JS bridge
@@ -134,7 +162,12 @@ intonavio/
 │       ├── IntonavioTests/
 │       │   ├── Audio/
 │       │   │   ├── StemPlayerTests.swift
-│       │   │   └── VideoAudioSyncTests.swift
+│       │   │   ├── VideoAudioSyncTests.swift
+│       │   │   ├── YINDetectorTests.swift
+│       │   │   ├── NoteMapperTests.swift
+│       │   │   ├── ScoringEngineTests.swift
+│       │   │   ├── ExercisePitchGeneratorTests.swift
+│       │   │   └── ReferencePitchStoreTests.swift
 │       │   ├── Auth/
 │       │   │   └── AuthViewModelTests.swift
 │       │   ├── Library/

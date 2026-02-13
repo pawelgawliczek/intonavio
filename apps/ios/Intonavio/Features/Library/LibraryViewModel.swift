@@ -39,6 +39,7 @@ final class LibraryViewModel {
             let response = try await apiClient.listSongs(page: 1, limit: 100)
             songs = response.data
             startPollingIfNeeded()
+            cacheMissingPitchData()
         } catch {
             errorMessage = (error as? APIError)?.message ?? error.localizedDescription
             AppLogger.library.error("Failed to load songs: \(error.localizedDescription)")
@@ -61,12 +62,54 @@ final class LibraryViewModel {
     @MainActor
     func refreshSong(id: String) async {
         do {
+            let previous = songs.first { $0.id == id }
             let updated = try await apiClient.getSong(id: id)
             if let index = songs.firstIndex(where: { $0.id == id }) {
                 songs[index] = updated
             }
+
+            let justBecameReady = previous?.status.isProcessing == true
+                && updated.status == .ready
+            if justBecameReady, updated.pitchData != nil {
+                downloadPitchData(songId: id)
+            }
         } catch {
             AppLogger.library.error("Failed to refresh song \(id): \(error.localizedDescription)")
+        }
+    }
+
+    private func downloadPitchData(songId: String) {
+        guard !PitchDataDownloader.isCached(songId: songId) else { return }
+        Task {
+            do {
+                _ = try await PitchDataDownloader.localURL(
+                    songId: songId,
+                    apiClient: apiClient
+                )
+            } catch {
+                AppLogger.library.error(
+                    "Failed to download pitch data for \(songId): \(error.localizedDescription)"
+                )
+            }
+        }
+    }
+
+    /// Download pitch data for all READY songs that have it but aren't cached yet.
+    /// Runs in the background after loading the song list.
+    private func cacheMissingPitchData() {
+        let needsDownload = songs.filter { song in
+            song.status == .ready
+                && song.pitchData != nil
+                && !PitchDataDownloader.isCached(songId: song.id)
+        }
+
+        for song in needsDownload {
+            downloadPitchData(songId: song.id)
+        }
+
+        if !needsDownload.isEmpty {
+            let count = needsDownload.count
+            AppLogger.library.info("Downloading pitch data for \(count) songs")
         }
     }
 }

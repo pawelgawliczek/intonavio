@@ -17,6 +17,11 @@ Cover the algorithmic core where bugs are hardest to spot manually.
 - `(440, 440) → 0 cents`, `(440, 466.16) → 100 cents`, `(440, 220) → -1200 cents`
 - Frame arrays with known deviations → assert score matches expected
 - All unvoiced reference frames → score excludes them (no division by zero)
+- Transpose: octave up → reference shifts to 880Hz, singing 880Hz → excellent (100 score)
+- Transpose: octave down → reference shifts to 220Hz, singing 220Hz → excellent
+- Transpose: mismatch (440Hz detected vs 880Hz adjusted ref) → poor accuracy
+- Transpose: zero offset → identical to no-transpose behavior
+- Transpose: pitch log records adjusted reference Hz, not original
 
 ### Exercise Pitch Generator
 

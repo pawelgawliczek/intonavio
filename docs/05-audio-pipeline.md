@@ -150,6 +150,20 @@ StemSplit uses HMAC-SHA256 signatures for webhook authentication via the `X-Webh
 
 ---
 
+## iOS Audio Session & Echo Cancellation
+
+The iOS app uses `AVAudioSession` with `.playAndRecord` category and `.voiceChat` mode. The `.voiceChat` mode enables iOS built-in Acoustic Echo Cancellation (AEC) and noise suppression, which removes speaker audio from the microphone input. This is essential because the app plays music through the speaker (YouTube or stems) while simultaneously recording the user's voice for pitch detection.
+
+Without AEC, the microphone picks up the song's melody from the speaker, causing the detected pitch line to follow the music rather than the user's voice.
+
+Additional pre-detection filtering:
+
+- **RMS noise gate**: `vDSP_rmsqv` (Accelerate) — skip YIN if RMS < 0.01 (~-40 dB)
+- **Confidence threshold**: 0.85 (above default 0.80)
+- **MIDI jump filter**: Reject >12 semitone jumps within 50ms
+
+---
+
 ## Pitch Analysis (Python Worker)
 
 The Python worker extracts reference pitch data from the vocal stem using librosa's pYIN algorithm.

@@ -114,6 +114,9 @@ extension PracticeViewModel {
         }
         sessionSaved = true
 
+        let score = scoringEngine?.finalScore ?? 0
+        let log = scoringEngine?.pitchLog ?? []
+
         sessionsViewModel?.saveSession(
             CreateSessionRequest(
                 songId: songId,
@@ -121,8 +124,8 @@ extension PracticeViewModel {
                 loopStart: markerA,
                 loopEnd: markerB,
                 speed: playbackRate,
-                overallScore: 0,
-                pitchLog: []
+                overallScore: score,
+                pitchLog: log
             )
         )
         let sid = songId

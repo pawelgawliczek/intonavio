@@ -12,10 +12,14 @@ struct DeveloperView: View {
     @State private var addSongURL = ""
     @State private var isAddingSong = false
 
+    @State private var isPitchDebugEnabled = false
+    @State private var isPitchRecording = false
+
     var body: some View {
         List {
             apiSection
             authSection
+            pitchDebugSection
             addSongSection
             songsSection
             actionsSection
@@ -115,6 +119,17 @@ private extension DeveloperView {
         }
     }
 
+    var pitchDebugSection: some View {
+        Section("Pitch Debug") {
+            Toggle("Debug Overlay", isOn: $isPitchDebugEnabled)
+            Toggle("Record Pitch Data", isOn: $isPitchRecording)
+            Button("Export Recording") {
+                statusMessage = "Pitch recording export not active"
+            }
+            .disabled(!isPitchRecording)
+        }
+    }
+
     var actionsSection: some View {
         Section("Quick Actions") {
             Button("Force Token Refresh") { forceRefresh() }
@@ -164,7 +179,7 @@ private extension DeveloperView {
         } else {
             ForEach(songs) { song in
                 NavigationLink {
-                    SongPracticeView(songId: song.id, videoId: song.videoId, stems: song.stems)
+                    SongPracticeView(songId: song.id, videoId: song.videoId, stems: song.stems, hasPitchData: song.pitchData != nil)
                 } label: {
                     DevSongRow(song: song)
                 }
