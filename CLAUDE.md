@@ -102,3 +102,10 @@ Always read `docs/12-code-quality.md` — it applies to every change.
 | UI views & navigation flow   | `docs/16-ui-views-flow.md`         |
 
 Do not deviate from documented architecture without updating the relevant doc first.
+
+## Deployment
+
+- SSH into the production server: `ssh hostinger`
+- Source code on server: `/opt/intonavio-src` (shallow clone of `main`)
+- Docker Compose: `/opt/intonavio/docker-compose.yml`
+- Deploy flow: push to `main` → `ssh hostinger` → `cd /opt/intonavio-src && git pull` → `cd /opt/intonavio && docker compose build api && docker compose up -d api`

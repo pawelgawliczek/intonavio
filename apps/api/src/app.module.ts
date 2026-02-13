@@ -14,6 +14,7 @@ import { JobsModule } from './jobs/jobs.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 import { StorageModule } from './storage/storage.module';
 import { HealthModule } from './health/health.module';
+import { PitchModule } from './pitch/pitch.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { HealthModule } from './health/health.module';
     AuthModule,
     SongsModule,
     StemsModule,
+    PitchModule,
     SessionsModule,
     JobsModule,
     WebhooksModule,
