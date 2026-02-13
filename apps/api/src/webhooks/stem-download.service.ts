@@ -8,6 +8,7 @@ import { StorageService } from '../storage/storage.service';
 
 const STEM_TYPE_MAP: Record<string, StemType> = {
   vocals: 'VOCALS',
+  instrumental: 'OTHER',
   drums: 'DRUMS',
   bass: 'BASS',
   other: 'OTHER',

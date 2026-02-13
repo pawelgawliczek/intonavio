@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import type { StemSplitAdapter } from './stemsplit.interface';
 
 interface CreateJobResponse {
-  job_id: string;
+  id: string;
 }
 
 @Injectable()
@@ -44,14 +44,12 @@ export class StemSplitService implements StemSplitAdapter {
     }
 
     const data = (await response.json()) as CreateJobResponse;
-    this.logger.log('StemSplit job created', { jobId: data.job_id, youtubeUrl });
-    return data.job_id;
+    this.logger.log('StemSplit job created', { jobId: data.id, youtubeUrl });
+    return data.id;
   }
 
   async downloadStem(downloadUrl: string): Promise<Buffer> {
-    const response = await fetch(downloadUrl, {
-      headers: { Authorization: `Bearer ${this.apiKey}` },
-    });
+    const response = await fetch(downloadUrl);
 
     if (!response.ok) {
       throw new Error(`Stem download failed: ${response.status} from ${downloadUrl}`);

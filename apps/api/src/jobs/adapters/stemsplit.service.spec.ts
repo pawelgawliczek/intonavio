@@ -30,10 +30,10 @@ describe('StemSplitService', () => {
   });
 
   describe('createJob', () => {
-    it('should POST to StemSplit API and return job_id', async () => {
+    it('should POST to StemSplit API and return id', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ job_id: 'ss_job_789' }),
+        json: async () => ({ id: 'ss_job_789' }),
       });
 
       const jobId = await service.createJob('https://youtube.com/watch?v=abc');
@@ -81,9 +81,7 @@ describe('StemSplitService', () => {
       const buffer = await service.downloadStem('https://cdn.stemsplit.io/stem.mp3');
 
       expect(Buffer.isBuffer(buffer)).toBe(true);
-      expect(mockFetch).toHaveBeenCalledWith('https://cdn.stemsplit.io/stem.mp3', {
-        headers: { Authorization: 'Bearer test-api-key' },
-      });
+      expect(mockFetch).toHaveBeenCalledWith('https://cdn.stemsplit.io/stem.mp3');
     });
 
     it('should throw when download fails', async () => {
