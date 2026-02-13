@@ -50,7 +50,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
         scope.setTag('path', request.url);
         scope.setTag('method', request.method);
 
-        const user = (request as Record<string, unknown>)['user'] as { id?: string } | undefined;
+        const user = (request as unknown as Record<string, unknown>)['user'] as
+          | { id?: string }
+          | undefined;
         if (user?.id) {
           scope.setTag('userId', user.id);
         }
