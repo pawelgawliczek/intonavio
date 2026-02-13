@@ -524,24 +524,32 @@ Same shape as list item, plus `pitchLog` array. Returns `403` if session belongs
 
 ### Webhooks (Internal)
 
-| Method | Path                  | Description                       | Auth                                 |
-| ------ | --------------------- | --------------------------------- | ------------------------------------ |
-| `POST` | `/webhooks/stemsplit` | StemSplit job completion callback | `x-webhook-secret` header validation |
+| Method | Path                  | Description                       | Auth                                           |
+| ------ | --------------------- | --------------------------------- | ---------------------------------------------- |
+| `POST` | `/webhooks/stemsplit` | StemSplit job completion callback | `X-Webhook-Signature` HMAC-SHA256 verification |
 
 **Webhook Payload (from StemSplit):**
 
 ```json
 {
-  "job_id": "ss_job_123",
-  "status": "completed",
-  "stems": [
-    { "type": "vocals", "download_url": "https://cdn.stemsplit.io/..." },
-    { "type": "drums", "download_url": "https://cdn.stemsplit.io/..." },
-    { "type": "bass", "download_url": "https://cdn.stemsplit.io/..." },
-    { "type": "other", "download_url": "https://cdn.stemsplit.io/..." },
-    { "type": "piano", "download_url": "https://cdn.stemsplit.io/..." },
-    { "type": "guitar", "download_url": "https://cdn.stemsplit.io/..." }
-  ]
+  "event": "job.completed",
+  "timestamp": "2026-01-05T12:30:00Z",
+  "data": {
+    "jobId": "clxxx123...",
+    "status": "COMPLETED",
+    "input": { "durationSeconds": 240 },
+    "outputs": {
+      "vocals": {
+        "url": "https://stemsplit-storage...r2.cloudflarestorage.com/...",
+        "expiresAt": "2026-01-05T13:30:00Z"
+      },
+      "instrumental": {
+        "url": "https://stemsplit-storage...r2.cloudflarestorage.com/...",
+        "expiresAt": "2026-01-05T13:30:00Z"
+      }
+    },
+    "creditsCharged": 240
+  }
 }
 ```
 
@@ -549,9 +557,10 @@ Same shape as list item, plus `pitchLog` array. Returns `403` if session belongs
 
 **Behavior:**
 
-- Completed: download stems → upload to R2 → create Stem records → status ANALYZING → enqueue pitch analysis
+- Completed: download stems from presigned URLs → upload to R2 → create Stem records → status ANALYZING → enqueue pitch analysis
 - Failed: mark song as FAILED with error message
 - Idempotent: skips if stems already exist for the song
+- Signature verification: HMAC-SHA256 of raw request body using `STEMSPLIT_WEBHOOK_SECRET`
 
 ---
 

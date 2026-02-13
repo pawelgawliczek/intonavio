@@ -79,6 +79,8 @@ flowchart TD
 
 ## StemSplit API Integration
 
+StemSplit offers two flows: **YouTube jobs** (direct URL, 2-stem output) and **file upload jobs** (supports up to 6-stem separation). Intonavio uses the YouTube flow for simplicity.
+
 ### Job Creation
 
 ```
@@ -88,38 +90,63 @@ Content-Type: application/json
 
 {
   "youtubeUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-  "outputType": "SIX_STEMS",
   "outputFormat": "MP3",
-  "quality": "BEST",
-  "webhookUrl": "https://api.intonavio.com/v1/webhooks/stemsplit"
+  "quality": "BEST"
 }
 ```
 
-### Output Types
+Note: The YouTube endpoint does **not** accept `outputType` or `webhookUrl`. Webhooks are registered separately via `POST /api/v1/webhooks`. YouTube jobs always produce vocals + instrumental + fullAudio.
 
-| Type         | Stems Produced                            | Use Case                  |
-| ------------ | ----------------------------------------- | ------------------------- |
-| `VOCALS`     | vocals only                               | Vocal isolation           |
-| `BOTH`       | vocals, instrumental                      | Basic vocal/backing split |
-| `FOUR_STEMS` | vocals, drums, bass, other                | Standard separation       |
-| `SIX_STEMS`  | vocals, drums, bass, other, piano, guitar | Full separation (default) |
+### Output Types by Flow
+
+| Flow         | Endpoint        | Available Output Types                      | Stems Produced                                            |
+| ------------ | --------------- | ------------------------------------------- | --------------------------------------------------------- |
+| YouTube jobs | `/youtube-jobs` | Fixed (vocals + instrumental + fullAudio)   | 3 outputs (2 useful stems)                                |
+| File upload  | `/jobs`         | `VOCALS`, `BOTH`, `FOUR_STEMS`, `SIX_STEMS` | Up to 6 stems (vocals, drums, bass, other, piano, guitar) |
+
+### Webhook Registration
+
+Webhooks are registered once via the StemSplit dashboard or API (`POST /api/v1/webhooks`), not per-job. StemSplit sends events for all jobs to the registered URL.
 
 ### Webhook Payload
 
+StemSplit uses HMAC-SHA256 signatures for webhook authentication via the `X-Webhook-Signature` header.
+
 ```json
 {
-  "job_id": "ss_job_123",
-  "status": "completed",
-  "stems": [
-    { "type": "vocals", "download_url": "https://cdn.stemsplit.io/..." },
-    { "type": "drums", "download_url": "https://cdn.stemsplit.io/..." },
-    { "type": "bass", "download_url": "https://cdn.stemsplit.io/..." },
-    { "type": "other", "download_url": "https://cdn.stemsplit.io/..." },
-    { "type": "piano", "download_url": "https://cdn.stemsplit.io/..." },
-    { "type": "guitar", "download_url": "https://cdn.stemsplit.io/..." }
-  ]
+  "event": "job.completed",
+  "timestamp": "2026-01-05T12:30:00Z",
+  "data": {
+    "jobId": "clxxx123...",
+    "status": "COMPLETED",
+    "input": {
+      "durationSeconds": 240,
+      "fileSizeBytes": 4500000
+    },
+    "outputs": {
+      "vocals": {
+        "url": "https://stemsplit-storage....r2.cloudflarestorage.com/...",
+        "expiresAt": "2026-01-05T13:30:00Z"
+      },
+      "instrumental": {
+        "url": "https://stemsplit-storage....r2.cloudflarestorage.com/...",
+        "expiresAt": "2026-01-05T13:30:00Z"
+      }
+    },
+    "creditsCharged": 240,
+    "createdAt": "2026-01-05T12:00:00Z",
+    "completedAt": "2026-01-05T12:02:30Z"
+  }
 }
 ```
+
+### Webhook Headers
+
+| Header                | Description                            |
+| --------------------- | -------------------------------------- |
+| `X-Webhook-Signature` | `sha256=<HMAC-SHA256 of request body>` |
+| `X-Webhook-Event`     | Event type (e.g., `job.completed`)     |
+| `X-Webhook-Id`        | Webhook endpoint identifier            |
 
 ---
 
@@ -154,11 +181,11 @@ The Python worker extracts reference pitch data from the vocal stem using libros
 
 ## Cost Optimization
 
-| Strategy               | Description                                                    |
-| ---------------------- | -------------------------------------------------------------- |
-| **Song deduplication** | Same videoId shared across users — process once, serve many    |
-| **R2 storage**         | No egress fees for stem downloads (Cloudflare R2)              |
-| **Lazy processing**    | Only process songs when first requested, not speculatively     |
-| **Format choice**      | MP3 for stems (smaller files, acceptable quality for practice) |
-| **TTL on failed jobs** | Auto-retry failed jobs up to 3 times, then mark as FAILED      |
-| **StemSplit pricing**  | ~$0.10/min of audio — a 4-min song costs ~$0.40 once           |
+| Strategy               | Description                                                                      |
+| ---------------------- | -------------------------------------------------------------------------------- |
+| **Song deduplication** | Same videoId shared across users — process once, serve many                      |
+| **R2 storage**         | No egress fees for stem downloads (Cloudflare R2)                                |
+| **Lazy processing**    | Only process songs when first requested, not speculatively                       |
+| **Format choice**      | MP3 for stems (smaller files, acceptable quality for practice)                   |
+| **TTL on failed jobs** | Auto-retry failed jobs up to 3 times, then mark as FAILED                        |
+| **StemSplit pricing**  | Credits = audio duration in seconds. ~$0.10/min — a 4-min song costs ~$0.40 once |

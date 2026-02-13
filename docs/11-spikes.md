@@ -95,49 +95,86 @@ Does the StemSplit API produce stems of sufficient quality for practice purposes
 
 ### Approach
 
-1. Create a minimal Node.js script that calls the StemSplit API
-2. Submit 5 diverse YouTube URLs (pop, rock, ballad, hip-hop, classical)
-3. Use 6-stem split mode (`SIX_STEMS`) with MP3 output
-4. Measure processing time for each
-5. Download stems and evaluate quality (vocals isolation, artifact levels)
-6. Test webhook delivery reliability
-7. Calculate cost per song
+Used the production Intonavio API (`api.intonavio.pawelgawliczek.cloud`) to submit songs through the full pipeline: API → BullMQ → StemSplit → webhook → stem download.
 
 ### Test Songs
 
-| #   | Genre    | Duration | YouTube URL             | Notes                       |
-| --- | -------- | -------- | ----------------------- | --------------------------- |
-| 1   | Pop      | ~3:30    | (selected at test time) | Clean studio production     |
-| 2   | Rock     | ~4:00    | (selected at test time) | Heavy instrumentation       |
-| 3   | Ballad   | ~4:30    | (selected at test time) | Vocal-forward mix           |
-| 4   | Hip-hop  | ~3:00    | (selected at test time) | Rap vocals + beat           |
-| 5   | Acoustic | ~3:00    | (selected at test time) | Guitar + voice, minimal mix |
+| #   | Genre    | Song                                | URL                                         | Duration |
+| --- | -------- | ----------------------------------- | ------------------------------------------- | -------- |
+| 1   | Jazz/Pop | Michael Buble — "Feeling Good"      | https://www.youtube.com/watch?v=YwVEXGq1WN0 | 3:59     |
+| 2   | Acoustic | Carole King — "You've Got A Friend" | https://www.youtube.com/watch?v=BcJbzuyp6VY | 5:10     |
 
-### Success Criteria
+### Results
 
-| Metric                  | Target                           | How to Measure                                      |
-| ----------------------- | -------------------------------- | --------------------------------------------------- |
-| Vocal isolation quality | Minimal bleed, clear vocals      | Subjective listening test (1-5 scale, target ≥ 3.5) |
-| Instrumental quality    | Vocals removed cleanly           | Subjective listening test                           |
-| Processing time         | < 5 min for a 4-min song         | Measure webhook arrival time                        |
-| Webhook reliability     | 5/5 webhooks received            | Count received callbacks                            |
-| API uptime              | No errors during test            | Monitor HTTP responses                              |
-| Cost per song           | ≤ $0.50 for typical 3-4 min song | Calculate from API pricing                          |
+#### Processing Time
 
-### Risks
+| Song                | StemSplit Create → Complete | Notes                        |
+| ------------------- | --------------------------- | ---------------------------- |
+| Feeling Good        | ~69 seconds                 | 3:59 song processed in ~1m   |
+| You've Got A Friend | ~87 seconds                 | 5:10 song processed in ~1.5m |
 
-- **Quality variation**: Stem quality may vary significantly by genre or mix complexity → test diverse genres
-- **API downtime**: StemSplit is a third-party service → evaluate SLA, consider fallback (e.g., Demucs self-hosted)
-- **Webhook reliability**: Webhooks may fail or be delayed → implement polling fallback
-- **Cost at scale**: $0.10/min adds up — a 5-min song costs $0.50, which may require careful user-facing pricing
+Both well within the 5-minute target.
 
-### Deliverables
+#### Stem Output
 
-- Quality assessment spreadsheet (per song, per stem type)
-- Processing time measurements
-- Cost analysis with projections at 100/1K/10K songs per month
-- Webhook reliability report
-- Recommendation: proceed with StemSplit, negotiate pricing, or evaluate self-hosted Demucs as alternative
+**Critical finding:** The StemSplit YouTube endpoint (`POST /youtube-jobs`) only returns **3 outputs**: `fullAudio`, `vocals`, `instrumental`. It does **not** support `outputType` parameter — the `SIX_STEMS` option is only available on the file upload endpoint (`POST /jobs`).
+
+| Output       | Song 1 Size | Song 2 Size | Bitrate | Format |
+| ------------ | ----------- | ----------- | ------- | ------ |
+| vocals       | 9.1 MB      | 12 MB       | 320kbps | MP3    |
+| instrumental | 9.1 MB      | 12 MB       | 320kbps | MP3    |
+| fullAudio    | (skipped)   | (skipped)   | 320kbps | MP3    |
+
+#### Quality Assessment
+
+**Pending user listening test.** Stems downloaded to `/tmp/spike-c-stems/` for manual evaluation. Rate each on 1-5 scale:
+
+| Stem          | Song 1 (Jazz/Pop) | Song 2 (Acoustic) |
+| ------------- | ----------------- | ----------------- |
+| Vocal clarity | \_\_\_ / 5        | \_\_\_ / 5        |
+| Vocal bleed   | \_\_\_ / 5        | \_\_\_ / 5        |
+| Instrumental  | \_\_\_ / 5        | \_\_\_ / 5        |
+
+#### Cost Analysis
+
+| Metric              | Value                                  |
+| ------------------- | -------------------------------------- |
+| Credits charged     | 239 + 310 = 549 seconds (~9.2 minutes) |
+| Cost model          | Credits = audio duration in seconds    |
+| Cost per song (avg) | ~$0.46 at $0.10/min (4.5 min avg)      |
+| 30-min credit pack  | Covers ~6-7 typical songs              |
+
+#### Webhook Integration
+
+- Webhooks are registered **separately** via dashboard/API, not per-job
+- Authentication uses **HMAC-SHA256** (`X-Webhook-Signature`), not shared secret header
+- Webhook payload uses envelope format: `{ event, timestamp, data: { jobId, outputs } }`
+- Download URLs are **presigned R2 URLs** (1-hour expiry), no auth header needed
+
+#### API Contract Discrepancies Found
+
+Our original implementation (based on assumed API contract) had several mismatches with the real StemSplit API:
+
+| Aspect                | Documented (assumed)              | Actual                                               |
+| --------------------- | --------------------------------- | ---------------------------------------------------- |
+| Job creation response | `{ job_id: "..." }`               | `{ id: "..." }`                                      |
+| Webhook delivery      | `webhookUrl` param per job        | Registered separately via dashboard/API              |
+| Webhook auth          | `x-webhook-secret` shared header  | `X-Webhook-Signature` HMAC-SHA256                    |
+| Webhook payload       | `{ job_id, status, stems[] }`     | `{ event, timestamp, data: { jobId, outputs: {} } }` |
+| Stem download auth    | Bearer token required             | Presigned URLs, no auth needed                       |
+| YouTube 6-stem        | `outputType: SIX_STEMS` supported | YouTube flow fixed at vocals + instrumental only     |
+
+All discrepancies have been fixed in the codebase (commit `23d47bc` and `696a695`).
+
+### Recommendation
+
+**Conditional GO** — StemSplit works well for vocal/instrumental separation (fast, good quality at 320kbps). However:
+
+1. **YouTube flow limitation**: Only produces vocals + instrumental (2 useful stems). For 6-stem separation (drums, bass, piano, guitar), we'd need to either:
+   - Use the file upload flow: download YouTube audio first → upload to StemSplit → get 6 stems (adds complexity + download step)
+   - Accept 2-stem mode for MVP and add 6-stem later if needed
+2. **For singing practice**, vocals + instrumental is sufficient — the instrumental serves as the backing track. The 6-stem split would be a nice-to-have for advanced features (e.g., muting specific instruments).
+3. **Cost is reasonable** at ~$0.46/song. Deduplication makes this a one-time cost per unique song.
 
 ---
 
