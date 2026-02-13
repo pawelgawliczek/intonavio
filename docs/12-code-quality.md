@@ -125,16 +125,22 @@ All linters run in CI as a pre-merge gate. No warnings allowed — treat warning
 
 ### Python (Pitch Worker)
 
-- Type hints on all function signatures. Run `mypy` in strict mode.
-- Pydantic models for job payloads and output validation.
+- Type hints on all function signatures. Run `mypy` in strict mode with pydantic plugin.
+- Pydantic models for job payloads (camelCase aliases for BullMQ interop) and output validation.
+- Environment config via `pydantic-settings` `BaseSettings` — fails fast on missing required vars at startup.
 - Pin exact dependency versions in `requirements.txt`.
-- Each job is process-isolated: load audio, process, upload, update DB, exit. No shared mutable state.
+- BullMQ consumer via `bullmq` Python package with 5-minute lock duration (pYIN extraction is CPU-bound, ~110s per song).
+- Each job is process-isolated: download stem → extract pitch → upload JSON → update DB. No shared mutable state.
+- CPU-bound pYIN runs in `ThreadPoolExecutor` via `run_in_executor` to avoid blocking the async BullMQ event loop.
 - Validate pYIN output before uploading: reject if >90% of frames are unvoiced (bad audio) or all NaN.
-- Log with structured context: `logger.info("Pitch analysis complete", extra={"song_id": song_id, "frame_count": len(frames)})`.
+- Idempotent database writes: `INSERT ... ON CONFLICT ("songId") DO UPDATE` for PitchData upserts.
+- Structured JSON logging to stdout with `traceId`, `songId`, `durationMs` context fields.
+- Use `from __future__ import annotations` in modules importing BullMQ `Job` (not subscriptable at runtime).
+- Type-only imports in `TYPE_CHECKING` blocks (e.g., `mypy_boto3_s3.S3Client`, `bullmq.Job`).
 
 ### Cloudflare R2 (Storage)
 
 - Presigned URLs for client downloads (15 min TTL). Never proxy file content through the API.
-- Consistent key naming: `stems/{songId}/{type}.mp3`, `pitch/{songId}/reference.json`, `pitch/{exerciseId}/reference.json`.
+- Consistent key naming: `stems/{songId}/{TYPE}.mp3` (uppercase StemType enum value), `pitch/{songId}/reference.json`, `pitch/{exerciseId}/reference.json`.
 - Set correct `Content-Type` on every upload (`audio/mpeg`, `application/json`).
 - Set `Cache-Control: public, max-age=31536000, immutable` on stems (content-addressed, never changes).

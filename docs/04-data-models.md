@@ -232,7 +232,7 @@ model Stem {
   id         String   @id @default(cuid())
   songId     String
   type       StemType
-  storageKey String   // R2 object key: "stems/{songId}/{type}.mp3"
+  storageKey String   // R2 object key: "stems/{songId}/{TYPE}.mp3"
   format     String   @default("mp3")
   fileSize   Int      // bytes
   createdAt  DateTime @default(now())
@@ -411,24 +411,22 @@ The pitch data file stored in R2 contains frame-by-frame pitch information. For 
 {
   "songId": "cm7abc123def456ghijklmnop",
   "sampleRate": 44100,
-  "hopSize": 512,
   "hopDuration": 0.0116,
-  "frameCount": 18362,
   "frames": [
     { "t": 0.0, "hz": null, "midi": null, "voiced": false },
     { "t": 0.0116, "hz": null, "midi": null, "voiced": false },
-    { "t": 0.5104, "hz": 329.63, "midi": 64, "voiced": true },
-    { "t": 0.522, "hz": 330.12, "midi": 64, "voiced": true }
+    { "t": 0.5104, "hz": 329.63, "midi": 64.0, "voiced": true },
+    { "t": 0.522, "hz": 330.12, "midi": 64.1, "voiced": true }
   ]
 }
 ```
 
-| Field    | Type     | Description                                        |
-| -------- | -------- | -------------------------------------------------- |
-| `t`      | `float`  | Time in seconds from start of track                |
-| `hz`     | `float?` | Detected frequency in Hz (`null` if unvoiced)      |
-| `midi`   | `int?`   | MIDI note number (`null` if unvoiced)              |
-| `voiced` | `bool`   | Whether a pitched vocal was detected at this frame |
+| Field    | Type     | Description                                            |
+| -------- | -------- | ------------------------------------------------------ |
+| `t`      | `float`  | Time in seconds from start of track (4 decimal places) |
+| `hz`     | `float?` | Detected frequency in Hz (`null` if unvoiced)          |
+| `midi`   | `float?` | MIDI note number, 1 decimal place (`null` if unvoiced) |
+| `voiced` | `bool`   | Whether a pitched vocal was detected at this frame     |
 
 **Design notes:**
 

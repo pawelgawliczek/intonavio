@@ -140,7 +140,7 @@ Caddy runs as a shared reverse proxy at `/opt/caddy` on the Hostinger KVM, servi
 
 The production compose file lives at `/opt/intonavio/docker-compose.yml` on Hostinger. Source code is at `/opt/intonavio-src` (shallow clone, pulled before each build).
 
-Currently deployed: **API + PostgreSQL + Redis** (web and worker not yet implemented).
+Currently deployed: **API + Worker + PostgreSQL + Redis** (web not yet implemented).
 
 ```yaml
 # /opt/intonavio/docker-compose.yml (current)
@@ -158,8 +158,24 @@ services:
     restart: unless-stopped
     networks: [default, stack_appnet]
 
+  worker:
+    build:
+      context: /opt/intonavio-src/workers/pitch-analyzer
+      dockerfile: Dockerfile
+    env_file: .env.production
+    depends_on:
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+
   # web: not yet implemented
-  # worker: not yet implemented
 
   postgres:
     image: postgres:16-alpine

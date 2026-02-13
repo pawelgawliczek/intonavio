@@ -98,11 +98,25 @@ intonavio/
 ├── workers/
 │   └── pitch-analyzer/             # Python pitch analysis worker
 │       ├── src/
-│       │   ├── analyzer.py         # pYIN pitch extraction
-│       │   ├── worker.py           # BullMQ consumer (via Redis)
-│       │   ├── storage.py          # R2 upload/download
-│       │   └── db.py               # PostgreSQL updates
+│       │   ├── __init__.py         # Package marker (empty)
+│       │   ├── config.py           # pydantic-settings env config
+│       │   ├── logger.py           # Structured JSON logging
+│       │   ├── models.py           # Pydantic models (job data, output)
+│       │   ├── consumer.py         # BullMQ Worker wrapper + heartbeat
+│       │   ├── analyzer.py         # pYIN pitch extraction via librosa
+│       │   ├── storage.py          # R2 download/upload via boto3
+│       │   ├── db.py               # PostgreSQL upserts via psycopg2
+│       │   └── worker.py           # Job orchestrator + main()
+│       ├── tests/
+│       │   ├── conftest.py         # Shared fixtures (config, wav gen)
+│       │   ├── test_analyzer.py    # pYIN extraction tests (19 tests)
+│       │   ├── test_config.py      # Config validation tests
+│       │   ├── test_db.py          # DB adapter tests (mocked)
+│       │   ├── test_models.py      # Pydantic model tests
+│       │   ├── test_storage.py     # R2 adapter tests (mocked)
+│       │   └── test_worker.py      # Orchestrator integration tests
 │       ├── requirements.txt
+│       ├── requirements-dev.txt
 │       ├── Dockerfile
 │       └── pyproject.toml
 │
@@ -174,13 +188,13 @@ graph TD
 
 ## Tech Stack Per Directory
 
-| Directory                | Language    | Runtime             | Key Dependencies                                  |
-| ------------------------ | ----------- | ------------------- | ------------------------------------------------- |
-| `apps/api`               | TypeScript  | Node.js 20          | NestJS, Prisma, BullMQ, `@aws-sdk/client-s3` (R2) |
-| `apps/web`               | TypeScript  | Node.js 20          | Next.js 14, React 18, Tailwind CSS                |
-| `apps/ios`               | Swift       | iOS 17+ / macOS 14+ | SwiftUI, AVFoundation, WebKit                     |
-| `packages/shared`        | TypeScript  | —                   | Zod (validation), shared types                    |
-| `workers/pitch-analyzer` | Python 3.11 | —                   | librosa, numpy, boto3 (R2), psycopg2, redis       |
+| Directory                | Language    | Runtime             | Key Dependencies                                                |
+| ------------------------ | ----------- | ------------------- | --------------------------------------------------------------- |
+| `apps/api`               | TypeScript  | Node.js 20          | NestJS, Prisma, BullMQ, `@aws-sdk/client-s3` (R2)               |
+| `apps/web`               | TypeScript  | Node.js 20          | Next.js 14, React 18, Tailwind CSS                              |
+| `apps/ios`               | Swift       | iOS 17+ / macOS 14+ | SwiftUI, AVFoundation, WebKit                                   |
+| `packages/shared`        | TypeScript  | —                   | Zod (validation), shared types                                  |
+| `workers/pitch-analyzer` | Python 3.11 | —                   | librosa, numpy, boto3 (R2), psycopg2, bullmq, pydantic-settings |
 
 ---
 

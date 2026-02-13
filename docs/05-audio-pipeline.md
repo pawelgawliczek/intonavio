@@ -156,7 +156,7 @@ The Python worker extracts reference pitch data from the vocal stem using libros
 
 ### Pipeline
 
-1. **Download** vocal stem from R2 (`stems/{songId}/vocals.mp3`)
+1. **Download** vocal stem from R2 (`stems/{songId}/VOCALS.mp3`)
 2. **Load** audio with librosa at 44.1kHz mono
 3. **Extract pitch** using `librosa.pyin()`:
    - `fmin=65` (C2) — lowest expected singing pitch

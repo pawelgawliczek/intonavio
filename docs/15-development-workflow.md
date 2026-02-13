@@ -42,13 +42,14 @@ For deployment infrastructure details, see `docs/08-infrastructure.md`.
 
 ### Deploy workflow (`deploy.yml`) — runs on merge to `main`
 
-Currently builds API only (web and worker not yet implemented):
+Currently builds API and worker (web not yet implemented):
 
-1. Build Docker image for `api` and push to GitHub Container Registry (ghcr.io)
+1. Build Docker images for `api` and `worker`, push to GitHub Container Registry (ghcr.io)
 2. SSH into Hostinger KVM
-3. Pull latest image and restart containers
+3. Pull latest images and restart containers
 4. Run database migrations (`prisma migrate deploy`)
 5. Health check verification (`GET /v1/health`)
+6. Verify worker heartbeat in logs
 
 Note: GHCR auth on the server requires a PAT with `read:packages` scope. As an alternative, the server currently builds from source (`/opt/intonavio-src`) via `docker compose build`.
 

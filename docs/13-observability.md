@@ -57,8 +57,15 @@ Every log entry is JSON with mandatory fields:
 
 ### Python Worker
 
-- Log pYIN parameters used (fmin, fmax, hop_length) for every analysis — reproducible locally with same params.
-- Log output stats after analysis: `frameCount`, `voicedFramePercent`, `frequencyRange`. If `voicedFramePercent < 10%`, log a warning (bad audio).
+- Structured JSON logging to stdout with mandatory fields: `level`, `timestamp`, `service` ("pitch-worker"), `module`, `message`.
+- Every log line includes `traceId` and `songId` for cross-service correlation.
+- Log pYIN parameters used (`fmin`, `fmax`, `hopLength`, `sampleRate`) for every analysis — reproducible locally with same params.
+- Log output stats after analysis: `frameCount`, `voicedFramePercent`, `frequencyMin`, `frequencyMax`. If `voicedFramePercent < 10%`, log a warning (bad audio).
+- Log R2 operations with `key`, `sizeBytes`, `durationMs` for both stem download and pitch JSON upload.
+- Log DB persistence with `pitchDataId`, `songId`, `durationMs`.
+- Log job lifecycle: `Job started` (with traceId, songId), `Job completed` (with durationMs), `Job failed` (with error, attempt info).
+- Heartbeat every 60s: `{"message": "heartbeat", "status": "alive"}` for health monitoring.
+- BullMQ lock duration set to 5 minutes (pYIN extraction takes ~110s on a typical song).
 - Debug mode (env flag, disabled in production): save intermediate numpy arrays to a debug path for reproducing pitch extraction issues locally.
 
 ### iOS Client

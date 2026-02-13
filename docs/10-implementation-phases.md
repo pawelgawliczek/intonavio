@@ -126,32 +126,34 @@ graph LR
 
 ---
 
-### Phase 2: Pitch Worker
+### Phase 2: Pitch Worker ✅ COMPLETE
 
 **Goal:** Python worker that extracts reference pitch from vocal stems.
 
+> **Status:** All 8 sub-phases implemented and verified. 43 unit tests passing, ruff lint/format clean, mypy strict clean, 83% overall coverage (80% threshold), 100% coverage on `analyzer.py` (95% threshold). Deployed to Hostinger KVM, verified on 2 songs — both transitioned from ANALYZING → READY with valid pitch data. See `docs/implementation_plans/pitch-worker.md` for detailed sub-phase breakdown.
+
 **Deliverables:**
 
-- BullMQ consumer that listens for pitch-analysis jobs with typed `PitchAnalysisJobData`
-- pYIN extraction pipeline with configurable parameters (fmin, fmax, hop_length), all parameters logged for reproducibility (see `docs/13-observability.md` — Python Worker debugging)
+- BullMQ consumer (`consumer.py`) that listens on the `pitch-analysis` queue with 5-minute lock duration for CPU-bound pYIN extraction
+- pYIN extraction pipeline (`analyzer.py`) with configurable parameters (fmin=65, fmax=2093, hop_length=512), all parameters logged for reproducibility (see `docs/13-observability.md` — Python Worker debugging)
 - Validation: reject output if >90% of frames are unvoiced or all NaN (see `docs/12-code-quality.md` — Python rules)
 - JSON pitch data upload to R2 with key `pitch/{songId}/reference.json` and `Content-Type: application/json` (see `docs/12-code-quality.md` — R2 rules)
-- Database status updates (song → READY) via `prisma.$transaction()`
-- Pydantic models for job payloads and output validation
-- Type hints on all function signatures, mypy strict mode
-- Structured logging with context: `song_id`, `frame_count`, `voicedFramePercent`, `frequencyRange` (see `docs/13-observability.md`)
+- Database status updates (song ANALYZING → READY) via psycopg2 transactions with idempotent `ON CONFLICT DO UPDATE` upserts
+- Pydantic models (`models.py`) for job payloads (camelCase aliases for BullMQ interop) and output validation
+- Environment configuration (`config.py`) via pydantic-settings with fail-fast startup validation
+- Structured JSON logging (`logger.py`) with mandatory fields: level, timestamp, service, module, message, traceId, songId, durationMs (see `docs/13-observability.md`)
 - Stdout heartbeat every 60s for health monitoring
-- Process-isolated: load audio, process, upload, update DB, exit. No shared mutable state
-- 80% line coverage, 95% branch coverage on pYIN extraction and cents math
-- Deployed to Hostinger KVM as Docker container with CPU/memory limits (see `docs/08-infrastructure.md`)
-
-**Runs in parallel with Phase 1** (after database schema is ready).
+- Type hints on all function signatures, mypy strict mode
+- Process-isolated: download stem → extract pitch → upload JSON → update DB. No shared mutable state
+- 83% overall line coverage, 100% branch coverage on `analyzer.py` (pYIN extraction and MIDI math)
+- Deployed to Hostinger KVM as Docker container with CPU/memory limits (2 CPU, 2G RAM)
 
 **Quality gates:**
 
 - Ruff linting + formatting passes, mypy strict passes
 - Exact dependency versions pinned in `requirements.txt`
-- Job idempotency verified: running same job twice produces same result
+- Job idempotency verified: `ON CONFLICT ("songId") DO UPDATE` ensures re-runs produce same result
+- Verified on production: 2 songs processed (20,501 and 26,679 frames, 62.7% and 69.1% voiced)
 
 ---
 
