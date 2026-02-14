@@ -45,11 +45,12 @@ final class MetronomeTick {
 private extension MetronomeTick {
     func attachIfNeeded() {
         guard !isAttached else { return }
+        let monoFormat = AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 1)!
         audioEngine.attach(playerNode)
         audioEngine.connect(
             playerNode,
             to: audioEngine.mainMixerNode,
-            format: nil
+            format: monoFormat
         )
         generateTickBuffer()
         isAttached = true

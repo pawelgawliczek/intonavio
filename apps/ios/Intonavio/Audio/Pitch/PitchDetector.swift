@@ -12,7 +12,7 @@ final class PitchDetector {
     private(set) var isRunning = false
 
     private let audioEngine: AudioEngine
-    private let detector = YINDetector()
+    private var detector = YINDetector()
 
     /// Ring buffer accumulating mic samples.
     private var ringBuffer: [Float] = []
@@ -42,6 +42,15 @@ final class PitchDetector {
         )
 
         let format = audioEngine.inputFormat
+        let actualSampleRate = Float(format.sampleRate)
+
+        // Rebuild detector with the real sample rate (VP may use 48000, not 44100)
+        detector = YINDetector(
+            sampleRate: actualSampleRate,
+            threshold: PitchConstants.yinThreshold,
+            minLag: Int(actualSampleRate / PitchConstants.maxFrequency),
+            maxLag: Int(actualSampleRate / PitchConstants.minFrequency)
+        )
 
         audioEngine.installInputTap(
             bufferSize: PitchConstants.ioBufferSize,
@@ -51,7 +60,9 @@ final class PitchDetector {
         }
 
         isRunning = true
-        AppLogger.pitch.info("PitchDetector started")
+        AppLogger.pitch.info(
+            "PitchDetector started — sampleRate=\(actualSampleRate) channels=\(format.channelCount)"
+        )
     }
 
     func stop() {

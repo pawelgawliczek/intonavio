@@ -20,7 +20,7 @@ enum AudioSessionManager {
         let session = AVAudioSession.sharedInstance()
         try session.setCategory(
             .playAndRecord,
-            mode: .voiceChat,
+            mode: .measurement,
             options: [.defaultToSpeaker, .allowBluetooth, .mixWithOthers]
         )
         try session.setPreferredIOBufferDuration(
