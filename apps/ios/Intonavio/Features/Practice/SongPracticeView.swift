@@ -106,6 +106,9 @@ private extension SongPracticeView {
             onWebViewReady: vm.onWebViewReady
         )
         .background(Color.black)
+        .overlay {
+            Color.clear.contentShape(Rectangle())
+        }
     }
 
     func controlsSection(_ vm: PracticeViewModel) -> some View {

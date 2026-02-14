@@ -60,18 +60,17 @@ extension PracticeViewModel {
         }
     }
 
-    /// Download pitch data if the song has it but it's not yet cached.
+    /// Download pitch data if the song has it. Always fetches fresh data
+    /// so re-analyzed results (e.g. with RMS values) replace stale cache.
     func downloadPitchDataIfNeeded(
         hasPitchData: Bool,
         apiClient: any APIClientProtocol
     ) {
-        guard hasPitchData,
-              !PitchDataDownloader.isCached(songId: songId) else {
-            return
-        }
+        guard hasPitchData else { return }
 
         Task {
             do {
+                PitchDataDownloader.removeCache(songId: songId)
                 _ = try await PitchDataDownloader.localURL(
                     songId: songId,
                     apiClient: apiClient
