@@ -68,13 +68,17 @@ final class StemPlayer {
     func play(from time: Double = 0) {
         guard isSetup else { return }
         audioEngine.ensureRunning()
-        playbackStartOffset = time
+
+        // Schedule stems ahead by TimePitch processing latency so the
+        // audio output aligns with the requested time after the pipeline delay.
+        let compensated = time + timePitch.latency
+        playbackStartOffset = compensated
 
         for (type, player) in playerNodes {
             guard let file = audioFiles[type] else { continue }
 
             let sampleRate = file.processingFormat.sampleRate
-            let startFrame = AVAudioFramePosition(time * sampleRate)
+            let startFrame = AVAudioFramePosition(compensated * sampleRate)
             let totalFrames = file.length
             let remainingFrames = AVAudioFrameCount(
                 max(0, totalFrames - startFrame)

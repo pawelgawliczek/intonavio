@@ -170,9 +170,9 @@ PlayerNode(full)    ──┘
 
 ### AudioEngine Lifecycle
 
-1. **`prepare()`** — Configure audio session (`.playAndRecord`, `.voiceChat`) and enable voice processing on `inputNode`. Must be called before attaching nodes — VP re-creates the audio graph.
+1. **`prepare()`** — Configure audio session (`.playAndRecord`, `.measurement`) and enable voice processing on `inputNode`. Must be called before attaching nodes — VP re-creates the audio graph.
 2. **Attach nodes** — `StemPlayer.setup()` attaches player nodes, mixer, and timePitch to the prepared engine.
-3. **`start()`** — Start the engine with all nodes connected. Idempotent — safe to call from multiple consumers.
+3. **`start()`** — Start the engine with all nodes connected. Observes interruption and route change notifications on iOS. Idempotent — safe to call from multiple consumers.
 
 `StemPlayer`, `PitchDetector`, and `MetronomeTick` all accept a shared `AudioEngine` via init. None creates its own `AVAudioEngine`. The engine starts lazily when stems are set up or pitch detection begins.
 
@@ -180,14 +180,37 @@ PlayerNode(full)    ──┘
 
 Previous architecture used separate engines for `StemPlayer` (output) and `PitchDetector` (input). On iOS, enabling `setVoiceProcessingEnabled(true)` on one engine's input node caused VPIO render errors because both engines competed for audio I/O hardware. With a single engine, VPIO sees the stem output and cancels it from the mic input.
 
+### Audio Route Change Handling
+
+When the audio output route changes (e.g. AirPods connected/disconnected), iOS posts `AVAudioSession.routeChangeNotification`. `AudioEngine` observes this and:
+
+1. Ensures the engine is still running (route changes can stop it)
+2. Fires an `onRouteChange` callback so consumers can re-sync playback
+
+`PracticeViewModel` handles the callback by stopping all stems, re-applying the current audio mode volumes, and restarting playback from the current YouTube time. Without this, player nodes lose sync during route changes and all stems become audible at slightly different offsets.
+
+### TimePitch Latency Compensation
+
+`AVAudioUnitTimePitch` introduces processing latency (~125ms) — audio frames take time to pass through the pitch-preserving time-stretch pipeline. `StemPlayer.play(from:)` compensates by scheduling stems ahead by `timePitch.latency`:
+
+```swift
+let compensated = time + timePitch.latency
+```
+
+This ensures the audio output aligns with the requested playback time after the pipeline delay. The drift checker in `VideoAudioSync` accounts for the same latency when comparing stem position against YouTube time.
+
+### Video-Audio Drift Correction
+
+`VideoAudioSync` polls YouTube time every 2 seconds and compares it with the stem player's current position (adjusted for TimePitch latency). If drift exceeds 150ms, stems are seeked to match YouTube. YouTube is the master clock — stems follow.
+
 ### Audio Session Configuration
 
-The audio session uses `.voiceChat` mode (not `.default`) to enable iOS built-in Acoustic Echo Cancellation (AEC) and noise suppression. All audio routes through stem playback — YouTube audio is not used.
+The audio session uses `.measurement` mode with voice processing enabled on the input node for AEC. All audio routes through stem playback — YouTube audio is not used.
 
 ```swift
 AVAudioSession.sharedInstance().setCategory(
     .playAndRecord,
-    mode: .voiceChat,  // Enables AEC + noise suppression
+    mode: .measurement,  // VP enabled separately on inputNode for AEC
     options: [.defaultToSpeaker, .allowBluetooth, .mixWithOthers]
 )
 ```

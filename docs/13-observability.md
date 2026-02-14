@@ -71,7 +71,8 @@ Every log entry is JSON with mandatory fields:
 ### iOS Client
 
 - Pitch detection debug mode (dev settings toggle): records raw mic input + detected frequencies + reference lookup to a local file. When a user reports "scoring feels wrong", export this file for analysis.
-- YouTube sync drift log: every sync correction (drift > 150ms) logged with `ytTime`, `stemTime`, `correction` to reveal patterns.
+- YouTube sync drift log: every sync correction (drift > 150ms) logged with `ytTime`, `stemTime`, `correction` to reveal patterns. In debug builds, every drift sample (corrected or not) is logged.
+- Audio route change log: when AirPods or other audio devices connect/disconnect, the route change reason is logged and stems are re-synced. Look for "Audio route changed" and "Re-synced stems after audio route change" entries.
 - Network request log in debug builds: all API calls with status, duration, response size.
 
 ### Web Client

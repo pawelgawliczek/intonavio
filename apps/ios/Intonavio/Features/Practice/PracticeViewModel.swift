@@ -119,6 +119,12 @@ final class PracticeViewModel {
         // Engine starts lazily in StemPlayer.setup() or PitchDetector.start().
         try? audioEngine.prepare()
 
+        #if os(iOS)
+        audioEngine.onRouteChange = { [weak self] in
+            self?.handleAudioRouteChange()
+        }
+        #endif
+
         sync = VideoAudioSync(
             controller: controller,
             stemPlayer: stemPlayer
@@ -299,6 +305,25 @@ private extension PracticeViewModel {
         case .unknown:
             break
         }
+    }
+
+    func handleAudioRouteChange() {
+        guard isInStemMode else { return }
+        let isPlaying = loopState == .playing || loopState == .looping
+
+        guard isPlaying else {
+            stemPlayer.applyMode(audioMode)
+            return
+        }
+
+        // Stop and re-sync from current YouTube time to eliminate drift
+        sync?.stop()
+        stemPlayer.stop()
+        stemPlayer.applyMode(audioMode)
+        stemPlayer.rate = Float(playbackRate)
+        stemPlayer.play(from: currentTime)
+        sync?.start()
+        AppLogger.audio.info("Re-synced stems after audio route change")
     }
 
     func handleStateChange(_ state: YouTubePlayerState) {

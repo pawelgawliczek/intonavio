@@ -32,15 +32,17 @@ graph LR
 - Detected pitch is dispatched to main thread for UI update
 - The reference pitch array is binary-searched by timestamp for O(log n) lookup
 - All audio (including "original" mode) routes through stem playback — YouTube audio is not used
+- **Audio route changes** (AirPods connect/disconnect) trigger a full stem re-sync — stops stems, re-applies mode volumes, restarts from current YouTube time
+- **TimePitch latency** (~125ms) is compensated in `StemPlayer.play(from:)` by scheduling frames ahead, so audio output aligns with the requested time
 
 ### Audio Session: Echo Cancellation
 
-The audio session uses `.voiceChat` mode (not `.default`) to enable iOS built-in Acoustic Echo Cancellation (AEC). Because stem playback and mic input share one engine, VPIO sees the stem output going to speakers and cancels it from the mic input. Without this, the microphone picks up the song's melody and the detected pitch line follows the music rather than the user's voice.
+The audio session uses `.measurement` mode with voice processing enabled separately on the input node. Because stem playback and mic input share one engine, VPIO sees the stem output going to speakers and cancels it from the mic input. Without this, the microphone picks up the song's melody and the detected pitch line follows the music rather than the user's voice.
 
 ```swift
 AVAudioSession.sharedInstance().setCategory(
     .playAndRecord,
-    mode: .voiceChat,  // Enables AEC + noise suppression
+    mode: .measurement,  // VP enabled separately on inputNode for AEC
     options: [.defaultToSpeaker, .allowBluetooth, .mixWithOthers]
 )
 ```

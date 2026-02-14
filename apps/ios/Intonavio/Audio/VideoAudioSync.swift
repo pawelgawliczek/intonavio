@@ -14,7 +14,7 @@ final class VideoAudioSync {
     init(
         controller: YouTubePlayerController,
         stemPlayer: StemPlayer,
-        driftThreshold: Double = 0.3
+        driftThreshold: Double = 0.15
     ) {
         self.controller = controller
         self.stemPlayer = stemPlayer

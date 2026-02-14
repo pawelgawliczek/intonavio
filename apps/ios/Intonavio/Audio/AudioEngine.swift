@@ -19,6 +19,12 @@ final class AudioEngine {
 
     #if os(iOS)
     private var interruptionObserver: NSObjectProtocol?
+    private var routeChangeObserver: NSObjectProtocol?
+
+    /// Called on the main queue when the audio output route changes
+    /// (e.g. AirPods connected/disconnected). Receivers should re-sync
+    /// playback to avoid stem drift.
+    var onRouteChange: (() -> Void)?
     #endif
 
     // MARK: - Lifecycle
@@ -54,6 +60,7 @@ final class AudioEngine {
 
         #if os(iOS)
         observeInterruptions()
+        observeRouteChanges()
         #endif
 
         AppLogger.audio.info("AudioEngine started")
@@ -64,6 +71,7 @@ final class AudioEngine {
 
         #if os(iOS)
         removeInterruptionObserver()
+        removeRouteChangeObserver()
         #endif
 
         engine.stop()
@@ -140,7 +148,7 @@ final class AudioEngine {
     }
 }
 
-// MARK: - Interruption Handling (iOS)
+// MARK: - Interruption & Route Change Handling (iOS)
 
 #if os(iOS)
 private extension AudioEngine {
@@ -176,6 +184,40 @@ private extension AudioEngine {
             try? AVAudioSession.sharedInstance().setActive(true)
             ensureRunning()
         @unknown default:
+            break
+        }
+    }
+
+    func observeRouteChanges() {
+        removeRouteChangeObserver()
+        routeChangeObserver = NotificationCenter.default.addObserver(
+            forName: AVAudioSession.routeChangeNotification,
+            object: AVAudioSession.sharedInstance(),
+            queue: .main
+        ) { [weak self] notification in
+            self?.handleRouteChange(notification)
+        }
+    }
+
+    func removeRouteChangeObserver() {
+        if let observer = routeChangeObserver {
+            NotificationCenter.default.removeObserver(observer)
+            routeChangeObserver = nil
+        }
+    }
+
+    func handleRouteChange(_ notification: Notification) {
+        guard let info = notification.userInfo,
+              let reasonValue = info[AVAudioSessionRouteChangeReasonKey] as? UInt,
+              let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue)
+        else { return }
+
+        switch reason {
+        case .newDeviceAvailable, .oldDeviceUnavailable:
+            AppLogger.audio.info("Audio route changed: \(reason.rawValue)")
+            ensureRunning()
+            onRouteChange?()
+        default:
             break
         }
     }
