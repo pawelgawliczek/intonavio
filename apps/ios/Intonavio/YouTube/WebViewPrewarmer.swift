@@ -23,7 +23,9 @@ final class WebViewPrewarmer {
 
         let config = WKWebViewConfiguration()
         config.processPool = processPool
+        #if os(iOS)
         config.allowsInlineMediaPlayback = true
+        #endif
         config.mediaTypesRequiringUserActionForPlayback = []
 
         let wv = WKWebView(

@@ -72,7 +72,7 @@ Helper `log_with_context(logger, level, message, **kwargs)` merges keyword args 
 | Model                  | Purpose                                                                                                                                |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | `PitchAnalysisJobData` | Parses camelCase BullMQ job data (`songId`, `vocalStemKey`, `traceId`)                                                                 |
-| `PitchFrame`           | Single frame: `t`, `hz` (nullable), `midi` (nullable), `voiced`                                                                        |
+| `PitchFrame`           | Single frame: `t`, `hz` (nullable), `midi` (nullable), `voiced`, `rms` (nullable)                                                      |
 | `PitchAnalysisOutput`  | Full output JSON with `songId`, `sampleRate`, `hopSize`, `hopDuration`, `frameCount`, `frames[]` — serializes to camelCase via aliases |
 | `AnalysisStats`        | Internal: `frame_count`, `voiced_frame_count`, `voiced_frame_percent`, `frequency_min`, `frequency_max`, `is_valid`                    |
 
@@ -124,8 +124,8 @@ Core algorithmic module — requires 95% branch coverage.
 Four focused functions:
 
 - **`hz_to_midi(hz) -> float`** — `69 + 12 * log2(hz / 440)`. Pure function.
-- **`extract_pitch(audio_bytes, config, trace_id) -> (frames, stats)`** — loads audio via `librosa.load(BytesIO(audio_bytes), sr=44100, mono=True)`, runs `librosa.pyin(fmin=65, fmax=2093, hop_length=512)`, logs params for reproducibility, warns if <10% voiced.
-- **`build_frames(f0, voiced_flag, sample_rate, hop_length) -> list[PitchFrame]`** — converts numpy arrays to PitchFrame list, handles NaN (unvoiced).
+- **`extract_pitch(audio_bytes, config, trace_id) -> (frames, stats)`** — loads audio via `librosa.load(BytesIO(audio_bytes), sr=44100, mono=True)`, runs `librosa.pyin(fmin=65, fmax=2093, hop_length=512)`, computes per-frame RMS via `librosa.feature.rms(y=audio, hop_length=512)`, logs params for reproducibility, warns if <10% voiced.
+- **`build_frames(f0, voiced_flag, rms_values, sample_rate, hop_length) -> list[PitchFrame]`** — converts numpy arrays to PitchFrame list, handles NaN (unvoiced). Includes RMS energy per frame for client-side artifact filtering.
 - **`validate_analysis(stats, max_unvoiced_ratio) -> bool`** — rejects if 0 frames or >90% unvoiced.
 
 Key: frame is voiced only if `voiced_flag[i]` is True AND `f0[i]` is not NaN. MIDI rounded to 1 decimal, time to 4 decimals.

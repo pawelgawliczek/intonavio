@@ -34,6 +34,14 @@ final class PitchDetector {
         )
 
         let inputNode = engine.inputNode
+
+        #if os(macOS)
+        if !inputNode.isVoiceProcessingEnabled {
+            try inputNode.setVoiceProcessingEnabled(true)
+            AppLogger.pitch.info("Voice processing (echo cancellation) enabled")
+        }
+        #endif
+
         let format = inputNode.outputFormat(forBus: 0)
 
         inputNode.installTap(

@@ -45,6 +45,17 @@ enum PitchDataDownloader {
         try? fileManager.removeItem(at: url)
     }
 
+    /// Remove all cached pitch data for every song.
+    static func clearAllCache() {
+        let caches = fileManager.urls(
+            for: .cachesDirectory,
+            in: .userDomainMask
+        )[0]
+        let pitchDir = caches.appendingPathComponent("pitch", isDirectory: true)
+        try? fileManager.removeItem(at: pitchDir)
+        AppLogger.pitch.info("All pitch data cache cleared")
+    }
+
     private static func cacheURL(for songId: String) -> URL {
         let caches = fileManager.urls(
             for: .cachesDirectory,

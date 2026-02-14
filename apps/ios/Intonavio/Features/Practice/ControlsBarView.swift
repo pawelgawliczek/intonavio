@@ -44,7 +44,7 @@ private extension ControlsBarView {
                 .frame(width: 34, height: 34)
                 .foregroundStyle(isSelected ? .white : .secondary)
                 .background(
-                    isSelected ? Color.accentColor : Color(.tertiarySystemFill),
+                    isSelected ? Color.accentColor : Color.platformTertiaryFill,
                     in: RoundedRectangle(cornerRadius: 6)
                 )
         }
@@ -95,7 +95,7 @@ private extension ControlsBarView {
             .padding(.horizontal, 6)
             .foregroundStyle(isActive ? .white : .secondary)
             .background(
-                isActive ? Color.accentColor : Color(.tertiarySystemFill),
+                isActive ? Color.accentColor : Color.platformTertiaryFill,
                 in: RoundedRectangle(cornerRadius: 6)
             )
         }
@@ -116,7 +116,7 @@ private extension ControlsBarView {
                 .frame(width: 34, height: 34)
                 .foregroundStyle(.secondary)
                 .background(
-                    Color(.tertiarySystemFill),
+                    Color.platformTertiaryFill,
                     in: RoundedRectangle(cornerRadius: 6)
                 )
         }

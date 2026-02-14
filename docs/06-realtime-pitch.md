@@ -154,7 +154,7 @@ When `transposeSemitones = 0`, this reduces to the standard formula. One semiton
 score = (sum of frame scores / number of voiced reference frames) × 100
 ```
 
-Only frames where the reference vocal is voiced are counted — silence, breaths, and instrumental sections are excluded.
+Only frames where the reference vocal is voiced and audible (`rms >= 0.02`) are counted — silence, breaths, instrumental sections, and low-energy stem separation artifacts are excluded.
 
 ---
 
@@ -275,7 +275,7 @@ The iOS and Web clients use classic YIN for real-time detection. The Python work
 
 ## Reference Pitch Sources
 
-The piano roll and scoring pipeline consume the same `{t, hz, midi, voiced}` frame array regardless of whether the reference comes from a song or an exercise. The only difference is how the reference is produced.
+The piano roll and scoring pipeline consume the same `{t, hz, midi, voiced, rms}` frame array regardless of whether the reference comes from a song or an exercise. The only difference is how the reference is produced.
 
 ```mermaid
 flowchart TD
@@ -320,3 +320,47 @@ The result is a smooth pitch curve that oscillates ±30 cents around C4 at 5.5 H
 ### Why This Works
 
 The client never needs to know whether it's practicing a song or an exercise. It loads a reference pitch JSON, plays back (stems for songs, metronome/guide tone for exercises), captures the singer's pitch, and compares frame by frame. The piano roll renders identically in both cases.
+
+---
+
+## Reference Pitch RMS Filtering
+
+Vocal stems from stem separation contain low-energy residual noise from other instruments. The pYIN algorithm marks these as "voiced" because they have detectable pitch, but they are artifacts — not real vocal signal. The `rms` field in each pitch frame enables the client to filter them out.
+
+### How It Works
+
+1. **Worker side**: `librosa.feature.rms()` computes per-frame energy alongside `librosa.pyin()` using the same hop length. Values are included in the JSON output.
+2. **Client side**: Frames with `rms < 0.02` are considered "inaudible" and excluded from:
+   - Piano roll rendering (no reference zones/lines drawn for inaudible frames)
+   - MIDI range computation (prevents artifacts from expanding the Y-axis range)
+   - Scoring (inaudible reference frames are treated like unvoiced frames)
+
+### Threshold Selection
+
+The threshold of `0.02` was chosen empirically. In tested vocal stems, real vocal signal has RMS values > 0.05, while stem separation artifacts typically have RMS values in the range 0.0001–0.001.
+
+### Pitch Data Caching
+
+Pitch data is cached locally at `~/Library/Caches/pitch/{songId}/reference.json`. The cache persists across sessions. If pitch data is re-analyzed on the server (e.g., after a worker update), users can clear the cache via Settings > Data > "Clear Pitch Cache" to force a re-download.
+
+---
+
+## Loop Scoring
+
+When an A-B loop is active, the scoring engine provides per-pass feedback to show improvement over repeated practice.
+
+### Per-Pass Scoring Flow
+
+1. User sets markers A and B → loop state becomes `.looping`
+2. `ScoringEngine.reset()` clears accumulated scores for the new loop
+3. Playback proceeds from A to B, scoring each detected pitch against the reference
+4. When `currentTime >= B`, before seeking back to A:
+   - Capture `scoringEngine.overallScore` as the pass score
+   - Compare to the previous pass score → compute improvement (better/worse/same)
+   - Reset the scoring engine for the next pass
+   - Show a toast overlay with score and delta (auto-dismisses after 2 seconds)
+5. Increment `loopCount` and seek back to A
+
+### MIDI Range Recalibration
+
+When a loop is activated, the piano roll's Y-axis range recalibrates to the looped section's pitch range (with ±3 semitone padding) instead of using the full song's range. This zooms in to show the relevant notes for the section being practiced. The range reverts to full-song when the loop is cleared.

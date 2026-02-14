@@ -40,11 +40,11 @@ final class YouTubePlayerController: VideoPlayerProtocol {
     }
 
     func mute() {
-        evaluate("player.mute()")
+        evaluate("window._ytSavedVolume = player.getVolume(); player.mute(); player.setVolume(0)")
     }
 
     func unmute() {
-        evaluate("player.unMute()")
+        evaluate("player.setVolume(window._ytSavedVolume !== undefined ? window._ytSavedVolume : 100); player.unMute()")
     }
 
     func startTimePolling(intervalMs: Int = 50) {

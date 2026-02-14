@@ -16,7 +16,7 @@ struct ExercisePracticeView: View {
         }
         .navigationTitle(exercise.name)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar(.hidden, for: .tabBar)
+        .hideTabBarIfNeeded()
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Done") { dismiss() }
@@ -24,6 +24,18 @@ struct ExercisePracticeView: View {
         }
         .onAppear { setupIfNeeded() }
         .onDisappear { viewModel?.stop() }
+        #if os(macOS)
+        .onKeyPress(.space) {
+            guard let vm = viewModel else { return .ignored }
+            if vm.isPlaying { vm.pause() } else { vm.play() }
+            return .handled
+        }
+        .onKeyPress(.escape) {
+            viewModel?.stop()
+            dismiss()
+            return .handled
+        }
+        #endif
     }
 }
 

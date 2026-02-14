@@ -16,7 +16,7 @@ Defining all views, navigation, and layout decisions for the Intonavio singing p
 ### Home (Tab 1: Library)
 
 3. **Home** — Two sections stacked vertically:
-   - **Song Library** — Grid of user's songs (thumbnail, title, status badge). "Add Song" button.
+   - **Song Library** — Grid of user's songs (thumbnail, title, artist, status badge). "Add Song" button.
    - **Exercises** — Horizontal scrollable categories (Scales, Arpeggios, Intervals, Vibrato, Breathing). Pre-built exercises ship with app; community-shared exercises available via browse/search.
 
 4. **Add Song Sheet** — YouTube URL input, validation, submit. Shows processing progress after submission.
@@ -28,7 +28,9 @@ Defining all views, navigation, and layout decisions for the Intonavio singing p
    - **Lyrics-focused**: Video ~65%, pitch graph ~35%
    - **Pitch-focused**: Video ~25% (small strip), pitch graph ~75%
    - Swipe or tap button to toggle between layouts
-   - **Controls overlay**: Play/pause, A-B loop markers, speed slider (0.25x–2x), stem mode selector (Original / Vocals / Instrumental / All Stems), transpose picker (musical intervals from -2 octaves to +2 octaves)
+   - **Controls overlay**: Play/pause, A-B loop markers, stem mode selector (Original / Vocals / Instrumental), transpose picker (musical intervals from -2 octaves to +2 octaves)
+   - **Loop score toast**: When A-B loop is active, a toast overlay appears after each pass showing the score percentage and improvement delta (green arrow up / red arrow down). Auto-dismisses after 2 seconds.
+   - **YouTube video**: Non-interactive — covered by a transparent touch-blocking overlay. All playback controlled via controls bar.
 
 7. **Exercise Practice** — Same pitch graph as song practice but no video. Shows exercise name, target notes as reference, and tempo/metronome guide.
 
@@ -49,7 +51,7 @@ Defining all views, navigation, and layout decisions for the Intonavio singing p
 
 ### Settings (Tab 3)
 
-10. **Settings** — Account management, audio input selection, pitch sensitivity, theme (dark/light)
+10. **Settings** — Account management, audio input selection, theme (dark/light), pitch data cache management (clear & re-download)
 11. **Profile / Community** — User's shared exercises, stats, linked accounts
 
 ---
@@ -119,7 +121,7 @@ Home → Exercises → Browse Community → Search/filter → Add to library →
 │  [ref bands + user line]    │
 │          ~35%               │
 ├─────────────────────────────┤
-│ ▶ LoopA LoopB 0.8x Stems T │
+│ ▶  LoopA LoopB  Stems  T    │
 │      [controls bar]         │
 └─────────────────────────────┘
 ```
@@ -129,16 +131,17 @@ Home → Exercises → Browse Community → Search/filter → Add to library →
 ```
 ┌─────────────────────────────┐
 │  Small video strip    ~25%  │
+│  [touch-blocked overlay]    │
 ├─────────────────────────────┤
 │                             │
 │   Piano Roll Pitch Graph    │
-│                             │
+│   [Loop Score Toast: 78%↑5] │
 │   [ref bands + user line]   │
 │   Current note: C4  +5¢    │
 │          ~75%               │
 │                             │
 ├─────────────────────────────┤
-│ ▶ LoopA LoopB 0.8x Stems T │
+│ ▶  LoopA LoopB  Stems  T    │
 │      [controls bar]         │
 └─────────────────────────────┘
 ```

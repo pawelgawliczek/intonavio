@@ -1,5 +1,8 @@
-import AVFoundation
 import SwiftUI
+
+#if os(iOS)
+import AVFoundation
+#endif
 
 @main
 struct IntonavioApp: App {
@@ -7,7 +10,9 @@ struct IntonavioApp: App {
     @AppStorage("appTheme") private var themeRaw = AppTheme.system.rawValue
 
     init() {
+        #if os(iOS)
         configureAudioSession()
+        #endif
     }
 
     var body: some Scene {
@@ -16,11 +21,15 @@ struct IntonavioApp: App {
                 .environment(appState)
                 .preferredColorScheme(AppTheme(rawValue: themeRaw)?.colorScheme)
         }
+        #if os(macOS)
+        .defaultSize(width: 1200, height: 800)
+        #endif
     }
 }
 
-// MARK: - Audio Session
+// MARK: - Audio Session (iOS)
 
+#if os(iOS)
 private extension IntonavioApp {
     func configureAudioSession() {
         let session = AVAudioSession.sharedInstance()
@@ -67,3 +76,4 @@ private extension IntonavioApp {
         }
     }
 }
+#endif

@@ -10,6 +10,16 @@ struct SongPracticeView: View {
     @State private var viewModel: PracticeViewModel?
 
     var body: some View {
+        mainContent
+            #if os(macOS)
+            .macKeyboardShortcuts(
+                viewModel: viewModel,
+                dismiss: dismiss
+            )
+            #endif
+    }
+
+    private var mainContent: some View {
         Group {
             if let vm = viewModel {
                 practiceContent(vm)
@@ -20,7 +30,7 @@ struct SongPracticeView: View {
         .navigationTitle("Practice")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(viewModel != nil)
-        .toolbar(.hidden, for: .tabBar)
+        .hideTabBarIfNeeded()
         .toolbar {
             if let vm = viewModel {
                 ToolbarItem(placement: .cancellationAction) {
@@ -43,6 +53,62 @@ struct SongPracticeView: View {
         }
     }
 }
+
+// MARK: - macOS Keyboard Shortcuts
+
+#if os(macOS)
+private struct SongPracticeKeyboardShortcuts: ViewModifier {
+    let viewModel: PracticeViewModel?
+    let dismiss: DismissAction
+
+    func body(content: Content) -> some View {
+        content
+            .onKeyPress(.space) {
+                guard let vm = viewModel else { return .ignored }
+                if vm.loopState == .playing || vm.loopState == .looping {
+                    vm.pause()
+                } else {
+                    vm.play()
+                }
+                return .handled
+            }
+            .onKeyPress("a", phases: .down) { press in
+                guard press.modifiers.contains(.command) else { return .ignored }
+                viewModel?.setMarkerA()
+                return .handled
+            }
+            .onKeyPress("b", phases: .down) { press in
+                guard press.modifiers.contains(.command) else { return .ignored }
+                viewModel?.setMarkerB()
+                return .handled
+            }
+            .onKeyPress(.escape) {
+                viewModel?.clearLoop()
+                return .handled
+            }
+            .onKeyPress("w", phases: .down) { press in
+                guard press.modifiers.contains(.command) else { return .ignored }
+                viewModel?.stopPitchDetection()
+                viewModel?.saveSessionIfNeeded()
+                viewModel?.server.stop()
+                dismiss()
+                return .handled
+            }
+    }
+}
+
+private extension View {
+    func macKeyboardShortcuts(
+        viewModel: PracticeViewModel?,
+        dismiss: DismissAction
+    ) -> some View {
+        modifier(SongPracticeKeyboardShortcuts(
+            viewModel: viewModel,
+            dismiss: dismiss
+        ))
+    }
+}
+#endif
 
 // MARK: - Subviews
 
@@ -118,7 +184,7 @@ private extension SongPracticeView {
 
     var loadingOverlay: some View {
         ZStack {
-            Color(.systemBackground).opacity(0.85)
+            Color.platformBackground.opacity(0.85)
             VStack(spacing: 12) {
                 ProgressView()
                     .controlSize(.large)

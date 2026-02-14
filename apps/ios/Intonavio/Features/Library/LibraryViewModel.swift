@@ -25,6 +25,7 @@ final class LibraryViewModel {
     // MARK: - Fetch Songs
 
     func fetchSongs() {
+        guard !isLoading else { return }
         Task { @MainActor in
             await loadSongs()
         }

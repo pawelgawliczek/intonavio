@@ -271,8 +271,9 @@ Always returns `202` regardless of whether the song is new or existing.
 {
   "id": "cm7abc123def456ghijklmnop",
   "videoId": "dQw4w9WgXcQ",
-  "title": "dQw4w9WgXcQ",
-  "thumbnailUrl": "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
+  "title": "Rick Astley - Never Gonna Give You Up",
+  "artist": "Rick Astley",
+  "thumbnailUrl": "https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
   "duration": 0,
   "status": "QUEUED",
   "stems": [],
@@ -288,7 +289,8 @@ Always returns `202` regardless of whether the song is new or existing.
   "id": "cm7abc123def456ghijklmnop",
   "videoId": "dQw4w9WgXcQ",
   "title": "Rick Astley - Never Gonna Give You Up",
-  "thumbnailUrl": "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
+  "artist": "Rick Astley",
+  "thumbnailUrl": "https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
   "duration": 213,
   "status": "READY",
   "stems": [
@@ -299,7 +301,7 @@ Always returns `202` regardless of whether the song is new or existing.
 }
 ```
 
-Note: The `title` field is initially set to the `videoId` at creation time. It is updated to the actual YouTube title once metadata is fetched during processing.
+**Song metadata:** The `title` and `artist` fields are fetched from the YouTube oEmbed API (`https://www.youtube.com/oembed?url=...&format=json`) at song creation time. If the oEmbed request fails, `title` falls back to the `videoId` and `artist` is `null`. The `thumbnailUrl` uses a fallback chain: `maxresdefault.jpg` → `hqdefault.jpg` → `mqdefault.jpg`, checked via HEAD requests to find the first available resolution.
 
 #### `GET /songs/:id`
 
@@ -312,7 +314,8 @@ Returns song details only if it exists in the authenticated user's library (via 
   "id": "cm7abc123def456ghijklmnop",
   "videoId": "dQw4w9WgXcQ",
   "title": "Rick Astley - Never Gonna Give You Up",
-  "thumbnailUrl": "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
+  "artist": "Rick Astley",
+  "thumbnailUrl": "https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
   "duration": 213,
   "status": "READY",
   "stems": [

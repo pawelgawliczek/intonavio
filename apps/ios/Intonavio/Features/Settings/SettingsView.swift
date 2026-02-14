@@ -3,6 +3,7 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(AppState.self) private var appState
     @State private var viewModel = SettingsViewModel()
+    @State private var pitchCacheCleared = false
     @AppStorage("appTheme") private var themeRaw = AppTheme.system.rawValue
 
     var body: some View {
@@ -10,6 +11,7 @@ struct SettingsView: View {
             accountSection
             audioInputSection
             themeSection
+            dataSection
             aboutSection
             #if DEBUG
             developerSection
@@ -74,6 +76,7 @@ private extension SettingsView {
 
     var audioInputSection: some View {
         Section("Audio Input") {
+            #if os(iOS)
             ForEach(viewModel.availableInputs, id: \.uid) { port in
                 Button {
                     viewModel.selectInput(port)
@@ -94,6 +97,28 @@ private extension SettingsView {
                 Text("No audio inputs available")
                     .foregroundStyle(.secondary)
             }
+            #else
+            ForEach(viewModel.availableDevices, id: \.uniqueID) { device in
+                Button {
+                    viewModel.selectDevice(device)
+                } label: {
+                    HStack {
+                        Text(device.localizedName)
+                            .foregroundStyle(.primary)
+                        Spacer()
+                        if device.uniqueID == viewModel.selectedInputUID {
+                            Image(systemName: "checkmark")
+                                .foregroundStyle(.tint)
+                        }
+                    }
+                }
+            }
+
+            if viewModel.availableDevices.isEmpty {
+                Text("No audio inputs available")
+                    .foregroundStyle(.secondary)
+            }
+            #endif
         }
     }
 
@@ -105,6 +130,29 @@ private extension SettingsView {
                 }
             }
             .pickerStyle(.segmented)
+        }
+    }
+
+    var dataSection: some View {
+        Section {
+            Button {
+                PitchDataDownloader.clearAllCache()
+                pitchCacheCleared = true
+            } label: {
+                HStack {
+                    Text("Clear Pitch Cache")
+                    Spacer()
+                    if pitchCacheCleared {
+                        Text("Cleared")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .disabled(pitchCacheCleared)
+        } header: {
+            Text("Data")
+        } footer: {
+            Text("Re-downloads pitch data from the server next time you practice a song.")
         }
     }
 

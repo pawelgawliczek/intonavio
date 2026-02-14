@@ -2,9 +2,13 @@ import AVFoundation
 
 /// Centralized AVAudioSession configuration for .playAndRecord + .measurement.
 /// Both StemPlayer and PitchDetector share this session config.
+/// On macOS, AVAudioEngine works without session management — this is a no-op.
 enum AudioSessionManager {
     private static var isConfigured = false
+
+    #if os(iOS)
     private static var interruptionObserver: NSObjectProtocol?
+    #endif
 
     /// Configure the audio session for simultaneous playback and recording.
     /// Safe to call multiple times — only configures once.
@@ -12,6 +16,7 @@ enum AudioSessionManager {
     static func configure() throws {
         guard !isConfigured else { return }
 
+        #if os(iOS)
         let session = AVAudioSession.sharedInstance()
         try session.setCategory(
             .playAndRecord,
@@ -25,11 +30,17 @@ enum AudioSessionManager {
         isConfigured = true
         observeInterruptions()
         AppLogger.pitch.info("Audio session configured for playAndRecord")
+        #else
+        isConfigured = true
+        AppLogger.pitch.info("macOS: audio session not required, skipping configuration")
+        #endif
     }
 
     /// Deactivate the audio session when no longer needed.
     static func deactivate() {
         guard isConfigured else { return }
+
+        #if os(iOS)
         do {
             try AVAudioSession.sharedInstance().setActive(
                 false,
@@ -41,12 +52,15 @@ enum AudioSessionManager {
             )
         }
         removeInterruptionObserver()
+        #endif
+
         isConfigured = false
     }
 }
 
 // MARK: - Interruption Handling
 
+#if os(iOS)
 private extension AudioSessionManager {
     static func observeInterruptions() {
         removeInterruptionObserver()
@@ -83,3 +97,4 @@ private extension AudioSessionManager {
         }
     }
 }
+#endif

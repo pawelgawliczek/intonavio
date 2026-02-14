@@ -1,11 +1,19 @@
 import SwiftUI
 
 struct HomeView: View {
+    @Environment(AppState.self) private var appState
     @State private var viewModel = LibraryViewModel()
+
+    #if os(iOS)
     private let columns = [
         GridItem(.flexible(), spacing: 12),
         GridItem(.flexible(), spacing: 12)
     ]
+    #else
+    private let columns = [
+        GridItem(.adaptive(minimum: 180, maximum: 250), spacing: 12)
+    ]
+    #endif
 
     var body: some View {
         ScrollView {
@@ -33,7 +41,12 @@ struct HomeView: View {
             await viewModel.loadSongs()
         }
         .onAppear {
-            if viewModel.songs.isEmpty {
+            if viewModel.songs.isEmpty, appState.isAuthenticated {
+                viewModel.fetchSongs()
+            }
+        }
+        .onChange(of: appState.isAuthenticated) { _, isAuthenticated in
+            if isAuthenticated, viewModel.songs.isEmpty {
                 viewModel.fetchSongs()
             }
         }
