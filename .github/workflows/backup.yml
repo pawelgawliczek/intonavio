@@ -18,10 +18,30 @@ jobs:
           username: ${{ secrets.HOSTINGER_USER }}
           key: ${{ secrets.HOSTINGER_SSH_KEY }}
           script: |
+            set -euo pipefail
+            cd /opt/intonavio
+
+            # Load production env vars (POSTGRES_*, R2_*)
+            set -a
+            source .env.production
+            set +a
+
             BACKUP_FILE="intonavio_$(date +%Y%m%d_%H%M%S).sql.gz"
-            docker exec intonavio-postgres-1 pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB" | gzip > "/tmp/$BACKUP_FILE"
-            # Upload to R2 using rclone (configured on server)
+
+            # Dump database — single quotes prevent host-side expansion,
+            # so $POSTGRES_USER and $POSTGRES_DB resolve inside the container.
+            docker exec intonavio-postgres-1 sh -c 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"' | gzip > "/tmp/$BACKUP_FILE"
+
+            # Configure rclone for R2 via env vars (no config file needed)
+            export RCLONE_CONFIG_R2_TYPE=s3
+            export RCLONE_CONFIG_R2_PROVIDER=Cloudflare
+            export RCLONE_CONFIG_R2_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID"
+            export RCLONE_CONFIG_R2_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY"
+            export RCLONE_CONFIG_R2_ENDPOINT="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+            export RCLONE_CONFIG_R2_ACL=private
+
             rclone copy "/tmp/$BACKUP_FILE" r2:intonavio-backups/db/
             rm "/tmp/$BACKUP_FILE"
+
             # Retain last 30 backups
             rclone delete r2:intonavio-backups/db/ --min-age 30d
