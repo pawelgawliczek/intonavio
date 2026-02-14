@@ -11,7 +11,7 @@ struct ReferencePitchFrame: Codable, Sendable {
 
     /// Frames with RMS below this threshold are treated as artifacts from
     /// imperfect stem separation and excluded from rendering/scoring.
-    static let rmsThreshold: Double = 0.01
+    static let rmsThreshold: Double = 0.02
 
     /// Whether this frame has enough energy to be considered a real vocal signal.
     var isAudible: Bool {

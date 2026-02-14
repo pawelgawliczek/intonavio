@@ -183,6 +183,7 @@ final class PracticeViewModel {
     }
 
     func seek(to time: Double) {
+        currentTime = time
         controller.seek(to: time)
         if isInStemMode {
             stemPlayer.seek(to: time)
