@@ -1,16 +1,17 @@
 import Accelerate
 import AVFoundation
 
-/// Captures microphone input via a separate AVAudioEngine and runs
+/// Captures microphone input via a shared AudioEngine and runs
 /// YIN pitch detection on a sliding window. Dispatches results to main thread.
 ///
-/// Uses its own engine instance so it coexists with StemPlayer's engine.
+/// Uses the shared engine's input node so voice processing (AEC)
+/// can cancel stem audio from the mic signal.
 @Observable
 final class PitchDetector {
     var latestResult: PitchResult?
     private(set) var isRunning = false
 
-    private let engine = AVAudioEngine()
+    private let audioEngine: AudioEngine
     private let detector = YINDetector()
 
     /// Ring buffer accumulating mic samples.
@@ -20,11 +21,18 @@ final class PitchDetector {
 
     var onPitchDetected: ((PitchResult) -> Void)?
 
+    init(engine: AudioEngine) {
+        self.audioEngine = engine
+    }
+
     // MARK: - Lifecycle
 
     func start() throws {
         guard !isRunning else { return }
-        try AudioSessionManager.configure()
+
+        // Ensure engine is running (idempotent if StemPlayer already started it).
+        // VP + audio session are configured inside start().
+        try audioEngine.start()
 
         writeIndex = 0
         samplesAccumulated = 0
@@ -33,35 +41,22 @@ final class PitchDetector {
             count: PitchConstants.analysisSize * 2
         )
 
-        let inputNode = engine.inputNode
+        let format = audioEngine.inputFormat
 
-        #if os(macOS)
-        if !inputNode.isVoiceProcessingEnabled {
-            try inputNode.setVoiceProcessingEnabled(true)
-            AppLogger.pitch.info("Voice processing (echo cancellation) enabled")
-        }
-        #endif
-
-        let format = inputNode.outputFormat(forBus: 0)
-
-        inputNode.installTap(
-            onBus: 0,
+        audioEngine.installInputTap(
             bufferSize: PitchConstants.ioBufferSize,
             format: format
         ) { [weak self] buffer, _ in
             self?.processBuffer(buffer)
         }
 
-        engine.prepare()
-        try engine.start()
         isRunning = true
         AppLogger.pitch.info("PitchDetector started")
     }
 
     func stop() {
         guard isRunning else { return }
-        engine.inputNode.removeTap(onBus: 0)
-        engine.stop()
+        audioEngine.removeInputTap()
         isRunning = false
         latestResult = nil
         AppLogger.pitch.info("PitchDetector stopped")
@@ -69,8 +64,7 @@ final class PitchDetector {
 
     deinit {
         if isRunning {
-            engine.inputNode.removeTap(onBus: 0)
-            engine.stop()
+            audioEngine.removeInputTap()
         }
     }
 }

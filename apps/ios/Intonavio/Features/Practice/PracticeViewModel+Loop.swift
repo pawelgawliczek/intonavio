@@ -31,6 +31,7 @@ extension PracticeViewModel {
 
     func checkLoopBoundary() {
         guard loopState == .looping,
+              !isWaitingForLoopSeek,
               let a = markerA,
               let b = markerB else {
             return
@@ -38,12 +39,39 @@ extension PracticeViewModel {
 
         if currentTime >= b - 0.05 {
             captureLoopScore()
+            detectedPoints.removeAll()
 
-            controller.seek(to: a)
+            // Stop everything for a clean loop transition.
+            controller.pause()
             if isInStemMode {
-                stemPlayer.seek(to: a)
+                stemPlayer.stop()
+                sync?.stop()
             }
+
+            // Seek YouTube while paused, then restart both in sync.
+            controller.seek(to: a)
+            isWaitingForLoopSeek = true
             loopCount += 1
+
+            let targetA = a
+            Task { @MainActor in
+                // Give YouTube time to complete the seek while paused.
+                try? await Task.sleep(nanoseconds: 250_000_000)
+                guard self.isWaitingForLoopSeek else { return }
+                self.isWaitingForLoopSeek = false
+
+                // Start stem and YouTube simultaneously from marker A.
+                if self.isInStemMode {
+                    self.stemPlayer.play(from: targetA)
+                }
+                self.controller.play()
+
+                // Delay sync start so the first drift check doesn't fire
+                // while both players are still stabilizing.
+                try? await Task.sleep(nanoseconds: 4_000_000_000)
+                guard self.loopState == .looping else { return }
+                self.sync?.start()
+            }
         }
     }
 

@@ -1,16 +1,20 @@
 import AVFoundation
 import Foundation
 
-/// AVAudioEngine-based stem player with per-stem volume control
-/// and pitch-preserving rate changes via AVAudioUnitTimePitch.
+/// Stem player with per-stem volume control and pitch-preserving
+/// rate changes via AVAudioUnitTimePitch.
 ///
-/// Audio graph:
+/// Uses a shared `AudioEngine` so voice processing (AEC) can reference
+/// the stem output and cancel it from the microphone input.
+///
+/// Audio graph (nodes owned by StemPlayer, engine owned by AudioEngine):
 /// ```
-/// PlayerNode(vocals)  --\
-/// PlayerNode(other)   ----> MixerNode --> TimePitch --> mainMixer --> output
+/// PlayerNode(vocals)  ──┐
+/// PlayerNode(other)   ──┼→ stemMixer → timePitch → mainMixer → output
+/// PlayerNode(full)    ──┘
 /// ```
 final class StemPlayer {
-    private let engine = AVAudioEngine()
+    private let audioEngine: AudioEngine
     private let mixer = AVAudioMixerNode()
     private let timePitch = AVAudioUnitTimePitch()
     private var playerNodes: [StemType: AVAudioPlayerNode] = [:]
@@ -19,42 +23,43 @@ final class StemPlayer {
     /// Offset added to playerTime so currentTime returns absolute file position.
     private var playbackStartOffset: Double = 0
 
-    #if os(iOS)
-    private var interruptionObserver: NSObjectProtocol?
-    #endif
+    init(engine: AudioEngine) {
+        self.audioEngine = engine
+    }
 
     var rate: Float {
         get { timePitch.rate }
         set { timePitch.rate = newValue }
     }
 
+    /// Processing latency introduced by the TimePitch node.
+    /// Used to adjust stem time when comparing with YouTube time.
+    var processingLatency: Double { timePitch.latency }
+
     // MARK: - Setup
 
     func setup(stems: [(type: StemType, url: URL)]) throws {
         teardown()
 
-        engine.attach(mixer)
-        engine.attach(timePitch)
+        audioEngine.attach(mixer)
+        audioEngine.attach(timePitch)
 
-        engine.connect(mixer, to: timePitch, format: nil)
-        engine.connect(timePitch, to: engine.mainMixerNode, format: nil)
+        audioEngine.connect(mixer, to: timePitch, format: nil)
+        audioEngine.connect(timePitch, to: audioEngine.mainMixerNode, format: nil)
 
         for stem in stems {
             let file = try AVAudioFile(forReading: stem.url)
             let player = AVAudioPlayerNode()
 
-            engine.attach(player)
-            engine.connect(player, to: mixer, format: file.processingFormat)
+            audioEngine.attach(player)
+            audioEngine.connect(player, to: mixer, format: file.processingFormat)
 
             playerNodes[stem.type] = player
             audioFiles[stem.type] = file
         }
 
-        try engine.start()
+        try audioEngine.start()
         isSetup = true
-        #if os(iOS)
-        observeInterruptions()
-        #endif
         AppLogger.audio.info("StemPlayer setup with \(stems.count) stems")
     }
 
@@ -62,7 +67,7 @@ final class StemPlayer {
 
     func play(from time: Double = 0) {
         guard isSetup else { return }
-        ensureEngineRunning()
+        audioEngine.ensureRunning()
         playbackStartOffset = time
 
         for (type, player) in playerNodes {
@@ -95,7 +100,7 @@ final class StemPlayer {
     }
 
     func resume() {
-        ensureEngineRunning()
+        audioEngine.ensureRunning()
         for player in playerNodes.values {
             player.play()
         }
@@ -147,17 +152,13 @@ final class StemPlayer {
     // MARK: - Teardown
 
     func teardown() {
-        #if os(iOS)
-        removeInterruptionObserver()
-        #endif
-        engine.stop()
         for player in playerNodes.values {
             player.stop()
-            engine.detach(player)
+            audioEngine.detach(player)
         }
         if isSetup {
-            engine.detach(mixer)
-            engine.detach(timePitch)
+            audioEngine.detach(mixer)
+            audioEngine.detach(timePitch)
         }
         playerNodes.removeAll()
         audioFiles.removeAll()
@@ -168,54 +169,3 @@ final class StemPlayer {
         teardown()
     }
 }
-
-// MARK: - Engine Recovery
-
-private extension StemPlayer {
-    func ensureEngineRunning() {
-        guard isSetup, !engine.isRunning else { return }
-        do {
-            try engine.start()
-            AppLogger.audio.info("AVAudioEngine restarted after stop")
-        } catch {
-            AppLogger.audio.error(
-                "Failed to restart engine: \(error.localizedDescription)"
-            )
-        }
-    }
-}
-
-// MARK: - Interruption Handling (iOS)
-
-#if os(iOS)
-private extension StemPlayer {
-    func observeInterruptions() {
-        removeInterruptionObserver()
-        interruptionObserver = NotificationCenter.default.addObserver(
-            forName: AVAudioSession.interruptionNotification,
-            object: AVAudioSession.sharedInstance(),
-            queue: .main
-        ) { [weak self] notification in
-            self?.handleInterruption(notification)
-        }
-    }
-
-    func removeInterruptionObserver() {
-        if let observer = interruptionObserver {
-            NotificationCenter.default.removeObserver(observer)
-            interruptionObserver = nil
-        }
-    }
-
-    func handleInterruption(_ notification: Notification) {
-        guard let info = notification.userInfo,
-              let typeValue = info[AVAudioSessionInterruptionTypeKey] as? UInt,
-              let type = AVAudioSession.InterruptionType(rawValue: typeValue)
-        else { return }
-
-        if type == .ended {
-            ensureEngineRunning()
-        }
-    }
-}
-#endif

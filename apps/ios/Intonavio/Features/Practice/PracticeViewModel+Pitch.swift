@@ -8,7 +8,7 @@ extension PracticeViewModel {
         guard isPitchReady else { return }
 
         if pitchDetector == nil {
-            pitchDetector = PitchDetector()
+            pitchDetector = PitchDetector(engine: audioEngine)
         }
 
         guard let detector = pitchDetector else { return }
@@ -95,6 +95,8 @@ extension PracticeViewModel {
 
     /// Handle each detected pitch result.
     func handleDetectedPitch(_ result: PitchResult) {
+        guard !isWaitingForLoopSeek else { return }
+
         let midi = NoteMapper.frequencyToMidi(result.frequency)
         let now = result.timestamp
 

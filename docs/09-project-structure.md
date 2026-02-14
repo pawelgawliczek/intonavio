@@ -115,17 +115,18 @@ intonavio/
 │       │   │       ├── ProfileView.swift          # Read-only profile display
 │       │   │       └── DeveloperView.swift        # Debug tools (dev builds only)
 │       │   ├── Audio/
-│       │   │   ├── StemPlayer.swift        # AVAudioEngine graph, engine recovery
+│       │   │   ├── AudioEngine.swift      # Shared AVAudioEngine: VP/AEC, lifecycle, input taps
+│       │   │   ├── StemPlayer.swift        # Stem playback nodes on shared AudioEngine
 │       │   │   ├── StemDownloader.swift    # Presigned URL fetch + cache to disk
 │       │   │   ├── VideoAudioSync.swift    # YouTube-as-master sync (300ms/2s)
 │       │   │   ├── AudioMode.swift         # Enum: original, vocalsOnly, instrumental
-│       │   │   ├── MetronomeTick.swift     # Click sound for exercise tempo
+│       │   │   ├── MetronomeTick.swift     # Click sound on shared AudioEngine
 │       │   │   └── Pitch/
 │       │   │       ├── AudioSessionManager.swift     # AVAudioSession: .voiceChat (AEC), interruptions
 │       │   │       ├── PitchTypes.swift              # PitchResult, PitchConstants (thresholds, RMS, jump)
 │       │   │       ├── NoteMapper.swift              # Hz↔MIDI↔cents conversions
 │       │   │       ├── YINDetector.swift             # 5-step YIN with Accelerate vDSP
-│       │   │       ├── PitchDetector.swift           # @Observable: mic engine, ring buffer, RMS gate
+│       │   │       ├── PitchDetector.swift           # @Observable: mic tap on shared AudioEngine, ring buffer
 │       │   │       ├── PitchAccuracy.swift           # Enum: excellent/good/fair/poor/unvoiced
 │       │   │       ├── ScoringEngine.swift           # Cents comparison + transpose offset + score accumulation
 │       │   │       ├── TransposeInterval.swift       # Enum: musical intervals (-24 to +24 semitones)

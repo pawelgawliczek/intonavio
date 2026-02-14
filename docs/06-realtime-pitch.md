@@ -8,9 +8,14 @@ Real-time pitch detection is the core interactive feature. The app captures the 
 
 ## iOS Audio Graph
 
+Stem playback and microphone input share a single `AudioEngine` instance. Voice processing (AEC) on the input node uses the output graph to cancel stem audio from the mic signal.
+
 ```mermaid
 graph LR
-    Mic[Microphone<br/>AVAudioInputNode] --> Tap[installTap<br/>bufferSize: 1024<br/>format: 44.1kHz mono]
+    subgraph SharedAudioEngine
+        Mic[Microphone<br/>inputNode VP/AEC] --> Tap[installTap<br/>bufferSize: 1024<br/>format: 44.1kHz mono]
+        Players[PlayerNodes<br/>vocals/other/full] --> Mixer[stemMixer] --> TP[TimePitch] --> Out[mainMixer<br/>→ output]
+    end
     Tap --> YIN[YIN Pitch Detector<br/>Swift implementation]
     YIN --> Freq[Detected Frequency<br/>Hz + confidence]
     Freq --> Compare[Compare vs Reference<br/>at current time T]
@@ -20,15 +25,17 @@ graph LR
 
 ### iOS Implementation Notes
 
-- **AVAudioEngine** provides low-latency access to the microphone input node
+- A shared **AudioEngine** wraps a single `AVAudioEngine` with voice processing (AEC) enabled on the input node
+- **StemPlayer**, **PitchDetector**, and **MetronomeTick** all receive the shared engine via init — none creates its own
 - **installTap** with buffer size 1024 at 44.1kHz gives callbacks every ~23ms
 - **YIN algorithm** runs synchronously in the tap callback (audio thread)
 - Detected pitch is dispatched to main thread for UI update
 - The reference pitch array is binary-searched by timestamp for O(log n) lookup
+- All audio (including "original" mode) routes through stem playback — YouTube audio is not used
 
 ### Audio Session: Echo Cancellation
 
-The audio session uses `.voiceChat` mode (not `.default`) to enable iOS built-in Acoustic Echo Cancellation (AEC). This removes speaker audio from the mic input — critical when playing music through the speaker while recording the singer's voice. Without AEC, the microphone picks up the song's melody and the detected pitch line follows the music rather than the user's voice.
+The audio session uses `.voiceChat` mode (not `.default`) to enable iOS built-in Acoustic Echo Cancellation (AEC). Because stem playback and mic input share one engine, VPIO sees the stem output going to speakers and cancels it from the mic input. Without this, the microphone picks up the song's melody and the detected pitch line follows the music rather than the user's voice.
 
 ```swift
 AVAudioSession.sharedInstance().setCategory(
@@ -47,12 +54,15 @@ Three filters prevent false detections:
 3. **MIDI jump filter**: Reject detections where MIDI jumps >12 semitones (1 octave) within 50ms of the previous detection. This catches spurious octave jumps from harmonic confusion.
 
 ```swift
-// Pseudocode for iOS pitch detection
-let audioEngine = AVAudioEngine()
-let inputNode = audioEngine.inputNode
-let format = inputNode.outputFormat(forBus: 0) // 44.1kHz
+// Pseudocode for iOS pitch detection (uses shared AudioEngine)
+let sharedEngine = AudioEngine()
+try sharedEngine.prepare()  // Enable VP before attaching nodes
+// ... StemPlayer attaches playback nodes here ...
+try sharedEngine.start()
 
-inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { buffer, time in
+let format = sharedEngine.inputFormat  // Read after VP is enabled
+
+sharedEngine.installInputTap(bufferSize: 1024, format: format) { buffer, time in
     let samples = Array(UnsafeBufferPointer(
         start: buffer.floatChannelData?[0],
         count: Int(buffer.frameLength)

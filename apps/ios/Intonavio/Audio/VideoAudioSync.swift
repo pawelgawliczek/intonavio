@@ -61,14 +61,17 @@ final class VideoAudioSync {
 private extension VideoAudioSync {
     func checkDrift() {
         controller.getCurrentTime { [weak self] ytTime in
-            guard let self else { return }
+            guard let self, self.isActive else { return }
 
-            guard let stemTime = self.stemPlayer.currentTime(for: .full)
+            guard let rawStemTime = self.stemPlayer.currentTime(for: .full)
                     ?? self.stemPlayer.currentTime(for: .vocals)
                     ?? self.stemPlayer.currentTime(for: .other) else {
                 return
             }
 
+            // Subtract TimePitch processing latency — the stem's reported
+            // time is ahead of actual audio output by this amount.
+            let stemTime = rawStemTime - self.stemPlayer.processingLatency
             let drift = ytTime - stemTime
 
             #if DEBUG

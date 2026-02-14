@@ -99,29 +99,29 @@ graph LR
 
 ## Technology Stack
 
-| Layer                | Technology                                       | Purpose                                      |
-| -------------------- | ------------------------------------------------ | -------------------------------------------- |
-| **iOS/macOS Client** | SwiftUI, AVAudioEngine, WKWebView                | UI, pitch detection, YouTube playback        |
-| **Web Client**       | Next.js 14, React, AudioWorklet                  | Web UI, browser-based pitch detection        |
-| **API Server**       | NestJS, TypeScript                               | REST API, auth, job orchestration            |
-| **Database**         | PostgreSQL 16 (Docker)                           | Users, songs, sessions, metadata             |
-| **ORM**              | Prisma                                           | Type-safe database access                    |
-| **Queue**            | BullMQ + Redis 7 (Docker)                        | Background job management                    |
-| **Pitch Analysis**   | Python, librosa, pYIN                            | Server-side reference pitch extraction       |
-| **Stem Separation**  | StemSplit API                                    | External service for audio source separation |
-| **Object Storage**   | Cloudflare R2                                    | Stems (MP3/WAV), pitch data (JSON)           |
-| **CDN**              | Cloudflare                                       | DNS, DDoS protection, R2 public access       |
-| **Reverse Proxy**    | Caddy (Docker)                                   | TLS termination, routing                     |
-| **Containerization** | Docker Compose                                   | All backend services on Hostinger KVM        |
-| **Auth**             | Apple Sign In, Google OAuth, Email/Password, JWT | Multi-provider authentication                |
-| **CI/CD**            | GitHub Actions                                   | Build, test, deploy                          |
+| Layer                | Technology                                       | Purpose                                                                   |
+| -------------------- | ------------------------------------------------ | ------------------------------------------------------------------------- |
+| **iOS/macOS Client** | SwiftUI, AVAudioEngine (shared), WKWebView       | UI, stem playback + pitch detection on unified engine, YouTube video-only |
+| **Web Client**       | Next.js 14, React, AudioWorklet                  | Web UI, browser-based pitch detection                                     |
+| **API Server**       | NestJS, TypeScript                               | REST API, auth, job orchestration                                         |
+| **Database**         | PostgreSQL 16 (Docker)                           | Users, songs, sessions, metadata                                          |
+| **ORM**              | Prisma                                           | Type-safe database access                                                 |
+| **Queue**            | BullMQ + Redis 7 (Docker)                        | Background job management                                                 |
+| **Pitch Analysis**   | Python, librosa, pYIN                            | Server-side reference pitch extraction                                    |
+| **Stem Separation**  | StemSplit API                                    | External service for audio source separation                              |
+| **Object Storage**   | Cloudflare R2                                    | Stems (MP3/WAV), pitch data (JSON)                                        |
+| **CDN**              | Cloudflare                                       | DNS, DDoS protection, R2 public access                                    |
+| **Reverse Proxy**    | Caddy (Docker)                                   | TLS termination, routing                                                  |
+| **Containerization** | Docker Compose                                   | All backend services on Hostinger KVM                                     |
+| **Auth**             | Apple Sign In, Google OAuth, Email/Password, JWT | Multi-provider authentication                                             |
+| **CI/CD**            | GitHub Actions                                   | Build, test, deploy                                                       |
 
 ## Data Flow Summary
 
 1. **Song submission**: Client sends YouTube URL → API creates song record → enqueues StemSplit job
 2. **Stem separation**: BullMQ triggers StemSplit API → StemSplit processes → webhook notifies API → stems downloaded and uploaded to R2
 3. **Pitch analysis**: After stems are ready → Python worker extracts reference pitch from vocal stem → pitch data uploaded to R2 as JSON
-4. **Practice session**: Client fetches stems + pitch data from R2 → plays stems locally → detects singer pitch in real time → compares against reference → displays on piano roll
+4. **Practice session**: Client fetches stems + pitch data from R2 → plays stems via shared AudioEngine (YouTube muted, video-only) → detects singer pitch via mic on same engine (AEC cancels stem audio) → compares against reference → displays on piano roll
 5. **Session save**: Client sends session summary (timestamped pitch data, score) → API stores in PostgreSQL
 
 ## Architecture Rules

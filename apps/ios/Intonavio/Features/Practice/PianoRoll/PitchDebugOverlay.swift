@@ -87,7 +87,7 @@ private extension PitchDebugOverlay {
 
 #Preview {
     PitchDebugOverlay(
-        pitchDetector: PitchDetector(),
+        pitchDetector: PitchDetector(engine: AudioEngine()),
         scoringEngine: nil,
         referenceStore: ReferencePitchStore(),
         currentTime: 10.0

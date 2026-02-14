@@ -3,12 +3,14 @@ import XCTest
 
 final class StemPlayerTests: XCTestCase {
     func testStemPlayerInitialState() {
-        let player = StemPlayer()
+        let engine = AudioEngine()
+        let player = StemPlayer(engine: engine)
         XCTAssertEqual(player.rate, 1.0)
     }
 
     func testRateChange() {
-        let player = StemPlayer()
+        let engine = AudioEngine()
+        let player = StemPlayer(engine: engine)
         player.rate = 0.75
         XCTAssertEqual(player.rate, 0.75, accuracy: 0.01)
     }

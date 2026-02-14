@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		00A1B2C3D4E5F60718293A4B /* AudioEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5C /* AudioEngine.swift */; };
+		00A1B2C3D4E5F60718293A5C /* AudioEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5C /* AudioEngine.swift */; };
 		00EEE68720960E08F7DF6855 /* PitchAccuracy.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6E3866A26CEA25A5361E33C /* PitchAccuracy.swift */; };
 		018FDB9EB144C35A12F2B395 /* SongStatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D838B316EBD35DBA8F5C732 /* SongStatusBadge.swift */; };
 		041194E9D875882E304AA4F8 /* PracticeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD158E2B7A33E186A33FF9E4 /* PracticeViewModel.swift */; };
@@ -53,7 +55,6 @@
 		492FF5E88238E96DC3F0997C /* ReferencePitchStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 464CE004041C12734782ADCA /* ReferencePitchStore.swift */; };
 		4A66628A042A125B2B7EABBA /* DriftLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD06120A65578A080033C797 /* DriftLogger.swift */; };
 		4B316FB76B08702FC90F4F1C /* SongPracticeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 889DC8B2F5F95A0437D1D4EE /* SongPracticeView.swift */; };
-		4B9EF0C2D7BF093D848B2797 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 8F9347824CB01A0984BB9524 /* Info.plist */; };
 		4DFCD1BCEE520A7DE731FD34 /* TransposeInterval.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3D17C5BC76C82062097F4A6 /* TransposeInterval.swift */; };
 		4E643C3C37BE67E95988F64C /* YouTubeBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68DA1164A44FECA38F6FA571 /* YouTubeBridge.swift */; };
 		4E9EDB51DDD898BE6C04B921 /* ScoringEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 374C4FE318BBF25BEF647785 /* ScoringEngine.swift */; };
@@ -165,7 +166,6 @@
 		DB6F5DF5D2170233A3D3CEB1 /* VisualizationMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD3F9FD70811F95A1EA21535 /* VisualizationMode.swift */; };
 		DD656D6D879D3BE1A6426624 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BC3833EA35109660C0D2E79 /* ContentView.swift */; };
 		DEF9510820B2DCC1182AEEE4 /* APIClientProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6ADC13DAC58FDBAE06B6FDAA /* APIClientProtocol.swift */; };
-		DFD63CECB7E355AF9493E217 /* Info-macOS.plist in Resources */ = {isa = PBXBuildFile; fileRef = BF82DC900B1F855D0DFBCD2D /* Info-macOS.plist */; };
 		E1E489C14B84FDA445B5843D /* PaginatedResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F0E53F84A0A7375CEF3F225 /* PaginatedResponse.swift */; };
 		E30C87CD29FA0140D7868279 /* PitchDataDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E53968AB4EA7CEFDE95BE5F /* PitchDataDownloader.swift */; };
 		E3AEC757351CCABB725EEF14 /* YouTubeHTML.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4848A66AB0B34E1703B26528 /* YouTubeHTML.swift */; };
@@ -209,6 +209,7 @@
 
 /* Begin PBXFileReference section */
 		02CC2F56981B7AC5426C8AE4 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B5C /* AudioEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioEngine.swift; sourceTree = "<group>"; };
 		0A5EED91336F487C29EA35D8 /* StemPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StemPlayer.swift; sourceTree = "<group>"; };
 		0C5C6F1A822EE04120BCF0CC /* IntonavioMac.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = IntonavioMac.entitlements; sourceTree = "<group>"; };
 		0CDD8E3C13172EA93857E093 /* Intonavio.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Intonavio.entitlements; sourceTree = "<group>"; };
@@ -568,6 +569,7 @@
 			isa = PBXGroup;
 			children = (
 				5A0C2AF248E9FC5B2280EAAF /* Pitch */,
+				A1B2C3D4E5F60718293A4B5C /* AudioEngine.swift */,
 				81BED35799707A0550050A4B /* AudioMode.swift */,
 				97CBE0920EF935138DF6FC7C /* MetronomeTick.swift */,
 				C38386796F7F9FCA92E8F887 /* StemDownloader.swift */,
@@ -721,7 +723,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4B9EF0C2D7BF093D848B2797 /* Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -729,7 +730,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DFD63CECB7E355AF9493E217 /* Info-macOS.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -771,6 +771,7 @@
 				B71DCC9D91AF341C853CFC1E /* LoopControlsView.swift in Sources */,
 				22403B6DC6484694DDF81E04 /* LoopScoreToastView.swift in Sources */,
 				34E29EE0F322BE2D369E4694 /* LoopState.swift in Sources */,
+				00A1B2C3D4E5F60718293A4B /* AudioEngine.swift in Sources */,
 				948A90A78B8988F73C2C6D4E /* MetronomeTick.swift in Sources */,
 				8D09205FA0E70F989F2F07F6 /* MockAPIClient.swift in Sources */,
 				7B71A0F36CC753563A0EF65A /* NoteMapper.swift in Sources */,
@@ -864,6 +865,7 @@
 				60CA75E1FF52CE707F51231A /* LoopControlsView.swift in Sources */,
 				D6000111A22EA30E3317FFB5 /* LoopScoreToastView.swift in Sources */,
 				1DFED3CC58434EA9826BACE8 /* LoopState.swift in Sources */,
+				00A1B2C3D4E5F60718293A5C /* AudioEngine.swift in Sources */,
 				F6495CAB4F1ABDABB96405C2 /* MetronomeTick.swift in Sources */,
 				2F57476F02D130B2201A5652 /* MockAPIClient.swift in Sources */,
 				85BB0B8FB629AE6B4D9950BB /* NoteMapper.swift in Sources */,

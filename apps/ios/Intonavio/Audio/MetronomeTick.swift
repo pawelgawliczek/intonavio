@@ -1,25 +1,28 @@
 import AVFoundation
 
 /// Plays a metronome click at a given BPM using a short sine burst.
+/// Uses a shared `AudioEngine` so it coexists with PitchDetector
+/// on the same engine in exercise mode.
 final class MetronomeTick {
+    private let audioEngine: AudioEngine
     private var timer: Timer?
-    private let engine = AVAudioEngine()
     private let playerNode = AVAudioPlayerNode()
     private var tickBuffer: AVAudioPCMBuffer?
     private(set) var isRunning = false
+    private var isAttached = false
 
     var bpm: Int = 80 {
         didSet { restartIfRunning() }
     }
 
-    init() {
-        setupEngine()
-        generateTickBuffer()
+    init(engine: AudioEngine) {
+        self.audioEngine = engine
     }
 
     func start() {
         guard !isRunning else { return }
-        ensureEngineRunning()
+        attachIfNeeded()
+        audioEngine.ensureRunning()
         scheduleTimer()
         isRunning = true
     }
@@ -33,21 +36,29 @@ final class MetronomeTick {
 
     deinit {
         stop()
-        engine.stop()
+        detach()
     }
 }
 
 // MARK: - Private
 
 private extension MetronomeTick {
-    func setupEngine() {
-        engine.attach(playerNode)
-        engine.connect(playerNode, to: engine.mainMixerNode, format: nil)
-        do {
-            try engine.start()
-        } catch {
-            AppLogger.pitch.error("Metronome engine failed: \(error.localizedDescription)")
-        }
+    func attachIfNeeded() {
+        guard !isAttached else { return }
+        audioEngine.attach(playerNode)
+        audioEngine.connect(
+            playerNode,
+            to: audioEngine.mainMixerNode,
+            format: nil
+        )
+        generateTickBuffer()
+        isAttached = true
+    }
+
+    func detach() {
+        guard isAttached else { return }
+        audioEngine.detach(playerNode)
+        isAttached = false
     }
 
     func generateTickBuffer() {
@@ -90,17 +101,6 @@ private extension MetronomeTick {
         playerNode.scheduleBuffer(buffer, at: nil, options: [], completionHandler: nil)
         if !playerNode.isPlaying {
             playerNode.play()
-        }
-    }
-
-    func ensureEngineRunning() {
-        guard !engine.isRunning else { return }
-        do {
-            try engine.start()
-        } catch {
-            AppLogger.pitch.error(
-                "Metronome engine restart failed: \(error.localizedDescription)"
-            )
         }
     }
 

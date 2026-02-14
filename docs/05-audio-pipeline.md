@@ -154,11 +154,43 @@ StemSplit uses HMAC-SHA256 signatures for webhook authentication via the `X-Webh
 
 ---
 
-## iOS Audio Session & Echo Cancellation
+## iOS Audio Architecture: Unified AudioEngine
 
-The iOS app uses `AVAudioSession` with `.playAndRecord` category and `.voiceChat` mode. The `.voiceChat` mode enables iOS built-in Acoustic Echo Cancellation (AEC) and noise suppression, which removes speaker audio from the microphone input. This is essential because the app plays music through the speaker (YouTube or stems) while simultaneously recording the user's voice for pitch detection.
+All audio I/O (stem playback + microphone input) runs through a single shared `AudioEngine` instance. This is required for Voice Processing (VPIO/AEC) to work on iOS — the system needs to see both the output going to speakers and the input from the microphone on the same `AVAudioEngine` to cancel speaker bleed from the mic.
 
-Without AEC, the microphone picks up the song's melody from the speaker, causing the detected pitch line to follow the music rather than the user's voice.
+### Unified Audio Graph
+
+```
+Microphone → inputNode (VP/AEC enabled) ── tap ──→ PitchDetector ring buffer
+
+PlayerNode(vocals)  ──┐
+PlayerNode(other)   ──┼→ stemMixer → timePitch → mainMixerNode → output
+PlayerNode(full)    ──┘
+```
+
+### AudioEngine Lifecycle
+
+1. **`prepare()`** — Configure audio session (`.playAndRecord`, `.voiceChat`) and enable voice processing on `inputNode`. Must be called before attaching nodes — VP re-creates the audio graph.
+2. **Attach nodes** — `StemPlayer.setup()` attaches player nodes, mixer, and timePitch to the prepared engine.
+3. **`start()`** — Start the engine with all nodes connected. Idempotent — safe to call from multiple consumers.
+
+`StemPlayer`, `PitchDetector`, and `MetronomeTick` all accept a shared `AudioEngine` via init. None creates its own `AVAudioEngine`. The engine starts lazily when stems are set up or pitch detection begins.
+
+### Why One Engine?
+
+Previous architecture used separate engines for `StemPlayer` (output) and `PitchDetector` (input). On iOS, enabling `setVoiceProcessingEnabled(true)` on one engine's input node caused VPIO render errors because both engines competed for audio I/O hardware. With a single engine, VPIO sees the stem output and cancels it from the mic input.
+
+### Audio Session Configuration
+
+The audio session uses `.voiceChat` mode (not `.default`) to enable iOS built-in Acoustic Echo Cancellation (AEC) and noise suppression. All audio routes through stem playback — YouTube audio is not used.
+
+```swift
+AVAudioSession.sharedInstance().setCategory(
+    .playAndRecord,
+    mode: .voiceChat,  // Enables AEC + noise suppression
+    options: [.defaultToSpeaker, .allowBluetooth, .mixWithOthers]
+)
+```
 
 Additional pre-detection filtering:
 

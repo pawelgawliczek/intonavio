@@ -24,10 +24,11 @@ final class ExercisePracticeViewModel {
 
     // MARK: - Dependencies
 
-    let pitchDetector = PitchDetector()
+    let audioEngine = AudioEngine()
+    let pitchDetector: PitchDetector
     let referenceStore = ReferencePitchStore()
     private(set) var scoringEngine: ScoringEngine?
-    let metronome = MetronomeTick()
+    let metronome: MetronomeTick
 
     private var playbackTimer: Timer?
     private let timerInterval: TimeInterval = 0.02 // 50fps update
@@ -39,6 +40,8 @@ final class ExercisePracticeViewModel {
     init(exercise: ExerciseDefinition) {
         self.exercise = exercise
         self.tempo = exercise.defaultTempo
+        self.pitchDetector = PitchDetector(engine: audioEngine)
+        self.metronome = MetronomeTick(engine: audioEngine)
     }
 
     deinit {
@@ -61,6 +64,15 @@ final class ExercisePracticeViewModel {
         guard isPrepared, !isPlaying else { return }
         isPlaying = true
         isComplete = false
+
+        do {
+            try audioEngine.start()
+        } catch {
+            AppLogger.pitch.error(
+                "Exercise audio engine failed: \(error.localizedDescription)"
+            )
+            return
+        }
 
         metronome.bpm = tempo
         metronome.start()
@@ -92,6 +104,7 @@ final class ExercisePracticeViewModel {
         pitchDetector.stop()
         pitchDetector.onPitchDetected = nil
         stopPlaybackTimer()
+        audioEngine.stop()
     }
 
     func restart() {

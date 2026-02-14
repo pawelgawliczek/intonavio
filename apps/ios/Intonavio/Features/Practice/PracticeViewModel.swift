@@ -59,7 +59,8 @@ final class PracticeViewModel {
     let bridge = YouTubeBridge()
     let controller = YouTubePlayerController()
     let server: YouTubeLocalServer
-    let stemPlayer = StemPlayer()
+    let audioEngine = AudioEngine()
+    let stemPlayer: StemPlayer
     let stemDownloader = StemDownloader()
     private(set) var sync: VideoAudioSync?
     let sessionsViewModel: SessionsViewModel?
@@ -71,6 +72,7 @@ final class PracticeViewModel {
 
     private weak var webViewRef: WKWebView?
     var loopCheckTask: Task<Void, Never>?
+    var isWaitingForLoopSeek = false
     var playStartTime: Date?
     var sessionSaved = false
 
@@ -99,20 +101,23 @@ final class PracticeViewModel {
         self.songId = songId
         self.videoId = videoId
         self.server = YouTubeLocalServer(videoId: videoId)
+        self.stemPlayer = StemPlayer(engine: audioEngine)
         self.sessionsViewModel = sessionsViewModel
     }
 
     deinit {
         loopCheckTask?.cancel()
         server.stop()
+        audioEngine.stop()
     }
 
     // MARK: - Setup
 
     func configure() {
-        // Configure audio session early so it's active before YouTube loads.
-        // This prevents session interruptions when PitchDetector starts later.
-        try? AudioSessionManager.configure()
+        // Enable VP early, before any nodes are attached to the engine.
+        // VP re-creates the audio graph, so it must happen first.
+        // Engine starts lazily in StemPlayer.setup() or PitchDetector.start().
+        try? audioEngine.prepare()
 
         sync = VideoAudioSync(
             controller: controller,
@@ -170,6 +175,7 @@ final class PracticeViewModel {
     }
 
     func pause() {
+        isWaitingForLoopSeek = false
         controller.pause()
         controller.stopTimePolling()
         loopState = .paused
@@ -183,6 +189,7 @@ final class PracticeViewModel {
     }
 
     func stop() {
+        isWaitingForLoopSeek = false
         controller.stop()
         controller.stopTimePolling()
         loopState = .idle
@@ -250,6 +257,7 @@ final class PracticeViewModel {
     }
 
     func clearLoop() {
+        isWaitingForLoopSeek = false
         markerA = nil
         markerB = nil
         loopCount = 0

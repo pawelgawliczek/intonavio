@@ -4,7 +4,8 @@ import XCTest
 final class VideoAudioSyncTests: XCTestCase {
     func testSyncInitialState() {
         let controller = YouTubePlayerController()
-        let stemPlayer = StemPlayer()
+        let engine = AudioEngine()
+        let stemPlayer = StemPlayer(engine: engine)
         let sync = VideoAudioSync(
             controller: controller,
             stemPlayer: stemPlayer
@@ -14,7 +15,8 @@ final class VideoAudioSyncTests: XCTestCase {
 
     func testStartStop() {
         let controller = YouTubePlayerController()
-        let stemPlayer = StemPlayer()
+        let engine = AudioEngine()
+        let stemPlayer = StemPlayer(engine: engine)
         let sync = VideoAudioSync(
             controller: controller,
             stemPlayer: stemPlayer

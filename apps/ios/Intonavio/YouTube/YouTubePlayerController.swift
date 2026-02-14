@@ -74,7 +74,7 @@ final class YouTubePlayerController: VideoPlayerProtocol {
 
 private extension YouTubePlayerController {
     func evaluate(_ js: String) {
-        webView?.evaluateJavaScript(js) { _, error in
+        webView?.evaluateJavaScript("\(js); void(0)") { _, error in
             if let error {
                 AppLogger.player.error("JS error: \(error.localizedDescription)")
             }

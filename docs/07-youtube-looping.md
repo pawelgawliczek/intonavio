@@ -46,11 +46,11 @@ stateDiagram-v2
 
 ## Audio Mode State
 
-Switching between original YouTube audio and separated stems.
+Switching between audio modes. YouTube is video-only — all audio routes through stem playback via the shared `AudioEngine`.
 
 ```mermaid
 stateDiagram-v2
-    [*] --> OriginalAudio: Default (stems not ready)
+    [*] --> OriginalAudio: Default (stems ready)
 
     OriginalAudio --> VocalsOnly: Tap mic button
     OriginalAudio --> InstrumentalOnly: Tap guitars button
@@ -64,15 +64,15 @@ stateDiagram-v2
 
 | Mode                  | YouTube Audio | Stem Playback           | Use Case                                            | UI Control             |
 | --------------------- | ------------- | ----------------------- | --------------------------------------------------- | ---------------------- |
-| **Original Audio**    | Muted\*       | FULL stem (full mix)    | Default playback — consistent volume with all modes | Speaker icon button    |
+| **Original Audio**    | Muted         | FULL stem (full mix)    | Default playback — consistent volume with all modes | Speaker icon button    |
 | **Vocals Only**       | Muted         | Vocals stem only        | Listen to reference vocal isolated                  | Microphone icon button |
 | **Instrumental Only** | Muted         | All stems except vocals | Sing along without competing vocal                  | Guitars icon button    |
 
-_\*Legacy songs without a FULL stem fall back to unmuted YouTube audio in Original mode._
+YouTube audio is always muted. All audio comes from stems played through the shared `AudioEngine`. This ensures voice processing (AEC) can reference the stem output and cancel it from the microphone input for pitch detection.
 
-Audio source buttons appear inline in the controls bar (next to A-B loop controls) once stems are downloaded. Before stems are ready, YouTube original plays by default with no source buttons shown.
+Audio source buttons appear inline in the controls bar (next to A-B loop controls) once stems are downloaded.
 
-**FULL stem audio**: Songs processed after Feb 2024 include a `FULL` stem type — StemSplit's `fullAudio` output stored in R2 alongside vocals/instrumental. This eliminates the volume mismatch between YouTube's WKWebView audio (~50% quieter) and AVAudioEngine stem playback. YouTube plays muted for video-only; all audio routes through `StemPlayer`.
+**FULL stem audio**: All songs include a `FULL` stem type — StemSplit's `fullAudio` output stored in R2 alongside vocals/instrumental. YouTube plays muted for video-only; all audio routes through `StemPlayer` on the shared `AudioEngine`.
 
 **Mode switching uses pause-switch-resume:** stop sync → stop stems → change mode/volumes → restart stems from current YouTube time → restart sync. This prevents race conditions where the sync system sees inconsistent state during transitions.
 
@@ -121,7 +121,7 @@ sequenceDiagram
 - Sync poll interval: **2 seconds**. Frequent polling (1s) caused excessive corrections without improving perceived sync.
 - Speed changes are applied to both stem playback (`AVAudioUnitTimePitch.rate`) and YouTube player (`setPlaybackRate()`) simultaneously.
 - On loop restart (B→A), both stem and video seek to marker A.
-- `AVAudioSession` uses `.mixWithOthers` option so YouTube WebView and AVAudioEngine coexist without triggering interruption notifications that would stop the engine.
+- `AVAudioSession` uses `.mixWithOthers` option so YouTube WebView and the shared AVAudioEngine coexist without triggering interruption notifications.
 
 ---
 
