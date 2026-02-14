@@ -2,7 +2,7 @@
 
 ## Overview
 
-Intonavio embeds YouTube lyrics videos and provides A-B looping, speed control, and the ability to switch between original audio and separated stems. On iOS, YouTube playback happens in a WKWebView using the YouTube IFrame Player API, controlled via a Swift ↔ JavaScript bridge.
+Intonavio embeds YouTube lyrics videos and provides A-B looping and the ability to switch between original audio and separated stems. On iOS, YouTube playback happens in a WKWebView using the YouTube IFrame Player API, controlled via a Swift ↔ JavaScript bridge. A transparent overlay blocks direct user interaction with the YouTube player's built-in controls — all playback is controlled via the app's controls bar.
 
 ---
 
@@ -19,7 +19,7 @@ stateDiagram-v2
     SettingA --> SettingAB: Marker A placed
     SettingAB --> Looping: Tap "Set B"
 
-    Looping --> Looping: Reached B → seek to A
+    Looping --> Looping: Reached B → score pass → seek to A
     Looping --> Playing: Tap "Clear Loop"
     Looping --> Paused: Tap Pause
 
@@ -33,14 +33,14 @@ stateDiagram-v2
 
 ### State Descriptions
 
-| State         | Description                                                           |
-| ------------- | --------------------------------------------------------------------- |
-| **Idle**      | Song loaded, not playing. No loop markers set.                        |
-| **Playing**   | Video/stems playing without loop.                                     |
-| **SettingA**  | User tapped "Set A" — marker A placed at current time. Waiting for B. |
-| **SettingAB** | Both A and B positions known. Not yet looping (transition state).     |
-| **Looping**   | Playback loops between A and B. On reaching B, seeks back to A.       |
-| **Paused**    | Playback paused. Loop markers preserved.                              |
+| State         | Description                                                                                       |
+| ------------- | ------------------------------------------------------------------------------------------------- |
+| **Idle**      | Song loaded, not playing. No loop markers set.                                                    |
+| **Playing**   | Video/stems playing without loop.                                                                 |
+| **SettingA**  | User tapped "Set A" — marker A placed at current time. Waiting for B.                             |
+| **SettingAB** | Both A and B positions known. Not yet looping (transition state).                                 |
+| **Looping**   | Playback loops between A and B. On reaching B, captures pass score, shows toast, seeks back to A. |
+| **Paused**    | Playback paused. Loop markers preserved.                                                          |
 
 ---
 
@@ -62,13 +62,17 @@ stateDiagram-v2
 
 ### Audio Modes
 
-| Mode                  | YouTube Audio | Stem Playback           | Use Case                                         | UI Control             |
-| --------------------- | ------------- | ----------------------- | ------------------------------------------------ | ---------------------- |
-| **Original Audio**    | Unmuted       | None                    | Before stems are ready, or user prefers original | Speaker icon button    |
-| **Vocals Only**       | Muted         | Vocals stem only        | Listen to reference vocal isolated               | Microphone icon button |
-| **Instrumental Only** | Muted         | All stems except vocals | Sing along without competing vocal               | Guitars icon button    |
+| Mode                  | YouTube Audio | Stem Playback           | Use Case                                            | UI Control             |
+| --------------------- | ------------- | ----------------------- | --------------------------------------------------- | ---------------------- |
+| **Original Audio**    | Muted\*       | FULL stem (full mix)    | Default playback — consistent volume with all modes | Speaker icon button    |
+| **Vocals Only**       | Muted         | Vocals stem only        | Listen to reference vocal isolated                  | Microphone icon button |
+| **Instrumental Only** | Muted         | All stems except vocals | Sing along without competing vocal                  | Guitars icon button    |
+
+_\*Legacy songs without a FULL stem fall back to unmuted YouTube audio in Original mode._
 
 Audio source buttons appear inline in the controls bar (next to A-B loop controls) once stems are downloaded. Before stems are ready, YouTube original plays by default with no source buttons shown.
+
+**FULL stem audio**: Songs processed after Feb 2024 include a `FULL` stem type — StemSplit's `fullAudio` output stored in R2 alongside vocals/instrumental. This eliminates the volume mismatch between YouTube's WKWebView audio (~50% quieter) and AVAudioEngine stem playback. YouTube plays muted for video-only; all audio routes through `StemPlayer`.
 
 **Mode switching uses pause-switch-resume:** stop sync → stop stems → change mode/volumes → restart stems from current YouTube time → restart sync. This prevents race conditions where the sync system sees inconsistent state during transitions.
 
@@ -123,22 +127,18 @@ sequenceDiagram
 
 ## Speed Control
 
-| Speed | Label     | Use Case                              |
-| ----- | --------- | ------------------------------------- |
-| 0.25x | Very slow | Learning complex melisma note by note |
-| 0.5x  | Slow      | Breaking down fast passages           |
-| 0.75x | Moderate  | Comfortable practice speed            |
-| 1.0x  | Normal    | Full speed performance                |
-| 1.25x | Fast      | Challenge mode                        |
-| 1.5x  | Faster    | Advanced practice                     |
-| 2.0x  | Double    | Quick review                          |
+Speed control is available programmatically (0.25x–2.0x) but the speed selector UI has been removed from the practice screen controls bar to reduce clutter. Speed defaults to 1.0x.
 
 Speed is applied via:
 
 - **AVAudioEngine**: `audioPlayerNode.rate = speed` (using AVAudioUnitTimePitch to preserve pitch)
 - **YouTube**: `player.setPlaybackRate(speed)` — YouTube supports 0.25x–2x natively
 
-For speeds above 2x (if needed later), the YouTube video would be paused and only stems played.
+---
+
+## YouTube Video Touch Blocking
+
+The YouTube player's WKWebView is covered by a transparent SwiftUI overlay (`Color.clear.contentShape(Rectangle())`) that absorbs all touch events. This prevents users from interacting with YouTube's built-in play/pause button, seek bar, and other controls. All playback is exclusively controlled through the app's controls bar, ensuring consistent state between the YouTube player, stem player, pitch detection, and loop logic.
 
 ---
 

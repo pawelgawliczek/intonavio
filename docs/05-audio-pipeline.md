@@ -69,7 +69,7 @@ flowchart TD
     D -->|FAILED| F[Reset status to QUEUED<br/>Re-enqueue processing]
     D -->|Processing| G[Return current status<br/>Client polls for updates]
 
-    C -->|Cache Miss| H[Fetch video metadata<br/>title, duration, thumbnail]
+    C -->|Cache Miss| H[Fetch YouTube oEmbed metadata<br/>title, artist, thumbnail]
     H --> I[Create new Song record]
     I --> J[Enqueue StemSplit job]
     J --> K[Return 202 with<br/>status: QUEUED]
@@ -131,6 +131,10 @@ StemSplit uses HMAC-SHA256 signatures for webhook authentication via the `X-Webh
       "instrumental": {
         "url": "https://stemsplit-storage....r2.cloudflarestorage.com/...",
         "expiresAt": "2026-01-05T13:30:00Z"
+      },
+      "fullAudio": {
+        "url": "https://stemsplit-storage....r2.cloudflarestorage.com/...",
+        "expiresAt": "2026-01-05T13:30:00Z"
       }
     },
     "creditsCharged": 240,
@@ -176,10 +180,11 @@ The Python worker extracts reference pitch data from the vocal stem using libros
    - `fmin=65` (C2) — lowest expected singing pitch
    - `fmax=2093` (C7) — highest expected singing pitch
    - `hop_length=512` — ~11.6ms resolution
-4. **Convert** frequencies to MIDI note numbers
-5. **Build** JSON frame array with `t`, `hz`, `midi`, `voiced` fields
-6. **Upload** JSON to R2 at `pitch/{songId}/reference.json`
-7. **Update** database: create PitchData record, set song status to READY
+4. **Compute RMS** energy per frame using `librosa.feature.rms()` (same hop length)
+5. **Convert** frequencies to MIDI note numbers
+6. **Build** JSON frame array with `t`, `hz`, `midi`, `voiced`, `rms` fields
+7. **Upload** JSON to R2 at `pitch/{songId}/reference.json`
+8. **Update** database: create PitchData record, set song status to READY
 
 ### Key Parameters
 
@@ -190,6 +195,10 @@ The Python worker extracts reference pitch data from the vocal stem using libros
 | fmin        | 65 Hz (C2)    | Covers bass vocal range                                      |
 | fmax        | 2,093 Hz (C7) | Covers soprano vocal range                                   |
 | Algorithm   | pYIN          | More robust than YIN for pre-recorded audio; handles vibrato |
+
+### RMS Energy (Artifact Filtering)
+
+Per-frame RMS energy is computed alongside pitch extraction using `librosa.feature.rms(y=audio, hop_length=512)`. This value is included in the output JSON (`rms` field) and used by iOS/Web clients to filter low-energy artifacts from imperfect stem separation. Frames where `rms < 0.02` are treated as inaudible — excluded from piano roll rendering and MIDI range computation. Without this filtering, pYIN marks residual noise as "voiced" (it has detectable pitch), producing visible artifacts on the piano roll.
 
 ---
 

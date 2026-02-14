@@ -26,6 +26,7 @@ enum StemType: String, Codable, Sendable {
     case other = "OTHER"
     case piano = "PIANO"
     case guitar = "GUITAR"
+    case full = "FULL"
 }
 
 // MARK: - Request DTOs

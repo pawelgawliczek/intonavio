@@ -3,18 +3,11 @@ import Foundation
 // MARK: - Audio Mode & Stem Management
 
 extension PracticeViewModel {
-    /// Switch audio source: YouTube original, vocals only, or instrumental.
+    /// Switch audio source: original (FULL stem or YouTube), vocals only, or instrumental.
     /// Uses pause-switch-resume to prevent sync issues during transition.
     @MainActor
     func setAudioMode(_ mode: AudioMode) {
         guard mode != audioMode else { return }
-        let previousMode = audioMode
-
-        if mode == .original {
-            switchToOriginal()
-            audioMode = mode
-            return
-        }
 
         guard isStemsReady else {
             downloadStemsAndSwitch(to: mode)
@@ -24,11 +17,25 @@ extension PracticeViewModel {
         let wasPlaying = loopState == .playing || loopState == .looping
         let resumeTime = currentTime
 
-        // Pause everything during the switch
         if wasPlaying {
             sync?.stop()
             stemPlayer.stop()
-            if previousMode == .original {
+        }
+
+        // Mute YouTube once stems are ready (for songs with FULL stem)
+        if hasFullStem && !isMuted {
+            controller.mute()
+            isMuted = true
+        }
+
+        // Legacy fallback: songs without FULL stem use YouTube for original mode
+        if !hasFullStem {
+            if mode == .original {
+                switchToOriginal()
+                audioMode = mode
+                return
+            }
+            if audioMode == .original && !isMuted {
                 controller.mute()
                 isMuted = true
             }
@@ -38,7 +45,6 @@ extension PracticeViewModel {
         stemPlayer.applyMode(mode)
         stemPlayer.rate = Float(playbackRate)
 
-        // Resume from the same position
         if wasPlaying {
             stemPlayer.play(from: resumeTime)
             sync?.start()
@@ -94,6 +100,13 @@ private extension PracticeViewModel {
             isStemsReady = true
             let count = stemFiles.count
             AppLogger.audio.info("Stems ready: \(count) loaded")
+
+            // Auto-mute YouTube and activate FULL stem when available
+            if hasFullStem {
+                controller.mute()
+                isMuted = true
+                stemPlayer.applyMode(audioMode)
+            }
         } catch {
             AppLogger.audio.error(
                 "Stem download failed: \(error.localizedDescription)"

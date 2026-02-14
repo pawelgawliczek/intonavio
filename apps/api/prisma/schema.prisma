@@ -40,6 +40,7 @@ enum StemType {
   OTHER
   PIANO
   GUITAR
+  FULL
 }
 
 // ─── Models ──────────────────────────────────────────

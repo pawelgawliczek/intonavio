@@ -16,9 +16,12 @@ final class StemPlayer {
     private var playerNodes: [StemType: AVAudioPlayerNode] = [:]
     private var audioFiles: [StemType: AVAudioFile] = [:]
     private var isSetup = false
-    private var interruptionObserver: NSObjectProtocol?
     /// Offset added to playerTime so currentTime returns absolute file position.
     private var playbackStartOffset: Double = 0
+
+    #if os(iOS)
+    private var interruptionObserver: NSObjectProtocol?
+    #endif
 
     var rate: Float {
         get { timePitch.rate }
@@ -49,7 +52,9 @@ final class StemPlayer {
 
         try engine.start()
         isSetup = true
+        #if os(iOS)
         observeInterruptions()
+        #endif
         AppLogger.audio.info("StemPlayer setup with \(stems.count) stems")
     }
 
@@ -111,6 +116,8 @@ final class StemPlayer {
     func applyMode(_ mode: AudioMode) {
         for (type, player) in playerNodes {
             switch type {
+            case .full:
+                player.volume = mode.hasFull ? 1.0 : 0.0
             case .vocals:
                 player.volume = mode.hasVocals ? 1.0 : 0.0
             default:
@@ -140,7 +147,9 @@ final class StemPlayer {
     // MARK: - Teardown
 
     func teardown() {
+        #if os(iOS)
         removeInterruptionObserver()
+        #endif
         engine.stop()
         for player in playerNodes.values {
             player.stop()
@@ -174,7 +183,12 @@ private extension StemPlayer {
             )
         }
     }
+}
 
+// MARK: - Interruption Handling (iOS)
+
+#if os(iOS)
+private extension StemPlayer {
     func observeInterruptions() {
         removeInterruptionObserver()
         interruptionObserver = NotificationCenter.default.addObserver(
@@ -204,3 +218,4 @@ private extension StemPlayer {
         }
     }
 }
+#endif

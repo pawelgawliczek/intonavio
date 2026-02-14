@@ -14,6 +14,7 @@ const STEM_TYPE_MAP: Record<string, StemType> = {
   other: 'OTHER',
   piano: 'PIANO',
   guitar: 'GUITAR',
+  fullAudio: 'FULL',
 };
 
 export interface StemInput {

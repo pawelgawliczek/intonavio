@@ -67,6 +67,7 @@ erDiagram
         string userId FK "original submitter"
         string videoId UK "YouTube video ID"
         string title
+        string artist "nullable, from YouTube oEmbed"
         string thumbnailUrl
         int duration "seconds"
         string status "SongStatus enum"
@@ -157,6 +158,7 @@ enum StemType {
   OTHER
   PIANO
   GUITAR
+  FULL
 }
 
 // ─── Models ──────────────────────────────────────────
@@ -193,8 +195,9 @@ model Song {
   id            String     @id @default(cuid())
   userId        String     // Original submitter (who triggered processing)
   videoId       String     @unique
-  title         String
-  thumbnailUrl  String
+  title         String     // Fetched from YouTube oEmbed API at creation
+  artist        String?    // Author name from YouTube oEmbed API
+  thumbnailUrl  String     // Best available thumbnail (maxresdefault → hqdefault → mqdefault fallback)
   duration      Int        // seconds
   status        SongStatus @default(QUEUED)
   externalJobId String?    // StemSplit job ID
@@ -336,14 +339,15 @@ A user can have multiple auth providers linked (e.g., sign up with email, later 
 
 ### StemType
 
-| Value    | Description                             |
-| -------- | --------------------------------------- |
-| `VOCALS` | Isolated vocal track                    |
-| `DRUMS`  | Isolated percussion                     |
-| `BASS`   | Isolated bass line                      |
-| `OTHER`  | Remaining instruments (synths, strings) |
-| `PIANO`  | Isolated piano/keys track               |
-| `GUITAR` | Isolated guitar track                   |
+| Value    | Description                                            |
+| -------- | ------------------------------------------------------ |
+| `VOCALS` | Isolated vocal track                                   |
+| `DRUMS`  | Isolated percussion                                    |
+| `BASS`   | Isolated bass line                                     |
+| `OTHER`  | Remaining instruments (synths, strings)                |
+| `PIANO`  | Isolated piano/keys track                              |
+| `GUITAR` | Isolated guitar track                                  |
+| `FULL`   | Full audio mix from StemSplit (replaces YouTube audio) |
 
 ### ExerciseCategory
 
@@ -397,7 +401,7 @@ The `notes` JSON field on the Exercise model defines the sequence of pitches the
 | `vibrato.cents`  | `float`   | Vibrato depth (±cents from center pitch)          |
 | `vibrato.rateHz` | `float`   | Vibrato oscillation rate in Hz (typically 4–7 Hz) |
 
-The generator converts this definition into the standard `{t, hz, midi, voiced}` frame array at 11.6ms hop intervals. Vibrato is rendered as a sine modulation: `hz = baseHz × 2^(cents × sin(2π × rateHz × t) / 1200)`. Rest periods produce unvoiced frames.
+The generator converts this definition into the standard `{t, hz, midi, voiced, rms}` frame array at 11.6ms hop intervals. Vibrato is rendered as a sine modulation: `hz = baseHz × 2^(cents × sin(2π × rateHz × t) / 1200)`. Rest periods produce unvoiced frames.
 
 ---
 
@@ -413,23 +417,25 @@ The pitch data file stored in R2 contains frame-by-frame pitch information. For 
   "sampleRate": 44100,
   "hopDuration": 0.0116,
   "frames": [
-    { "t": 0.0, "hz": null, "midi": null, "voiced": false },
-    { "t": 0.0116, "hz": null, "midi": null, "voiced": false },
-    { "t": 0.5104, "hz": 329.63, "midi": 64.0, "voiced": true },
-    { "t": 0.522, "hz": 330.12, "midi": 64.1, "voiced": true }
+    { "t": 0.0, "hz": null, "midi": null, "voiced": false, "rms": 0.0001 },
+    { "t": 0.0116, "hz": null, "midi": null, "voiced": false, "rms": 0.0002 },
+    { "t": 0.5104, "hz": 329.63, "midi": 64.0, "voiced": true, "rms": 0.15 },
+    { "t": 0.522, "hz": 330.12, "midi": 64.1, "voiced": true, "rms": 0.14 }
   ]
 }
 ```
 
-| Field    | Type     | Description                                            |
-| -------- | -------- | ------------------------------------------------------ |
-| `t`      | `float`  | Time in seconds from start of track (4 decimal places) |
-| `hz`     | `float?` | Detected frequency in Hz (`null` if unvoiced)          |
-| `midi`   | `float?` | MIDI note number, 1 decimal place (`null` if unvoiced) |
-| `voiced` | `bool`   | Whether a pitched vocal was detected at this frame     |
+| Field    | Type     | Description                                                            |
+| -------- | -------- | ---------------------------------------------------------------------- |
+| `t`      | `float`  | Time in seconds from start of track (4 decimal places)                 |
+| `hz`     | `float?` | Detected frequency in Hz (`null` if unvoiced)                          |
+| `midi`   | `float?` | MIDI note number, 1 decimal place (`null` if unvoiced)                 |
+| `voiced` | `bool`   | Whether a pitched vocal was detected at this frame                     |
+| `rms`    | `float?` | Per-frame RMS energy from `librosa.feature.rms()` (artifact filtering) |
 
 **Design notes:**
 
 - Hop size of 512 samples at 44.1kHz gives ~11.6ms resolution — sufficient for note-level comparison
 - Unvoiced frames (breaths, silence, consonants) are explicitly marked so the client can skip them during scoring
 - MIDI note numbers simplify note-level bucketing on the client (e.g., "you sang E4 instead of F4")
+- `rms` enables filtering of low-energy artifacts from imperfect stem separation. Frames with `rms < 0.02` are treated as inaudible on the client (excluded from rendering and MIDI range computation). The threshold filters residual noise that pYIN marks as "voiced" but is not real vocal signal.

@@ -63,7 +63,8 @@ private extension VideoAudioSync {
         controller.getCurrentTime { [weak self] ytTime in
             guard let self else { return }
 
-            guard let stemTime = self.stemPlayer.currentTime(for: .vocals)
+            guard let stemTime = self.stemPlayer.currentTime(for: .full)
+                    ?? self.stemPlayer.currentTime(for: .vocals)
                     ?? self.stemPlayer.currentTime(for: .other) else {
                 return
             }

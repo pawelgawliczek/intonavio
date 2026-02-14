@@ -81,7 +81,15 @@ final class PracticeViewModel {
         return Date().timeIntervalSince(start)
     }
 
-    var isInStemMode: Bool { audioMode != .original && isStemsReady }
+    /// Whether this song has a full audio stem (new songs do, legacy songs don't).
+    var hasFullStem: Bool { stems.contains { $0.type == .full } }
+
+    /// Whether stem audio is active. True for all modes when FULL stem exists,
+    /// or only for non-original modes on legacy songs without FULL stem.
+    var isInStemMode: Bool {
+        guard isStemsReady else { return false }
+        return hasFullStem || audioMode != .original
+    }
 
     init(
         songId: String,
@@ -139,6 +147,12 @@ final class PracticeViewModel {
         controller.play()
         controller.startTimePolling(intervalMs: 50)
         playStartTime = playStartTime ?? Date()
+
+        // Mute YouTube from the first play when FULL stem is available
+        if hasFullStem && isStemsReady && !isMuted {
+            controller.mute()
+            isMuted = true
+        }
 
         if isInStemMode {
             stemPlayer.play(from: currentTime)
