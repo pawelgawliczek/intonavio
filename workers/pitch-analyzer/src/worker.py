@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from bullmq import Job
 
 from src.analyzer import extract_pitch, validate_analysis
+from src.phrases import detect_phrases
 from src.config import WorkerConfig
 from src.consumer import create_worker, run_heartbeat
 from src.db import complete_pitch_analysis, create_connection, mark_song_failed
@@ -56,6 +57,7 @@ def _process_job(job_data: PitchAnalysisJobData, config: WorkerConfig) -> None:
 
     # 4. Build output and serialize to camelCase JSON
     hop_duration = config.pyin_hop_length / config.pyin_sample_rate
+    phrases = detect_phrases(frames, hop_duration)
     output = PitchAnalysisOutput(
         song_id=song_id,
         sample_rate=config.pyin_sample_rate,
@@ -63,6 +65,7 @@ def _process_job(job_data: PitchAnalysisJobData, config: WorkerConfig) -> None:
         hop_duration=hop_duration,
         frame_count=stats.frame_count,
         frames=frames,
+        phrases=phrases,
     )
     json_bytes = output.model_dump_json(by_alias=True).encode("utf-8")
 

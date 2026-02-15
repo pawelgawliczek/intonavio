@@ -8,8 +8,11 @@ final class ReferencePitchStore {
     private(set) var totalDuration: Double = 0
     private(set) var midiMin: Float = 48  // C3 default
     private(set) var midiMax: Float = 72  // C5 default
+    private(set) var phrases: [ReferencePhraseInfo] = []
 
     var isEmpty: Bool { frames.isEmpty }
+    var hasPhrases: Bool { !phrases.isEmpty }
+    var phraseCount: Int { phrases.count }
 
     // MARK: - Loading
 
@@ -36,6 +39,7 @@ final class ReferencePitchStore {
         totalDuration = 0
         midiMin = 48
         midiMax = 72
+        phrases = []
     }
 
     // MARK: - Private
@@ -44,6 +48,7 @@ final class ReferencePitchStore {
         frames = pitchData.frames
         hopDuration = pitchData.hopDuration
         totalDuration = hopDuration * Double(frames.count)
+        phrases = pitchData.phrases
         computeMidiRange()
     }
 
@@ -88,5 +93,10 @@ final class ReferencePitchStore {
         guard let minVal = voicedMidi.min(),
               let maxVal = voicedMidi.max() else { return nil }
         return (min: minVal - 3, max: maxVal + 3)
+    }
+
+    /// Find the phrase containing the given playback time (linear scan).
+    func phrase(at time: Double) -> ReferencePhraseInfo? {
+        phrases.first { time >= $0.startTime && time <= $0.endTime }
     }
 }

@@ -1,16 +1,21 @@
 import SwiftUI
 
-/// Displays the current detected note name and cents deviation.
+/// Displays the current detected note name, cents deviation, score, and phrase info.
 struct CurrentNoteView: View {
     let noteName: String?
     let centsDeviation: Float
     let accuracy: PitchAccuracy
     let score: Double
+    var phraseIndex: Int?
+    var totalPhrases: Int = 0
 
     var body: some View {
         HStack(spacing: 16) {
             noteDisplay
             Spacer()
+            if totalPhrases > 0, let index = phraseIndex {
+                phraseIndicator(index: index)
+            }
             scoreDisplay
         }
         .padding(.horizontal, 12)
@@ -50,15 +55,32 @@ private extension CurrentNoteView {
                 .foregroundStyle(.secondary)
             Text("\(Int(score))")
                 .font(.title3.bold().monospacedDigit())
-                .foregroundStyle(.primary)
+                .foregroundStyle(scoreColor)
         }
+    }
+
+    func phraseIndicator(index: Int) -> some View {
+        Text("Phrase \(index + 1)/\(totalPhrases)")
+            .font(.caption2.monospacedDigit())
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(.ultraThinMaterial, in: Capsule())
+    }
+
+    var scoreColor: Color {
+        if score > 80 { return .green }
+        if score > 50 { return .yellow }
+        if score > 30 { return .orange }
+        return .primary
     }
 }
 
 #Preview {
     VStack {
-        CurrentNoteView(noteName: "C4", centsDeviation: 5, accuracy: .excellent, score: 85)
-        CurrentNoteView(noteName: "A3", centsDeviation: -23, accuracy: .good, score: 72)
+        CurrentNoteView(noteName: "C4", centsDeviation: 5, accuracy: .excellent, score: 85,
+                        phraseIndex: 2, totalPhrases: 12)
+        CurrentNoteView(noteName: "A3", centsDeviation: -15, accuracy: .good, score: 72)
         CurrentNoteView(noteName: nil, centsDeviation: 0, accuracy: .unvoiced, score: 0)
     }
     .padding()

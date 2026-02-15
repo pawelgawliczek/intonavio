@@ -23,7 +23,8 @@ final class ScoringEngineTests: XCTestCase {
             hopSize: 256,
             frameCount: frames.count,
             hopDuration: 0.01,
-            frames: frames
+            frames: frames,
+            phrases: []
         )
         store.load(from: data)
         engine = ScoringEngine(referenceStore: store)
@@ -48,20 +49,28 @@ final class ScoringEngineTests: XCTestCase {
         XCTAssertEqual(PitchAccuracy.classify(cents: 11), .good)
     }
 
-    func testTwentyFiveCentsIsGood() {
-        XCTAssertEqual(PitchAccuracy.classify(cents: 25), .good)
+    func testTwentyCentsIsGood() {
+        XCTAssertEqual(PitchAccuracy.classify(cents: 20), .good)
     }
 
-    func testTwentySixCentsIsFair() {
-        XCTAssertEqual(PitchAccuracy.classify(cents: 26), .fair)
+    func testTwentyFiveCentsIsFair() {
+        XCTAssertEqual(PitchAccuracy.classify(cents: 25), .fair)
     }
 
-    func testFiftyCentsIsFair() {
-        XCTAssertEqual(PitchAccuracy.classify(cents: 50), .fair)
+    func testTwentyOneCentsIsFair() {
+        XCTAssertEqual(PitchAccuracy.classify(cents: 21), .fair)
     }
 
-    func testFiftyOneCentsIsPoor() {
-        XCTAssertEqual(PitchAccuracy.classify(cents: 51), .poor)
+    func testThirtyCentsIsFair() {
+        XCTAssertEqual(PitchAccuracy.classify(cents: 30), .fair)
+    }
+
+    func testThirtyOneCentsIsPoor() {
+        XCTAssertEqual(PitchAccuracy.classify(cents: 31), .poor)
+    }
+
+    func testFiftyCentsIsPoor() {
+        XCTAssertEqual(PitchAccuracy.classify(cents: 50), .poor)
     }
 
     func testLargeCentsIsPoor() {
@@ -74,12 +83,12 @@ final class ScoringEngineTests: XCTestCase {
         XCTAssertEqual(PitchAccuracy.excellent.points, 100)
     }
 
-    func testGoodGives75Points() {
-        XCTAssertEqual(PitchAccuracy.good.points, 75)
+    func testGoodGives50Points() {
+        XCTAssertEqual(PitchAccuracy.good.points, 50)
     }
 
-    func testFairGives50Points() {
-        XCTAssertEqual(PitchAccuracy.fair.points, 50)
+    func testFairGives20Points() {
+        XCTAssertEqual(PitchAccuracy.fair.points, 20)
     }
 
     func testPoorGives0Points() {
@@ -112,7 +121,8 @@ final class ScoringEngineTests: XCTestCase {
         )]
         let data = ReferencePitchData(
             songId: nil, sampleRate: 44100, hopSize: 256,
-            frameCount: 1, hopDuration: 0.01, frames: frames
+            frameCount: 1, hopDuration: 0.01, frames: frames,
+            phrases: []
         )
         unvoicedStore.load(from: data)
         let unvoicedEngine = ScoringEngine(referenceStore: unvoicedStore)

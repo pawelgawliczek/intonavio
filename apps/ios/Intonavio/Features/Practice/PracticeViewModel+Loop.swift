@@ -77,6 +77,7 @@ extension PracticeViewModel {
 
     private func captureLoopScore() {
         guard let engine = scoringEngine else { return }
+        engine.finalizeCurrentPhrase()
         let score = engine.overallScore
         let previousScore = lastLoopScore
 

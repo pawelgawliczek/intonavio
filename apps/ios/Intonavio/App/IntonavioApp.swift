@@ -1,3 +1,4 @@
+import SwiftData
 import SwiftUI
 
 #if os(iOS)
@@ -19,6 +20,7 @@ struct IntonavioApp: App {
         WindowGroup {
             ContentView()
                 .environment(appState)
+                .modelContainer(for: ScoreRecord.self)
                 .preferredColorScheme(AppTheme(rawValue: themeRaw)?.colorScheme)
         }
         #if os(macOS)

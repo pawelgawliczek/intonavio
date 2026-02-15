@@ -5,6 +5,15 @@ export interface PitchFrame {
   voiced: boolean;
 }
 
+export interface Phrase {
+  index: number;
+  startFrame: number;
+  endFrame: number;
+  startTime: number;
+  endTime: number;
+  voicedFrameCount: number;
+}
+
 export interface PitchDataFile {
   songId?: string;
   exerciseId?: string;
@@ -13,4 +22,5 @@ export interface PitchDataFile {
   hopDuration: number;
   frameCount: number;
   frames: PitchFrame[];
+  phrases: Phrase[];
 }

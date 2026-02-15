@@ -1,3 +1,4 @@
+import SwiftData
 import SwiftUI
 
 struct SongPracticeView: View {
@@ -7,7 +8,9 @@ struct SongPracticeView: View {
     var hasPitchData: Bool = false
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
     @State private var viewModel: PracticeViewModel?
+    @State private var isShowingProgress = false
 
     var body: some View {
         mainContent
@@ -35,12 +38,31 @@ struct SongPracticeView: View {
             if let vm = viewModel {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Done") {
+                        vm.saveSongScore()
                         vm.stopPitchDetection()
                         vm.saveSessionIfNeeded()
                         vm.server.stop()
                         dismiss()
                     }
                 }
+                if vm.totalPhrases > 0 {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button {
+                            isShowingProgress = true
+                        } label: {
+                            Image(systemName: "chart.bar.xaxis")
+                        }
+                    }
+                }
+            }
+        }
+        .sheet(isPresented: $isShowingProgress) {
+            if let vm = viewModel {
+                ProgressLogView(
+                    songId: vm.songId,
+                    totalPhrases: vm.totalPhrases,
+                    scoreRepository: vm.scoreRepository
+                )
             }
         }
         .onAppear { setupIfNeeded() }
@@ -148,6 +170,23 @@ private extension SongPracticeView {
                     .padding(.top, geometry.size.height * vm.layoutMode.videoFraction + 12)
                     .animation(.easeInOut(duration: 0.3), value: vm.isShowingLoopScore)
                 }
+
+                if vm.isShowingPhraseScore, let score = vm.currentPhraseScore {
+                    PhraseScoreToastView(
+                        score: score,
+                        phraseIndex: vm.currentPhraseIndex ?? 0,
+                        totalPhrases: vm.totalPhrases,
+                        isNewBest: vm.isPhraseNewBest
+                    )
+                    .padding(.top, geometry.size.height * vm.layoutMode.videoFraction + 12)
+                    .animation(.spring(response: 0.4, dampingFraction: 0.7), value: vm.isShowingPhraseScore)
+                }
+
+                if vm.isSongNewBest {
+                    SongBestToastView(score: vm.songBestScore)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .animation(.spring(response: 0.4, dampingFraction: 0.7), value: vm.isSongNewBest)
+                }
             }
         }
     }
@@ -228,7 +267,9 @@ private struct PianoRollSection: View {
             isPitchReady: viewModel.isPitchReady,
             midiMin: viewModel.transposedMidiMin,
             midiMax: viewModel.transposedMidiMax,
-            transposeSemitones: viewModel.transposeSemitones
+            transposeSemitones: viewModel.transposeSemitones,
+            phraseIndex: viewModel.scoringEngine?.currentPhraseIndex,
+            totalPhrases: viewModel.totalPhrases
         )
     }
 }
@@ -240,6 +281,7 @@ private extension SongPracticeView {
         guard viewModel == nil else { return }
         let vm = PracticeViewModel(songId: songId, videoId: videoId)
         vm.stems = stems
+        vm.scoreRepository = ScoreRepository(modelContext: modelContext)
         vm.configure()
         vm.preloadStems()
         vm.downloadPitchDataIfNeeded(

@@ -15,6 +15,8 @@ struct PianoRollView: View {
     let midiMin: Float
     let midiMax: Float
     let transposeSemitones: Int
+    var phraseIndex: Int?
+    var totalPhrases: Int = 0
 
     var body: some View {
         VStack(spacing: 0) {
@@ -23,7 +25,9 @@ struct PianoRollView: View {
                     noteName: currentNoteName,
                     centsDeviation: centsDeviation,
                     accuracy: accuracy,
-                    score: score
+                    score: score,
+                    phraseIndex: phraseIndex,
+                    totalPhrases: totalPhrases
                 )
 
                 PianoRollCanvas(

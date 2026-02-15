@@ -67,7 +67,8 @@ enum ExercisePitchGenerator {
             hopSize: hopLength,
             frameCount: frames.count,
             hopDuration: hopDuration,
-            frames: frames
+            frames: frames,
+            phrases: []
         )
     }
 

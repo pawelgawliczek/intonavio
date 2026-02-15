@@ -23,6 +23,19 @@ class PitchFrame(BaseModel):
     rms: float | None = None
 
 
+class Phrase(BaseModel):
+    """A contiguous run of voiced frames forming a singable phrase."""
+
+    index: int
+    start_frame: int = Field(serialization_alias="startFrame")
+    end_frame: int = Field(serialization_alias="endFrame")
+    start_time: float = Field(serialization_alias="startTime")
+    end_time: float = Field(serialization_alias="endTime")
+    voiced_frame_count: int = Field(serialization_alias="voicedFrameCount")
+
+    model_config = {"populate_by_name": True}
+
+
 class PitchAnalysisOutput(BaseModel):
     """Full pitch analysis result uploaded to R2 as JSON."""
 
@@ -32,6 +45,7 @@ class PitchAnalysisOutput(BaseModel):
     hop_duration: float = Field(serialization_alias="hopDuration")
     frame_count: int = Field(serialization_alias="frameCount")
     frames: list[PitchFrame]
+    phrases: list[Phrase]
 
     model_config = {"populate_by_name": True}
 

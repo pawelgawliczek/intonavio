@@ -38,6 +38,16 @@ final class PracticeViewModel {
     private var loopMidiMin: Float?
     private var loopMidiMax: Float?
 
+    // Phrase scoring
+    var currentPhraseScore: Double?
+    var currentPhraseIndex: Int?
+    var totalPhrases: Int = 0
+    var isShowingPhraseScore = false
+    var isPhraseNewBest = false
+    var isSongNewBest = false
+    var songBestScore: Double = 0
+    var scoreRepository: ScoreRepository?
+
     var transposedMidiMin: Float {
         let base = (loopState == .looping ? loopMidiMin : nil) ?? referenceStore.midiMin
         return base + Float(transposeSemitones)
@@ -131,6 +141,7 @@ final class PracticeViewModel {
         )
         scoringEngine = ScoringEngine(referenceStore: referenceStore)
         loadPitchDataIfAvailable()
+        setupPhraseScoring()
         bridge.onEvent = { [weak self] event in
             self?.handleEvent(event)
         }

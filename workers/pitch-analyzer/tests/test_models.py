@@ -37,6 +37,7 @@ def test_output_serializes_to_camel_case() -> None:
         hop_duration=0.01161,
         frame_count=1,
         frames=[PitchFrame(t=0.0, hz=440.0, midi=69.0, voiced=True)],
+        phrases=[],
     )
     data = json.loads(output.model_dump_json(by_alias=True))
     assert "songId" in data
@@ -44,6 +45,7 @@ def test_output_serializes_to_camel_case() -> None:
     assert "hopSize" in data
     assert "hopDuration" in data
     assert "frameCount" in data
+    assert "phrases" in data
     assert data["frames"][0]["hz"] == 440.0
 
 

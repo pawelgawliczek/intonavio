@@ -129,7 +129,8 @@ private extension ReferencePitchStoreTests {
             hopSize: 256,
             frameCount: frameCount,
             hopDuration: hopDuration,
-            frames: frames
+            frames: frames,
+            phrases: []
         )
     }
 }

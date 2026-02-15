@@ -2,7 +2,8 @@ import SwiftUI
 
 /// Static drawing helpers for the piano roll canvas.
 enum PianoRollRenderer {
-    /// Draw semi-transparent reference pitch zones (1 semitone height).
+    /// Draw 3-color accuracy zone bands per voiced reference frame.
+    /// Outer-to-inner: orange (±30¢), yellow (±20¢), green (±10¢).
     static func drawReferenceZones(
         context: inout GraphicsContext,
         frames: ArraySlice<ReferencePitchFrame>,
@@ -16,22 +17,26 @@ enum PianoRollRenderer {
         let midiSpan = midiRange.upperBound - midiRange.lowerBound
         guard timeSpan > 0, midiSpan > 0 else { return }
 
-        for frame in frames where frame.isVoiced && frame.isAudible {
-            guard let midiNote = frame.midiNote else { continue }
-            let midi = Float(midiNote) + transposeOffset
-            guard midi >= midiRange.lowerBound, midi <= midiRange.upperBound else { continue }
+        let zones: [(halfCents: Float, color: Color)] = [
+            (30, Color.orange.opacity(0.07)),
+            (20, Color.yellow.opacity(0.10)),
+            (10, Color.green.opacity(0.15)),
+        ]
 
-            let x = CGFloat((frame.time - timeRange.lowerBound) / timeSpan) * rect.width
-            let width = CGFloat(hopDuration / timeSpan) * rect.width
-            let noteHeight = rect.height / CGFloat(midiSpan)
-            let y = rect.height - CGFloat((midi - midiRange.lowerBound) / midiSpan) * rect.height
-                - noteHeight / 2
+        for (halfCents, color) in zones {
+            for frame in frames where frame.isVoiced && frame.isAudible {
+                guard let midiNote = frame.midiNote else { continue }
+                let midi = Float(midiNote) + transposeOffset
+                guard midi >= midiRange.lowerBound, midi <= midiRange.upperBound else { continue }
 
-            let noteRect = CGRect(x: x, y: y, width: max(width, 1), height: noteHeight)
-            context.fill(
-                Path(noteRect),
-                with: .color(.blue.opacity(0.15))
-            )
+                drawZoneBand(
+                    context: &context, midi: midi, time: frame.time,
+                    hopDuration: hopDuration, rect: rect,
+                    timeLower: timeRange.lowerBound, timeSpan: timeSpan,
+                    midiLower: midiRange.lowerBound, midiSpan: midiSpan,
+                    halfWidthCents: halfCents, color: color
+                )
+            }
         }
     }
 
@@ -181,9 +186,33 @@ enum PianoRollRenderer {
     }
 }
 
-// MARK: - Path Builder
+// MARK: - Private Helpers
 
 private extension PianoRollRenderer {
+    static func drawZoneBand(
+        context: inout GraphicsContext,
+        midi: Float, time: Double, hopDuration: Double,
+        rect: CGRect,
+        timeLower: Double, timeSpan: Double,
+        midiLower: Float, midiSpan: Float,
+        halfWidthCents: Float, color: Color
+    ) {
+        let halfSemitones = halfWidthCents / 100.0
+        let bandHeight = CGFloat(2 * halfSemitones / midiSpan) * rect.height
+
+        let x = CGFloat((time - timeLower) / timeSpan) * rect.width
+        let width = CGFloat(hopDuration / timeSpan) * rect.width
+        let centerY = rect.height - CGFloat((midi - midiLower) / midiSpan) * rect.height
+
+        let bandRect = CGRect(
+            x: x,
+            y: centerY - bandHeight / 2,
+            width: max(width, 1),
+            height: bandHeight
+        )
+        context.fill(Path(bandRect), with: .color(color))
+    }
+
     static func buildPath(
         frames: [(Double, Float)],
         rect: CGRect,
