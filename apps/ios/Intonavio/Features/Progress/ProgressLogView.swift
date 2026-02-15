@@ -7,6 +7,8 @@ struct ProgressLogView: View {
     let scoreRepository: ScoreRepository?
     var onPhraseTap: ((Int) -> Void)?
 
+    @State private var isShowingResetConfirmation = false
+
     var body: some View {
         NavigationStack {
             List {
@@ -14,11 +16,23 @@ struct ProgressLogView: View {
                 if totalPhrases > 0 {
                     phraseBreakdownSection
                 }
+                resetSection
             }
             .navigationTitle("Progress")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
+            .confirmationDialog(
+                "Reset all scores for this song?",
+                isPresented: $isShowingResetConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("Reset Scores", role: .destructive) {
+                    scoreRepository?.deleteAllScores(songId: songId)
+                }
+            } message: {
+                Text("This will delete all phrase and song scores across all difficulties. This cannot be undone.")
+            }
         }
     }
 }
@@ -65,6 +79,16 @@ private extension ProgressLogView {
                 ).count ?? 0
 
                 phraseRow(index: index, best: best, attempts: attempts)
+            }
+        }
+    }
+
+    var resetSection: some View {
+        Section {
+            Button(role: .destructive) {
+                isShowingResetConfirmation = true
+            } label: {
+                Label("Reset Scores", systemImage: "trash")
             }
         }
     }

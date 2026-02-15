@@ -7,7 +7,7 @@ final class ScoreRecord {
     var phraseIndex: Int?  // nil = song-level score
     var score: Double
     var date: Date
-    var difficulty: Int  // DifficultyLevel raw value
+    var difficulty: Int = 0  // DifficultyLevel raw value (default: beginner)
 
     init(
         songId: String,

@@ -27,7 +27,19 @@ final class ScoreRepository {
             difficulty: difficulty.rawValue
         )
         modelContext.insert(record)
-        try? modelContext.save()
+
+        do {
+            try modelContext.save()
+            AppLogger.pitch.info(
+                "Score saved: song=\(songId) phrase=\(String(describing: phraseIndex)) score=\(score) difficulty=\(difficulty.rawValue) newBest=\(isNewBest)"
+            )
+        } catch {
+            AppLogger.pitch.error("Score save FAILED: \(error.localizedDescription)")
+        }
+
+        // Debug: count total records in store
+        let totalCount = (try? modelContext.fetchCount(FetchDescriptor<ScoreRecord>())) ?? -1
+        AppLogger.pitch.info("Total ScoreRecords in store: \(totalCount)")
 
         return isNewBest
     }
@@ -38,9 +50,12 @@ final class ScoreRepository {
         phraseIndex: Int?,
         difficulty: DifficultyLevel = .current
     ) -> Double {
-        fetchRecords(songId: songId, phraseIndex: phraseIndex, difficulty: difficulty)
-            .map(\.score)
-            .max() ?? 0
+        let records = fetchRecords(songId: songId, phraseIndex: phraseIndex, difficulty: difficulty)
+        let best = records.map(\.score).max() ?? 0
+        AppLogger.pitch.debug(
+            "fetchBestScore: song=\(songId) phrase=\(String(describing: phraseIndex)) difficulty=\(difficulty.rawValue) found=\(records.count) best=\(best)"
+        )
+        return best
     }
 
     /// Fetch score history, newest first, for a specific difficulty.
@@ -54,13 +69,30 @@ final class ScoreRepository {
         let sorted = records.sorted { $0.date > $1.date }
         return Array(sorted.prefix(limit))
     }
+
+    /// Delete all score records for a song (all phrases, all difficulties).
+    func deleteAllScores(songId: String) {
+        var descriptor = FetchDescriptor<ScoreRecord>()
+        descriptor.predicate = #Predicate<ScoreRecord> { $0.songId == songId }
+
+        guard let records = try? modelContext.fetch(descriptor) else { return }
+        for record in records {
+            modelContext.delete(record)
+        }
+        try? modelContext.save()
+        AppLogger.pitch.info("Deleted \(records.count) score records for song \(songId)")
+    }
+
+    /// Debug: total records in the store (no filters).
+    func debugTotalCount() -> Int {
+        (try? modelContext.fetchCount(FetchDescriptor<ScoreRecord>())) ?? -1
+    }
 }
 
 // MARK: - Private
 
 private extension ScoreRepository {
     /// Fetch records matching songId and difficulty, then filter by phraseIndex in Swift.
-    /// Avoids SwiftData #Predicate issues with optional Int? comparisons.
     func fetchRecords(
         songId: String,
         phraseIndex: Int?,
@@ -72,7 +104,18 @@ private extension ScoreRepository {
             $0.songId == songId && $0.difficulty == difficultyRaw
         }
 
-        let all = (try? modelContext.fetch(descriptor)) ?? []
-        return all.filter { $0.phraseIndex == phraseIndex }
+        let all: [ScoreRecord]
+        do {
+            all = try modelContext.fetch(descriptor)
+        } catch {
+            AppLogger.pitch.error("Score fetch FAILED: \(error.localizedDescription)")
+            return []
+        }
+
+        let filtered = all.filter { $0.phraseIndex == phraseIndex }
+        AppLogger.pitch.debug(
+            "fetchRecords: song=\(songId) phrase=\(String(describing: phraseIndex)) difficulty=\(difficultyRaw) predicate=\(all.count) filtered=\(filtered.count)"
+        )
+        return filtered
     }
 }
