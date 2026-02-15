@@ -23,7 +23,10 @@ struct ExercisePracticeView: View {
             }
         }
         .onAppear { setupIfNeeded() }
-        .onDisappear { viewModel?.stop() }
+        .onDisappear {
+            viewModel?.stop()
+            viewModel?.audioEngine.shutdown()
+        }
         #if os(macOS)
         .onKeyPress(.space) {
             guard let vm = viewModel else { return .ignored }

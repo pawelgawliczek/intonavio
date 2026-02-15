@@ -11,11 +11,10 @@ enum AudioSessionManager {
     #endif
 
     /// Configure the audio session for simultaneous playback and recording.
-    /// Safe to call multiple times — only configures once.
+    /// Safe to call multiple times — always re-activates the session to ensure
+    /// a clean state after previous teardowns.
     /// Uses `.mixWithOthers` so WKWebView (YouTube) audio is not interrupted.
     static func configure() throws {
-        guard !isConfigured else { return }
-
         #if os(iOS)
         let session = AVAudioSession.sharedInstance()
         try session.setCategory(
@@ -27,12 +26,13 @@ enum AudioSessionManager {
             Double(PitchConstants.ioBufferSize) / Double(PitchConstants.sampleRate)
         )
         try session.setActive(true)
+        if !isConfigured {
+            observeInterruptions()
+        }
         isConfigured = true
-        observeInterruptions()
         AppLogger.pitch.info("Audio session configured for playAndRecord")
         #else
         isConfigured = true
-        AppLogger.pitch.info("macOS: audio session not required, skipping configuration")
         #endif
     }
 

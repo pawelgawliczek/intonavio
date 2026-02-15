@@ -79,6 +79,16 @@ final class AudioEngine {
         AppLogger.audio.info("AudioEngine stopped")
     }
 
+    /// Full shutdown — stops engine and deactivates audio session.
+    /// Call when the practice session ends, not for temporary pauses.
+    func shutdown() {
+        stop()
+        #if os(iOS)
+        AudioSessionManager.deactivate()
+        #endif
+        isPrepared = false
+    }
+
     // MARK: - Node Management
 
     func attach(_ node: AVAudioNode) {

@@ -34,6 +34,14 @@ final class PitchDetector {
         // VP + audio session are configured inside start().
         try audioEngine.start()
 
+        let format = audioEngine.inputFormat
+        guard format.sampleRate > 0, format.channelCount > 0 else {
+            AppLogger.pitch.error(
+                "Invalid input format: \(format.sampleRate)Hz, \(format.channelCount)ch"
+            )
+            return
+        }
+
         writeIndex = 0
         samplesAccumulated = 0
         ringBuffer = [Float](
@@ -41,7 +49,6 @@ final class PitchDetector {
             count: PitchConstants.analysisSize * 2
         )
 
-        let format = audioEngine.inputFormat
         let actualSampleRate = Float(format.sampleRate)
 
         // Rebuild detector with the real sample rate (VP may use 48000, not 44100)

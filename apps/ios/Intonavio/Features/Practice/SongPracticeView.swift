@@ -72,6 +72,7 @@ struct SongPracticeView: View {
             viewModel?.sync?.stop()
             viewModel?.stemPlayer.teardown()
             viewModel?.server.stop()
+            viewModel?.audioEngine.shutdown()
         }
     }
 }
