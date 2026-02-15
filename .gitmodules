@@ -1,0 +1,3 @@
+[submodule "apps/ios/Intonavio/Resources/GeneralUser-GS"]
+	path = apps/ios/Intonavio/Resources/GeneralUser-GS
+	url = https://github.com/mrbumpy409/GeneralUser-GS.git

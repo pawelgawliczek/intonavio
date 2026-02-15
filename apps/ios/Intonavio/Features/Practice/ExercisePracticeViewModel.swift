@@ -29,6 +29,7 @@ final class ExercisePracticeViewModel {
     let referenceStore = ReferencePitchStore()
     private(set) var scoringEngine: ScoringEngine?
     let metronome: MetronomeTick
+    let guideTone: GuideTone
 
     private var playbackTimer: Timer?
     private let timerInterval: TimeInterval = 0.02 // 50fps update
@@ -42,6 +43,7 @@ final class ExercisePracticeViewModel {
         self.tempo = exercise.defaultTempo
         self.pitchDetector = PitchDetector(engine: audioEngine)
         self.metronome = MetronomeTick(engine: audioEngine)
+        self.guideTone = GuideTone(engine: audioEngine)
     }
 
     deinit {
@@ -57,6 +59,7 @@ final class ExercisePracticeViewModel {
         )
         referenceStore.load(from: pitchData)
         scoringEngine = ScoringEngine(referenceStore: referenceStore)
+        guideTone.prepare(notes: exercise.notes, tempo: tempo)
         isPrepared = true
     }
 
@@ -76,6 +79,7 @@ final class ExercisePracticeViewModel {
 
         metronome.bpm = tempo
         metronome.start()
+        guideTone.start()
 
         do {
             try pitchDetector.start()
@@ -93,6 +97,7 @@ final class ExercisePracticeViewModel {
 
     func pause() {
         isPlaying = false
+        guideTone.stop()
         metronome.stop()
         pitchDetector.stop()
         stopPlaybackTimer()
@@ -100,6 +105,7 @@ final class ExercisePracticeViewModel {
 
     func stop() {
         isPlaying = false
+        guideTone.stop()
         metronome.stop()
         pitchDetector.stop()
         pitchDetector.onPitchDetected = nil

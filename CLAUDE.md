@@ -103,6 +103,11 @@ Always read `docs/12-code-quality.md` — it applies to every change.
 
 Do not deviate from documented architecture without updating the relevant doc first.
 
+## iOS Build
+
+- When building for iOS Simulator, use `iPhone 17 Pro` as the destination (iPhone 16 is not available).
+- Example: `xcodebuild -project apps/ios/Intonavio.xcodeproj -scheme Intonavio -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build`
+
 ## Deployment
 
 - SSH into the production server: `ssh hostinger`

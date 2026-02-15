@@ -10,6 +10,7 @@ struct SettingsView: View {
         List {
             accountSection
             audioInputSection
+            guideToneSection
             themeSection
             dataSection
             aboutSection
@@ -120,6 +121,27 @@ private extension SettingsView {
             }
             #endif
         }
+    }
+
+    var guideToneSection: some View {
+        Section("Guide Tone") {
+            NavigationLink {
+                GuideToneSettingsView()
+            } label: {
+                HStack {
+                    Text("Instrument")
+                    Spacer()
+                    Text(currentGuideToneLabel)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+
+    private var currentGuideToneLabel: String {
+        let stored = UserDefaults.standard.integer(forKey: "guideToneInstrument")
+        let instrument = GuideToneInstrument(rawValue: stored) ?? .acousticGrandPiano
+        return instrument.label
     }
 
     var themeSection: some View {
