@@ -6,14 +6,16 @@ import { StemSplitService } from './stemsplit.service';
 const mockFetch = jest.fn();
 global.fetch = mockFetch;
 
+const configValues: Record<string, string> = {
+  STEMSPLIT_API_URL: 'https://stemsplit.io',
+  STEMSPLIT_API_KEY: 'test-api-key',
+  STEMSPLIT_WEBHOOK_URL: 'https://api.example.com/v1/webhooks/stemsplit',
+  STEMSPLIT_WEBHOOK_SECRET: 'whsec_test123',
+};
+
 const mockConfig = {
-  getOrThrow: jest.fn((key: string) => {
-    const values: Record<string, string> = {
-      STEMSPLIT_API_URL: 'https://stemsplit.io',
-      STEMSPLIT_API_KEY: 'test-api-key',
-    };
-    return values[key];
-  }),
+  getOrThrow: jest.fn((key: string) => configValues[key]),
+  get: jest.fn((key: string) => configValues[key]),
 };
 
 describe('StemSplitService', () => {
@@ -52,6 +54,8 @@ describe('StemSplitService', () => {
             outputType: 'SIX_STEMS',
             outputFormat: 'MP3',
             quality: 'BEST',
+            webhookUrl: 'https://api.example.com/v1/webhooks/stemsplit',
+            webhookSecret: 'whsec_test123',
           }),
         }),
       );

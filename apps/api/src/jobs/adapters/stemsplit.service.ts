@@ -12,35 +12,48 @@ export class StemSplitService implements StemSplitAdapter {
   private readonly logger = new Logger(StemSplitService.name);
   private readonly apiUrl: string;
   private readonly apiKey: string;
+  private readonly webhookUrl: string | undefined;
+  private readonly webhookSecret: string | undefined;
 
   constructor(private readonly config: ConfigService) {
     this.apiUrl = this.config.getOrThrow<string>('STEMSPLIT_API_URL');
     this.apiKey = this.config.getOrThrow<string>('STEMSPLIT_API_KEY');
+    this.webhookUrl = this.config.get<string>('STEMSPLIT_WEBHOOK_URL');
+    this.webhookSecret = this.config.get<string>('STEMSPLIT_WEBHOOK_SECRET');
   }
 
   async createJob(youtubeUrl: string): Promise<string> {
+    const body: Record<string, string> = {
+      youtubeUrl,
+      outputType: 'SIX_STEMS',
+      outputFormat: 'MP3',
+      quality: 'BEST',
+    };
+
+    if (this.webhookUrl) {
+      body.webhookUrl = this.webhookUrl;
+    }
+    if (this.webhookSecret) {
+      body.webhookSecret = this.webhookSecret;
+    }
+
     const response = await fetch(`${this.apiUrl}/api/v1/youtube-jobs`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${this.apiKey}`,
       },
-      body: JSON.stringify({
-        youtubeUrl,
-        outputType: 'SIX_STEMS',
-        outputFormat: 'MP3',
-        quality: 'BEST',
-      }),
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {
-      const body = await response.text();
+      const errorBody = await response.text();
       this.logger.error('StemSplit job creation failed', {
         status: response.status,
-        body,
+        body: errorBody,
         youtubeUrl,
       });
-      throw new Error(`StemSplit API returned ${response.status}: ${body}`);
+      throw new Error(`StemSplit API returned ${response.status}: ${errorBody}`);
     }
 
     const data = (await response.json()) as CreateJobResponse;
