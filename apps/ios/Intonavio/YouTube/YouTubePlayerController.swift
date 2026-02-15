@@ -35,6 +35,12 @@ final class YouTubePlayerController: VideoPlayerProtocol {
         evaluate("player.seekTo(\(seconds), true)")
     }
 
+    /// Atomic pause + seek to avoid race where seek resumes playback
+    /// before the pause takes effect.
+    func pauseAndSeek(to seconds: Double) {
+        evaluate("player.pauseVideo(); player.seekTo(\(seconds), true)")
+    }
+
     func setPlaybackRate(_ rate: Double) {
         evaluate("player.setPlaybackRate(\(rate))")
     }

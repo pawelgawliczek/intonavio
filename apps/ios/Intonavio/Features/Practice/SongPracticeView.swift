@@ -61,7 +61,11 @@ struct SongPracticeView: View {
                 ProgressLogView(
                     songId: vm.songId,
                     totalPhrases: vm.totalPhrases,
-                    scoreRepository: vm.scoreRepository
+                    scoreRepository: vm.scoreRepository,
+                    onPhraseTap: { phraseIndex in
+                        vm.setupPhraseLoop(phraseIndex: phraseIndex)
+                        isShowingProgress = false
+                    }
                 )
             }
         }

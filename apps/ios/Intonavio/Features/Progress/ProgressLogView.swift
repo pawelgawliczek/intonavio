@@ -5,6 +5,7 @@ struct ProgressLogView: View {
     let songId: String
     let totalPhrases: Int
     let scoreRepository: ScoreRepository?
+    var onPhraseTap: ((Int) -> Void)?
 
     var body: some View {
         NavigationStack {
@@ -63,13 +64,22 @@ private extension ProgressLogView {
                     songId: songId, phraseIndex: index, limit: 1000
                 ).count ?? 0
 
-                PhraseScoreRowView(
-                    phraseNumber: index + 1,
-                    bestScore: best,
-                    totalAttempts: attempts
-                )
+                phraseRow(index: index, best: best, attempts: attempts)
             }
         }
+    }
+
+    func phraseRow(index: Int, best: Double, attempts: Int) -> some View {
+        Button {
+            onPhraseTap?(index)
+        } label: {
+            PhraseScoreRowView(
+                phraseNumber: index + 1,
+                bestScore: best,
+                totalAttempts: attempts
+            )
+        }
+        .tint(.primary)
     }
 }
 

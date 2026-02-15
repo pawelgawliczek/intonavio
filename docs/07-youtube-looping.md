@@ -42,6 +42,17 @@ stateDiagram-v2
 | **Looping**   | Playback loops between A and B. On reaching B, captures pass score, shows toast, seeks back to A. |
 | **Paused**    | Playback paused. Loop markers preserved.                                                          |
 
+### Phrase Loop Setup
+
+Tapping a phrase in the Progress sheet sets up an A-B loop around that phrase without starting playback:
+
+1. All playback is stopped (stems, pitch detection, sync, time polling).
+2. Marker A is placed before the phrase start with up to 1.5 s of breathing room. If the previous phrase's `endTime` falls within that window, marker A is placed at the previous phrase's end to avoid hearing its tail.
+3. Marker B is placed at the phrase's `endTime`.
+4. YouTube is paused and seeked atomically (`pauseVideo(); seekTo()` in a single JS evaluation) to avoid a race where `seekTo` resumes playback before the pause takes effect.
+5. Piano roll MIDI range recalibrates to the phrase's vocal range.
+6. State is set to **Paused** — the user presses Play to begin looping.
+
 ---
 
 ## Audio Mode State

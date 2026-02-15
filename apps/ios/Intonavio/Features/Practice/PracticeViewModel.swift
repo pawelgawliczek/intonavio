@@ -278,6 +278,55 @@ final class PracticeViewModel {
         markerB = max(lower, min(time, duration))
     }
 
+    /// Set up a loop around a specific phrase without starting playback.
+    /// Adds breathing room before the phrase start so the singer can prepare.
+    func setupPhraseLoop(phraseIndex: Int) {
+        guard phraseIndex >= 0, phraseIndex < referenceStore.phrases.count else { return }
+
+        let phrase = referenceStore.phrases[phraseIndex]
+
+        let breathingRoom: Double = 1.5
+        let candidateStart = max(0, phrase.startTime - breathingRoom)
+        let previousPhrase = phraseIndex > 0 ? referenceStore.phrases[phraseIndex - 1] : nil
+        let loopStart: Double
+        if let prev = previousPhrase, prev.endTime > candidateStart {
+            loopStart = prev.endTime
+        } else {
+            loopStart = candidateStart
+        }
+        let loopEnd = phrase.endTime
+
+        // Stop stems, pitch detection, sync, and loop checking
+        isWaitingForLoopSeek = false
+        pendingStemStart = false
+        controller.stopTimePolling()
+        stopLoopCheck()
+        stopPitchDetection()
+        if isInStemMode {
+            stemPlayer.stop()
+            sync?.stop()
+        }
+
+        // Atomic pause + seek so YouTube doesn't resume from the seek
+        controller.pauseAndSeek(to: loopStart)
+        currentTime = loopStart
+        loopState = .paused
+
+        markerA = loopStart
+        markerB = loopEnd
+        loopCount = 0
+        loopScores = []
+        lastLoopScore = nil
+        loopScoreImprovement = nil
+
+        if let range = referenceStore.midiRange(from: phrase.startTime, to: loopEnd) {
+            loopMidiMin = range.min
+            loopMidiMax = range.max
+        }
+
+        scoringEngine?.reset()
+    }
+
     func clearLoop() {
         isWaitingForLoopSeek = false
         markerA = nil
