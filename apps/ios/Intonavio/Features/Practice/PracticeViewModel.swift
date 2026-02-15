@@ -83,6 +83,8 @@ final class PracticeViewModel {
     private weak var webViewRef: WKWebView?
     var loopCheckTask: Task<Void, Never>?
     var isWaitingForLoopSeek = false
+    /// Stem start deferred until first YouTube time update to avoid drift.
+    private var pendingStemStart = false
     var playStartTime: Date?
     var sessionSaved = false
 
@@ -176,9 +178,10 @@ final class PracticeViewModel {
             isMuted = true
         }
 
+        // Defer stem start until the first YouTube time update so stems
+        // don't race ahead while YouTube is still buffering/starting.
         if isInStemMode {
-            stemPlayer.play(from: currentTime)
-            sync?.start()
+            pendingStemStart = true
         }
 
         startPitchDetection()
@@ -193,6 +196,7 @@ final class PracticeViewModel {
 
     func pause() {
         isWaitingForLoopSeek = false
+        pendingStemStart = false
         controller.pause()
         controller.stopTimePolling()
         loopState = .paused
@@ -207,6 +211,7 @@ final class PracticeViewModel {
 
     func stop() {
         isWaitingForLoopSeek = false
+        pendingStemStart = false
         controller.stop()
         controller.stopTimePolling()
         loopState = .idle
@@ -307,6 +312,7 @@ private extension PracticeViewModel {
         case .timeUpdate(let time, _):
             currentTime = time
             controller.updateTime(time)
+            startStemsIfPending(at: time)
             checkLoopBoundary()
 
         case .error(let code):
@@ -316,6 +322,13 @@ private extension PracticeViewModel {
         case .unknown:
             break
         }
+    }
+
+    func startStemsIfPending(at time: Double) {
+        guard pendingStemStart else { return }
+        pendingStemStart = false
+        stemPlayer.play(from: time)
+        sync?.start()
     }
 
     func handleAudioRouteChange() {
