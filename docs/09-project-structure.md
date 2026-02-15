@@ -127,7 +127,8 @@ intonavio/
 │       │   │       ├── NoteMapper.swift              # Hz↔MIDI↔cents conversions
 │       │   │       ├── YINDetector.swift             # 5-step YIN with Accelerate vDSP
 │       │   │       ├── PitchDetector.swift           # @Observable: mic tap on shared AudioEngine, ring buffer
-│       │   │       ├── PitchAccuracy.swift           # Enum: excellent/good/fair/poor/unvoiced
+│       │   │       ├── DifficultyLevel.swift          # Enum: beginner/intermediate/advanced — thresholds, points, zone defs
+│       │   │       ├── PitchAccuracy.swift           # Enum: excellent/good/fair/poor/unvoiced — classify(cents:difficulty:)
 │       │   │       ├── ScoringEngine.swift           # Cents comparison + transpose offset + score accumulation
 │       │   │       ├── TransposeInterval.swift       # Enum: musical intervals (-24 to +24 semitones)
 │       │   │       ├── ReferencePitchFrame.swift     # Codable frame struct matching pYIN output

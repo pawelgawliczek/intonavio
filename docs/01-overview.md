@@ -24,18 +24,18 @@ Existing karaoke apps use limited licensed catalogs. Intonavio leverages YouTube
 
 ## Core Features
 
-| Feature                        | Description                                                                                                       |
-| ------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
-| **YouTube Integration**        | Paste any YouTube lyrics video URL to start practicing                                                            |
-| **Stem Separation**            | Split audio into vocals + instrumental via StemSplit API (YouTube flow). File upload flow supports up to 6 stems. |
-| **A-B Looping**                | Set loop markers on the video timeline, repeat sections at adjustable speed (0.25x–4x)                            |
-| **Real-Time Pitch Detection**  | Detect the singer's pitch via microphone and display on a piano roll                                              |
-| **Pitch Comparison**           | Overlay detected pitch against the reference vocal pitch, color-coded by accuracy                                 |
-| **Scoring**                    | Per-note and per-session accuracy scores with historical tracking                                                 |
-| **Practice Sessions**          | Save and review past sessions with timestamped pitch data                                                         |
-| **Audio Mode Toggle**          | Switch between original audio, instrumental only, or vocals only during practice                                  |
-| **Exercises**                  | Pre-built vocal exercises (scales, arpeggios, intervals, vibrato, breathing) with community sharing               |
-| **Toggleable Practice Layout** | Switch between lyrics-focused (video 65%, pitch 35%) and pitch-focused (video 25%, pitch 75%) modes               |
+| Feature                        | Description                                                                                                                                       |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **YouTube Integration**        | Paste any YouTube lyrics video URL to start practicing                                                                                            |
+| **Stem Separation**            | Split audio into vocals + instrumental via StemSplit API (YouTube flow). File upload flow supports up to 6 stems.                                 |
+| **A-B Looping**                | Set loop markers on the video timeline, repeat sections at adjustable speed (0.25x–4x)                                                            |
+| **Real-Time Pitch Detection**  | Detect the singer's pitch via microphone and display on a piano roll                                                                              |
+| **Pitch Comparison**           | Overlay detected pitch against the reference vocal pitch, color-coded by accuracy                                                                 |
+| **Scoring**                    | Per-note and per-session accuracy scores with historical tracking, 3 difficulty levels (Beginner/Intermediate/Advanced) with separate best scores |
+| **Practice Sessions**          | Save and review past sessions with timestamped pitch data                                                                                         |
+| **Audio Mode Toggle**          | Switch between original audio, instrumental only, or vocals only during practice                                                                  |
+| **Exercises**                  | Pre-built vocal exercises (scales, arpeggios, intervals, vibrato, breathing) with community sharing                                               |
+| **Toggleable Practice Layout** | Switch between lyrics-focused (video 65%, pitch 35%) and pitch-focused (video 25%, pitch 75%) modes                                               |
 
 ## Platform Strategy
 

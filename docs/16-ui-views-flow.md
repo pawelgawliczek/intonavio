@@ -156,10 +156,14 @@ Home → Exercises → Browse Community → Search/filter → Add to library →
 
 ### Accuracy Color Scale
 
-- **Green**: ±10 cents (excellent)
-- **Yellow-green**: ±25 cents (good)
-- **Yellow**: ±50 cents (fair)
-- **Red**: >50 cents (off pitch)
+Colors are consistent across all difficulty levels; the cent thresholds change per level (see `docs/06-realtime-pitch.md`).
+
+- **Green**: Excellent (within tightest zone)
+- **Yellow**: Good (middle zone)
+- **Orange**: Fair (outer zone)
+- **Gray**: Poor (outside all zones)
+
+Difficulty is selected in Settings → Difficulty (Beginner / Intermediate / Advanced). Zone bands on the piano roll visually widen or narrow to reflect the selected level.
 
 ---
 

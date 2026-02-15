@@ -7,11 +7,19 @@ final class ScoreRecord {
     var phraseIndex: Int?  // nil = song-level score
     var score: Double
     var date: Date
+    var difficulty: Int  // DifficultyLevel raw value
 
-    init(songId: String, phraseIndex: Int? = nil, score: Double, date: Date = .now) {
+    init(
+        songId: String,
+        phraseIndex: Int? = nil,
+        score: Double,
+        difficulty: Int = DifficultyLevel.current.rawValue,
+        date: Date = .now
+    ) {
         self.songId = songId
         self.phraseIndex = phraseIndex
         self.score = score
+        self.difficulty = difficulty
         self.date = date
     }
 }

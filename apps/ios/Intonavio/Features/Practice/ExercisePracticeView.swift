@@ -101,7 +101,8 @@ private extension ExercisePracticeView {
             isPitchReady: vm.isPrepared,
             midiMin: vm.referenceStore.midiMin,
             midiMax: vm.referenceStore.midiMax,
-            transposeSemitones: 0
+            transposeSemitones: 0,
+            zones: DifficultyLevel.current.zones
         )
         .frame(maxHeight: .infinity)
     }

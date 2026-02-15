@@ -15,6 +15,7 @@ struct PianoRollView: View {
     let midiMin: Float
     let midiMax: Float
     let transposeSemitones: Int
+    let zones: [(halfCents: Float, color: Color)]
     var phraseIndex: Int?
     var totalPhrases: Int = 0
 
@@ -38,7 +39,8 @@ struct PianoRollView: View {
                     currentTime: currentTime,
                     midiMin: midiMin,
                     midiMax: midiMax,
-                    transposeSemitones: transposeSemitones
+                    transposeSemitones: transposeSemitones,
+                    zones: zones
                 )
             } else {
                 pitchUnavailable
@@ -83,7 +85,8 @@ private extension PianoRollView {
         isPitchReady: true,
         midiMin: 55,
         midiMax: 75,
-        transposeSemitones: 0
+        transposeSemitones: 0,
+        zones: DifficultyLevel.current.zones
     )
     .frame(height: 200)
 }
@@ -102,7 +105,8 @@ private extension PianoRollView {
         isPitchReady: false,
         midiMin: 48,
         midiMax: 72,
-        transposeSemitones: 0
+        transposeSemitones: 0,
+        zones: DifficultyLevel.current.zones
     )
     .frame(height: 200)
 }

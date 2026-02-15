@@ -2,28 +2,28 @@ import SwiftUI
 
 /// Accuracy classification based on cents deviation from reference.
 enum PitchAccuracy: Sendable {
-    case excellent  // ±10 cents -> 100 points
-    case good       // ±20 cents ->  50 points
-    case fair       // ±30 cents ->  20 points
-    case poor       // >30 cents ->   0 points
+    case excellent  // Perfect — tightest zone
+    case good       // Good — middle zone
+    case fair       // OK — outer zone
+    case poor       // Miss — outside all zones
     case unvoiced   // No pitch detected
 
     /// Classify based on absolute cents deviation.
-    static func classify(cents: Float) -> PitchAccuracy {
+    static func classify(cents: Float, difficulty: DifficultyLevel = .current) -> PitchAccuracy {
         let absCents = abs(cents)
-        if absCents <= 10 { return .excellent }
-        if absCents <= 20 { return .good }
-        if absCents <= 30 { return .fair }
+        if absCents <= difficulty.excellentCents { return .excellent }
+        if absCents <= difficulty.goodCents { return .good }
+        if absCents <= difficulty.fairCents { return .fair }
         return .poor
     }
 
-    var points: Double {
+    /// Points awarded for this accuracy at the given difficulty.
+    func points(difficulty: DifficultyLevel = .current) -> Double {
         switch self {
-        case .excellent: return 100
-        case .good: return 50
-        case .fair: return 20
-        case .poor: return 0
-        case .unvoiced: return 0
+        case .excellent: return difficulty.excellentPoints
+        case .good: return difficulty.goodPoints
+        case .fair: return difficulty.fairPoints
+        case .poor, .unvoiced: return 0
         }
     }
 

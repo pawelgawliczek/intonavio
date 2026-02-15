@@ -10,6 +10,7 @@ struct PianoRollCanvas: View {
     let midiMin: Float
     let midiMax: Float
     let transposeSemitones: Int
+    let zones: [(halfCents: Float, color: Color)]
 
     /// 8-second scrolling window: 4s past + 4s future.
     private let windowDuration: Double = 8.0
@@ -45,7 +46,8 @@ struct PianoRollCanvas: View {
                     rect: rect,
                     timeRange: timeRange,
                     midiRange: midiRange,
-                    transposeOffset: offset
+                    transposeOffset: offset,
+                    zones: zones
                 )
                 PianoRollRenderer.drawDetectedLine(
                     context: &context,
@@ -80,7 +82,8 @@ struct PianoRollCanvas: View {
                     rect: rect,
                     timeRange: timeRange,
                     midiRange: midiRange,
-                    transposeOffset: offset
+                    transposeOffset: offset,
+                    zones: zones
                 )
                 PianoRollRenderer.drawDetectedGlow(
                     context: &context,

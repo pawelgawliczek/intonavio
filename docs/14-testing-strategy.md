@@ -23,6 +23,14 @@ Cover the algorithmic core where bugs are hardest to spot manually.
 - Transpose: zero offset → identical to no-transpose behavior
 - Transpose: pitch log records adjusted reference Hz, not original
 
+### Difficulty Levels
+
+- Advanced boundary tests: ±25¢ excellent, ±40¢ good, ±60¢ fair, >60¢ poor
+- Intermediate boundary tests: ±25¢ excellent, ±50¢ good, ±75¢ fair, >75¢ poor
+- Beginner boundary tests: ±150¢ excellent, ±300¢ good, ±450¢ fair, >450¢ poor
+- Points vary by level: excellent always 100; good 75/60/50; fair 40/25/20
+- `PitchAccuracy.classify(cents:difficulty:)` and `.points(difficulty:)` tested per level
+
 ### Exercise Pitch Generator
 
 - `{midi: 60, duration: 1.0, tempo: 60}` → assert 86 frames, all at 261.63 Hz

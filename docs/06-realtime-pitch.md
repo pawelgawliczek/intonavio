@@ -129,10 +129,10 @@ flowchart TD
     H -->|Yes| J[Compute cents deviation<br/>1200 × log2 detected/adjustedRef]
 
     J --> K{Classify accuracy}
-    K -->|±10 cents| L[Excellent<br/>green]
-    K -->|±25 cents| M[Good<br/>yellow-green]
-    K -->|±50 cents| N[Fair<br/>yellow]
-    K -->|> 50 cents| O[Poor<br/>red]
+    K -->|within excellent zone| L[Excellent<br/>green]
+    K -->|within good zone| M[Good<br/>yellow]
+    K -->|within fair zone| N[Fair<br/>orange]
+    K -->|outside all zones| O[Poor<br/>gray]
 
     L --> P[Update piano roll<br/>with color-coded dot]
     M --> P
@@ -142,14 +142,18 @@ flowchart TD
 
 ---
 
-## Scoring Thresholds
+## Scoring Thresholds (Difficulty Levels)
 
-| Category  | Cents Deviation | Color        | Points |
-| --------- | --------------- | ------------ | ------ |
-| Excellent | ±10 cents       | Green        | 100%   |
-| Good      | ±25 cents       | Yellow-green | 75%    |
-| Fair      | ±50 cents       | Yellow       | 50%    |
-| Poor      | > 50 cents      | Red          | 0%     |
+Thresholds and point rewards are controlled by `DifficultyLevel` (stored in UserDefaults). The user selects a level in Settings. Default is **Beginner**.
+
+| Category  | Beginner             | Intermediate        | Advanced            | Color  |
+| --------- | -------------------- | ------------------- | ------------------- | ------ |
+| Excellent | ±150 cents → 100 pts | ±25 cents → 100 pts | ±25 cents → 100 pts | Green  |
+| Good      | ±300 cents → 75 pts  | ±50 cents → 60 pts  | ±40 cents → 50 pts  | Yellow |
+| Fair      | ±450 cents → 40 pts  | ±75 cents → 25 pts  | ±60 cents → 20 pts  | Orange |
+| Poor      | >450 cents → 0 pts   | >75 cents → 0 pts   | >60 cents → 0 pts   | Gray   |
+
+Piano roll zone bands visually reflect the selected difficulty (wider bands = easier). Best scores are tracked per difficulty level via a `difficulty` field on `ScoreRecord` (SwiftData).
 
 **Cents formula (with transpose):**
 
@@ -158,7 +162,7 @@ adjustedRefHz = referenceHz × 2^(transposeSemitones / 12)
 cents = 1200 × log₂(detectedHz / adjustedRefHz)
 ```
 
-When `transposeSemitones = 0`, this reduces to the standard formula. One semitone = 100 cents. A deviation of ±50 cents means the singer is halfway to the wrong note.
+When `transposeSemitones = 0`, this reduces to the standard formula. One semitone = 100 cents.
 
 **Overall session score:**
 

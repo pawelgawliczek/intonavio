@@ -28,6 +28,13 @@ private extension ProgressLogView {
     var songSummarySection: some View {
         Section("Overall") {
             HStack {
+                Label("Difficulty", systemImage: DifficultyLevel.current.icon)
+                Spacer()
+                Text(DifficultyLevel.current.label)
+                    .foregroundStyle(.secondary)
+            }
+
+            HStack {
                 Label("Best Score", systemImage: "star.fill")
                     .foregroundStyle(.yellow)
                 Spacer()

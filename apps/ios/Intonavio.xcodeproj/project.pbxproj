@@ -29,6 +29,7 @@
 		DD68BCE312D8490605BCA469 /* GuideToneSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3A0C88CED22FB2FCE2F30E7 /* GuideToneSettingsView.swift */; };
 		00A1B2C3D4E5F60718293A4B /* AudioEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5C /* AudioEngine.swift */; };
 		00A1B2C3D4E5F60718293A5C /* AudioEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5C /* AudioEngine.swift */; };
+		00DD1F1CA1B2C3D4E5F60701 /* DifficultyLevel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE1F1CA1B2C3D4E5F6070102 /* DifficultyLevel.swift */; };
 		00EEE68720960E08F7DF6855 /* PitchAccuracy.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6E3866A26CEA25A5361E33C /* PitchAccuracy.swift */; };
 		018FDB9EB144C35A12F2B395 /* SongStatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D838B316EBD35DBA8F5C732 /* SongStatusBadge.swift */; };
 		041194E9D875882E304AA4F8 /* PracticeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD158E2B7A33E186A33FF9E4 /* PracticeViewModel.swift */; };
@@ -116,6 +117,7 @@
 		7B71A0F36CC753563A0EF65A /* NoteMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79E86CFBEC3BBF7C1F117A5A /* NoteMapper.swift */; };
 		7C0222DE15A046DC45F19E0C /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8436184CAD35E298A54C8C48 /* AppState.swift */; };
 		7CAA8EF13DC95BD152B37330 /* YouTubePlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 532C92000393851D59FBFD5B /* YouTubePlayerView.swift */; };
+		7DDD1F1CA1B2C3D4E5F60702 /* DifficultyLevel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE1F1CA1B2C3D4E5F6070102 /* DifficultyLevel.swift */; };
 		7E52812781C420D7A529D19C /* PitchAccuracy.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6E3866A26CEA25A5361E33C /* PitchAccuracy.swift */; };
 		7F373B10CDAC1EEF699706BE /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDAAE236C7E1D23140BC63C2 /* ProfileView.swift */; };
 		7F3FBC5167FB0E6D513DEB61 /* PracticeLayoutMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DF42E8DDEB37A70C265320 /* PracticeLayoutMode.swift */; };
@@ -332,6 +334,7 @@
 		CF72D25F9B2CE003A8CC1589 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		CFB0170DA235F751AB0551B0 /* IntonavioTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = IntonavioTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D6E3866A26CEA25A5361E33C /* PitchAccuracy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchAccuracy.swift; sourceTree = "<group>"; };
+		EE1F1CA1B2C3D4E5F6070102 /* DifficultyLevel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DifficultyLevel.swift; sourceTree = "<group>"; };
 		D73FDEF8391DAEF4CA02313F /* APIError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIError.swift; sourceTree = "<group>"; };
 		DB8A307C4CE851A699727E97 /* PlatformColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformColors.swift; sourceTree = "<group>"; };
 		DBD375DB01D7DA35A14BEA8F /* SongGridItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SongGridItemView.swift; sourceTree = "<group>"; };
@@ -515,6 +518,7 @@
 			isa = PBXGroup;
 			children = (
 				BAAB3E44A39E110F86A76894 /* AudioSessionManager.swift */,
+				EE1F1CA1B2C3D4E5F6070102 /* DifficultyLevel.swift */,
 				922518DBC2492529E9DED83A /* ExerciseDefinitions.swift */,
 				A557DCB3FEB614983FAE453E /* ExercisePitchGenerator.swift */,
 				79E86CFBEC3BBF7C1F117A5A /* NoteMapper.swift */,
@@ -846,6 +850,7 @@
 				AA0005010101010101010101 /* PhraseScoreToastView.swift in Sources */,
 				AA0007010101010101010101 /* PhraseScoreRowView.swift in Sources */,
 				AA0001010101010101010101 /* PhraseScoreResult.swift in Sources */,
+				00DD1F1CA1B2C3D4E5F60701 /* DifficultyLevel.swift in Sources */,
 				00EEE68720960E08F7DF6855 /* PitchAccuracy.swift in Sources */,
 				B0C04BF234A3DE7E3BF69C69 /* PitchDataDownloader.swift in Sources */,
 				978809C38F25B5FA9831C387 /* PitchDebugOverlay.swift in Sources */,
@@ -950,6 +955,7 @@
 				AA0005010101010101010102 /* PhraseScoreToastView.swift in Sources */,
 				AA0007010101010101010102 /* PhraseScoreRowView.swift in Sources */,
 				AA0001010101010101010102 /* PhraseScoreResult.swift in Sources */,
+				7DDD1F1CA1B2C3D4E5F60702 /* DifficultyLevel.swift in Sources */,
 				7E52812781C420D7A529D19C /* PitchAccuracy.swift in Sources */,
 				E30C87CD29FA0140D7868279 /* PitchDataDownloader.swift in Sources */,
 				B89A05DDB6E345A18B79DD45 /* PitchDebugOverlay.swift in Sources */,

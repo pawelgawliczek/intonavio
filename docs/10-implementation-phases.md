@@ -239,7 +239,7 @@ graph LR
 - Song Practice view with toggleable layout: lyrics-focused (65/35) and pitch-focused (25/75) (see `docs/16-ui-views-flow.md`)
 - Exercise Practice view with pitch graph, target notes, metronome tick, and tempo guide
 - Piano roll view with 3 visualization modes: Zones+Line, Two Lines, Zones+Glow (see `docs/16-ui-views-flow.md`)
-- Color-coded accuracy feedback (green ±10¢, yellow-green ±25¢, yellow ±50¢, red >50¢)
+- Color-coded accuracy feedback with 3 difficulty levels (Beginner/Intermediate/Advanced) — zone widths and point values scale per level (see `docs/06-realtime-pitch.md`). Default is Beginner. Difficulty picker in Settings with visual zone preview. Best scores tracked per difficulty level via `ScoreRecord.difficulty` field.
 - Reference pitch transpose: shift reference up/down by musical intervals (-2 oct to +2 oct) via `TransposeInterval` enum, applied to both visual rendering (reference zones/lines) and scoring (cents calculation). User's detected voice remains at actual position. Controlled via transpose picker menu in `ControlsBarView`.
 - Per-session scoring: cents deviation calculation with transpose offset and division-by-zero protection for unvoiced frames
 - `ScoringEngine` with `transposeSemitones` — adjusts reference frequency via `refHz × 2^(semitones/12)` before comparison

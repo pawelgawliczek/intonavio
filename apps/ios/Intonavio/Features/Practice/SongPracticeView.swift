@@ -269,6 +269,7 @@ private struct PianoRollSection: View {
             midiMin: viewModel.transposedMidiMin,
             midiMax: viewModel.transposedMidiMax,
             transposeSemitones: viewModel.transposeSemitones,
+            zones: DifficultyLevel.current.zones,
             phraseIndex: viewModel.scoringEngine?.currentPhraseIndex,
             totalPhrases: viewModel.totalPhrases
         )

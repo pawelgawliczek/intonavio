@@ -66,8 +66,8 @@ final class ScoringEngine {
         let accuracy = PitchAccuracy.classify(cents: cents)
         currentAccuracy = accuracy
 
-        totalPoints += accuracy.points
-        accumulatePhrasePoints(accuracy.points)
+        totalPoints += accuracy.points()
+        accumulatePhrasePoints(accuracy.points())
 
         overallScore = finalScore
 

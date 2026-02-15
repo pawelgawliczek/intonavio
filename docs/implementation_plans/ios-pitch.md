@@ -131,10 +131,11 @@ Pure-logic module comparing detected pitch against reference, accumulating sessi
 
 ### Create
 
-| File                              | LOC  | Purpose                                                                                                                                      |
-| --------------------------------- | ---- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Audio/Pitch/PitchAccuracy.swift` | ~50  | Enum: `excellent` (±10¢, 100pts), `good` (±25¢, 75pts), `fair` (±50¢, 50pts), `poor` (>50¢, 0pts), `unvoiced`. Color mapping.                |
-| `Audio/Pitch/ScoringEngine.swift` | ~120 | `@Observable`. Evaluates each detection against reference with transpose offset. Accumulates `pitchLog: [PitchLogEntry]` and `overallScore`. |
+| File                                | LOC  | Purpose                                                                                                                                      |
+| ----------------------------------- | ---- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Audio/Pitch/DifficultyLevel.swift` | ~100 | Enum: `beginner`/`intermediate`/`advanced`. Cent thresholds, point values, zone definitions. Stored via `@AppStorage("difficultyLevel")`.    |
+| `Audio/Pitch/PitchAccuracy.swift`   | ~50  | Enum: `excellent`/`good`/`fair`/`poor`/`unvoiced`. `classify(cents:difficulty:)` and `points(difficulty:)` use `DifficultyLevel` thresholds. |
+| `Audio/Pitch/ScoringEngine.swift`   | ~120 | `@Observable`. Evaluates each detection against reference with transpose offset. Accumulates `pitchLog: [PitchLogEntry]` and `overallScore`. |
 
 ### ScoringEngine.evaluate() algorithm
 
@@ -143,17 +144,16 @@ Pure-logic module comparing detected pitch against reference, accumulating sessi
 3. Apply transpose: `adjustedRefHz = refHz × 2^(transposeSemitones / 12)`
 4. If detected is unvoiced -> record as unvoiced, don't score
 5. `cents = 1200 * log2(detectedHz / adjustedRefHz)`
-6. Classify via `PitchAccuracy.classify(cents:)`
-7. `totalPoints += accuracy.points`, increment `voicedReferenceFrames`
+6. Classify via `PitchAccuracy.classify(cents:difficulty:)` (defaults to current difficulty)
+7. `totalPoints += accuracy.points()`, increment `voicedReferenceFrames`
 8. `overallScore = totalPoints / voicedReferenceFrames * 100` (guard division by zero)
 9. Append `PitchLogEntry` to `pitchLog` (with `adjustedRefHz`, not original)
 
 ### Tests (95% branch coverage)
 
 - Exact match -> 0 cents, excellent
-- ±10 -> excellent boundary, ±11 -> good
-- ±25 -> good boundary, ±26 -> fair
-- ±50 -> fair boundary, ±51 -> poor
+- Boundary tests per difficulty level (Beginner: ±150/300/450, Intermediate: ±25/50/75, Advanced: ±25/40/60)
+- Points per difficulty (excellent 100 all; good 75/60/50; fair 40/25/20)
 - Unvoiced reference -> skip
 - All unvoiced -> score remains 0 (no division by zero)
 - Mixed accuracies -> correct weighted score
@@ -185,7 +185,7 @@ SwiftUI Canvas piano roll with 3 visualization modes.
 
 - Y-axis: MIDI notes, dynamic range centered on current note ±12 semitones (1 octave)
 - X-axis: 8-second scrolling window (4s past + 4s future)
-- Colors: green (±10¢), yellow-green (±25¢), yellow (±50¢), red (>50¢)
+- Colors: green (excellent), yellow (good), orange (fair), gray (poor) — zone widths scale with difficulty level
 - Target: 43+ FPS with video playing simultaneously
 
 ### Tests

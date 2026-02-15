@@ -5,12 +5,14 @@ struct SettingsView: View {
     @State private var viewModel = SettingsViewModel()
     @State private var pitchCacheCleared = false
     @AppStorage("appTheme") private var themeRaw = AppTheme.system.rawValue
+    @AppStorage("difficultyLevel") private var difficultyRaw = DifficultyLevel.beginner.rawValue
 
     var body: some View {
         List {
             accountSection
             audioInputSection
             guideToneSection
+            difficultySection
             themeSection
             dataSection
             aboutSection
@@ -144,6 +146,33 @@ private extension SettingsView {
         return instrument.label
     }
 
+    var difficultySection: some View {
+        Section {
+            Picker("Difficulty", selection: $difficultyRaw) {
+                ForEach(DifficultyLevel.allCases, id: \.rawValue) { level in
+                    Text(level.label).tag(level.rawValue)
+                }
+            }
+            .pickerStyle(.segmented)
+
+            if let selected = DifficultyLevel(rawValue: difficultyRaw) {
+                HStack(spacing: 8) {
+                    Image(systemName: selected.icon)
+                        .foregroundStyle(.secondary)
+                    Text(selected.description)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                DifficultyZonePreview(difficulty: selected)
+            }
+        } header: {
+            Text("Difficulty")
+        } footer: {
+            Text("Controls how precisely you need to match the pitch. Beginner has wider tolerance zones.")
+        }
+    }
+
     var themeSection: some View {
         Section("Appearance") {
             Picker("Theme", selection: $themeRaw) {
@@ -231,6 +260,54 @@ private extension SettingsView {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
         return "\(version) (\(build))"
+    }
+}
+
+// MARK: - Difficulty Zone Preview
+
+/// Horizontal bar showing relative zone widths for a difficulty level.
+/// Uses the widest level (beginner) as the full-width reference so
+/// bars visibly shrink for harder difficulties.
+private struct DifficultyZonePreview: View {
+    let difficulty: DifficultyLevel
+
+    /// Fixed reference so all levels are compared against the same max.
+    private let maxCents = DifficultyLevel.beginner.fairCents
+
+    var body: some View {
+        GeometryReader { geometry in
+            let width = geometry.size.width
+
+            ZStack(alignment: .leading) {
+                // Fair
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.orange.opacity(0.3))
+                    .frame(width: width * CGFloat(difficulty.fairCents / maxCents))
+
+                // Good
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.yellow.opacity(0.4))
+                    .frame(width: width * CGFloat(difficulty.goodCents / maxCents))
+
+                // Excellent
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.green.opacity(0.5))
+                    .frame(width: width * CGFloat(difficulty.excellentCents / maxCents))
+            }
+        }
+        .frame(height: 12)
+
+        HStack {
+            Label("Perfect", systemImage: "circle.fill")
+                .foregroundStyle(.green)
+            Spacer()
+            Label("Good", systemImage: "circle.fill")
+                .foregroundStyle(.yellow)
+            Spacer()
+            Label("OK", systemImage: "circle.fill")
+                .foregroundStyle(.orange)
+        }
+        .font(.caption2)
     }
 }
 

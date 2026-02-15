@@ -30,69 +30,121 @@ final class ScoringEngineTests: XCTestCase {
         engine = ScoringEngine(referenceStore: store)
     }
 
-    // MARK: - Accuracy Classification
+    // MARK: - Accuracy Classification (Advanced — ±25/40/60)
 
     func testExactMatchIsExcellent() {
-        let accuracy = PitchAccuracy.classify(cents: 0)
+        let accuracy = PitchAccuracy.classify(cents: 0, difficulty: .advanced)
         XCTAssertEqual(accuracy, .excellent)
     }
 
-    func testPlusTenCentsIsExcellent() {
-        XCTAssertEqual(PitchAccuracy.classify(cents: 10), .excellent)
+    func testAdvancedTwentyFiveCentsIsExcellent() {
+        XCTAssertEqual(PitchAccuracy.classify(cents: 25, difficulty: .advanced), .excellent)
     }
 
-    func testMinusTenCentsIsExcellent() {
-        XCTAssertEqual(PitchAccuracy.classify(cents: -10), .excellent)
+    func testAdvancedMinusTwentyFiveCentsIsExcellent() {
+        XCTAssertEqual(PitchAccuracy.classify(cents: -25, difficulty: .advanced), .excellent)
     }
 
-    func testElevenCentsIsGood() {
-        XCTAssertEqual(PitchAccuracy.classify(cents: 11), .good)
+    func testAdvancedTwentySixCentsIsGood() {
+        XCTAssertEqual(PitchAccuracy.classify(cents: 26, difficulty: .advanced), .good)
     }
 
-    func testTwentyCentsIsGood() {
-        XCTAssertEqual(PitchAccuracy.classify(cents: 20), .good)
+    func testAdvancedFortyCentsIsGood() {
+        XCTAssertEqual(PitchAccuracy.classify(cents: 40, difficulty: .advanced), .good)
     }
 
-    func testTwentyFiveCentsIsFair() {
-        XCTAssertEqual(PitchAccuracy.classify(cents: 25), .fair)
+    func testAdvancedFortyOneCentsIsFair() {
+        XCTAssertEqual(PitchAccuracy.classify(cents: 41, difficulty: .advanced), .fair)
     }
 
-    func testTwentyOneCentsIsFair() {
-        XCTAssertEqual(PitchAccuracy.classify(cents: 21), .fair)
+    func testAdvancedSixtyCentsIsFair() {
+        XCTAssertEqual(PitchAccuracy.classify(cents: 60, difficulty: .advanced), .fair)
     }
 
-    func testThirtyCentsIsFair() {
-        XCTAssertEqual(PitchAccuracy.classify(cents: 30), .fair)
+    func testAdvancedSixtyOneCentsIsPoor() {
+        XCTAssertEqual(PitchAccuracy.classify(cents: 61, difficulty: .advanced), .poor)
     }
 
-    func testThirtyOneCentsIsPoor() {
-        XCTAssertEqual(PitchAccuracy.classify(cents: 31), .poor)
+    func testAdvancedLargeCentsIsPoor() {
+        XCTAssertEqual(PitchAccuracy.classify(cents: 200, difficulty: .advanced), .poor)
     }
 
-    func testFiftyCentsIsPoor() {
-        XCTAssertEqual(PitchAccuracy.classify(cents: 50), .poor)
-    }
-
-    func testLargeCentsIsPoor() {
-        XCTAssertEqual(PitchAccuracy.classify(cents: 200), .poor)
-    }
-
-    // MARK: - Points
+    // MARK: - Points (Advanced)
 
     func testExcellentGives100Points() {
-        XCTAssertEqual(PitchAccuracy.excellent.points, 100)
+        XCTAssertEqual(PitchAccuracy.excellent.points(difficulty: .advanced), 100)
     }
 
     func testGoodGives50Points() {
-        XCTAssertEqual(PitchAccuracy.good.points, 50)
+        XCTAssertEqual(PitchAccuracy.good.points(difficulty: .advanced), 50)
     }
 
     func testFairGives20Points() {
-        XCTAssertEqual(PitchAccuracy.fair.points, 20)
+        XCTAssertEqual(PitchAccuracy.fair.points(difficulty: .advanced), 20)
     }
 
     func testPoorGives0Points() {
-        XCTAssertEqual(PitchAccuracy.poor.points, 0)
+        XCTAssertEqual(PitchAccuracy.poor.points(difficulty: .advanced), 0)
+    }
+
+    // MARK: - Beginner Thresholds (±150/300/450)
+
+    func testBeginnerExcellentAt150Cents() {
+        XCTAssertEqual(PitchAccuracy.classify(cents: 150, difficulty: .beginner), .excellent)
+    }
+
+    func testBeginner151CentsIsGood() {
+        XCTAssertEqual(PitchAccuracy.classify(cents: 151, difficulty: .beginner), .good)
+    }
+
+    func testBeginnerGoodAt300Cents() {
+        XCTAssertEqual(PitchAccuracy.classify(cents: 300, difficulty: .beginner), .good)
+    }
+
+    func testBeginnerFairAt450Cents() {
+        XCTAssertEqual(PitchAccuracy.classify(cents: 450, difficulty: .beginner), .fair)
+    }
+
+    func testBeginnerPoorAbove450Cents() {
+        XCTAssertEqual(PitchAccuracy.classify(cents: 451, difficulty: .beginner), .poor)
+    }
+
+    func testBeginnerGoodPoints() {
+        XCTAssertEqual(PitchAccuracy.good.points(difficulty: .beginner), 75)
+    }
+
+    func testBeginnerFairPoints() {
+        XCTAssertEqual(PitchAccuracy.fair.points(difficulty: .beginner), 40)
+    }
+
+    // MARK: - Intermediate Thresholds (2.5x — ±25/50/75)
+
+    func testIntermediateExcellentAt25Cents() {
+        XCTAssertEqual(PitchAccuracy.classify(cents: 25, difficulty: .intermediate), .excellent)
+    }
+
+    func testIntermediateTwentySixCentsIsGood() {
+        XCTAssertEqual(PitchAccuracy.classify(cents: 26, difficulty: .intermediate), .good)
+    }
+
+    func testIntermediateGoodAt50Cents() {
+        XCTAssertEqual(PitchAccuracy.classify(cents: 50, difficulty: .intermediate), .good)
+    }
+
+    func testIntermediateFairAt75Cents() {
+        XCTAssertEqual(PitchAccuracy.classify(cents: 75, difficulty: .intermediate), .fair)
+    }
+
+    func testIntermediatePoorAbove75Cents() {
+        XCTAssertEqual(PitchAccuracy.classify(cents: 76, difficulty: .intermediate), .poor)
+    }
+
+    func testIntermediateGoodPoints() {
+        XCTAssertEqual(PitchAccuracy.good.points(difficulty: .intermediate), 60)
+    }
+
+    func testIntermediateFairPoints() {
+        XCTAssertEqual(PitchAccuracy.fair.points(difficulty: .intermediate), 25)
     }
 
     // MARK: - Scoring Engine

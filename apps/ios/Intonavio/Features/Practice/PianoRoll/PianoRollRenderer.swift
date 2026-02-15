@@ -11,17 +11,12 @@ enum PianoRollRenderer {
         rect: CGRect,
         timeRange: ClosedRange<Double>,
         midiRange: ClosedRange<Float>,
-        transposeOffset: Float = 0
+        transposeOffset: Float = 0,
+        zones: [(halfCents: Float, color: Color)]
     ) {
         let timeSpan = timeRange.upperBound - timeRange.lowerBound
         let midiSpan = midiRange.upperBound - midiRange.lowerBound
         guard timeSpan > 0, midiSpan > 0 else { return }
-
-        let zones: [(halfCents: Float, color: Color)] = [
-            (30, Color.orange.opacity(0.07)),
-            (20, Color.yellow.opacity(0.10)),
-            (10, Color.green.opacity(0.15)),
-        ]
 
         for (halfCents, color) in zones {
             for frame in frames where frame.isVoiced && frame.isAudible {
