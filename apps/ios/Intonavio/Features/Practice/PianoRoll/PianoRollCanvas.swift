@@ -49,6 +49,15 @@ struct PianoRollCanvas: View {
                     transposeOffset: offset,
                     zones: zones
                 )
+                PianoRollRenderer.drawReferenceLine(
+                    context: &context,
+                    frames: referenceFrames,
+                    hopDuration: hopDuration,
+                    rect: rect,
+                    timeRange: timeRange,
+                    midiRange: midiRange,
+                    transposeOffset: offset
+                )
                 PianoRollRenderer.drawDetectedLine(
                     context: &context,
                     points: detectedPoints,
@@ -61,6 +70,7 @@ struct PianoRollCanvas: View {
                 PianoRollRenderer.drawReferenceLine(
                     context: &context,
                     frames: referenceFrames,
+                    hopDuration: hopDuration,
                     rect: rect,
                     timeRange: timeRange,
                     midiRange: midiRange,
@@ -84,6 +94,15 @@ struct PianoRollCanvas: View {
                     midiRange: midiRange,
                     transposeOffset: offset,
                     zones: zones
+                )
+                PianoRollRenderer.drawReferenceLine(
+                    context: &context,
+                    frames: referenceFrames,
+                    hopDuration: hopDuration,
+                    rect: rect,
+                    timeRange: timeRange,
+                    midiRange: midiRange,
+                    transposeOffset: offset
                 )
                 PianoRollRenderer.drawDetectedGlow(
                     context: &context,

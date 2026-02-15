@@ -35,29 +35,48 @@ enum PianoRollRenderer {
         }
     }
 
-    /// Draw reference pitch as a thin dashed gray line.
+    /// Draw reference pitch as a thin dashed line only where zones exist.
     static func drawReferenceLine(
         context: inout GraphicsContext,
         frames: ArraySlice<ReferencePitchFrame>,
+        hopDuration: Double,
         rect: CGRect,
         timeRange: ClosedRange<Double>,
         midiRange: ClosedRange<Float>,
         transposeOffset: Float = 0
     ) {
-        let path = buildPath(
-            frames: frames.compactMap { frame -> (Double, Float)? in
-                guard frame.isVoiced, frame.isAudible, let midi = frame.midiNote else { return nil }
-                return (frame.time, Float(midi) + transposeOffset)
-            },
-            rect: rect,
-            timeRange: timeRange,
-            midiRange: midiRange
-        )
+        let timeSpan = timeRange.upperBound - timeRange.lowerBound
+        let midiSpan = midiRange.upperBound - midiRange.lowerBound
+        guard timeSpan > 0, midiSpan > 0 else { return }
+
+        let gapThreshold = hopDuration * 2
+        var path = Path()
+        var lastTime: Double?
+
+        for frame in frames {
+            guard frame.isVoiced, frame.isAudible, let midiNote = frame.midiNote else {
+                lastTime = nil
+                continue
+            }
+            guard frame.time >= timeRange.lowerBound, frame.time <= timeRange.upperBound else { continue }
+
+            let midi = Float(midiNote) + transposeOffset
+            let x = CGFloat((frame.time - timeRange.lowerBound) / timeSpan) * rect.width
+            let y = rect.height - CGFloat((midi - midiRange.lowerBound) / midiSpan) * rect.height
+            let point = CGPoint(x: x, y: y)
+
+            if let prev = lastTime, frame.time - prev <= gapThreshold {
+                path.addLine(to: point)
+            } else {
+                path.move(to: point)
+            }
+            lastTime = frame.time
+        }
 
         context.stroke(
             path,
-            with: .color(.gray.opacity(0.6)),
-            style: StrokeStyle(lineWidth: 1.5, dash: [4, 3])
+            with: .color(.white.opacity(0.4)),
+            style: StrokeStyle(lineWidth: 1, dash: [3, 3])
         )
     }
 
@@ -206,35 +225,5 @@ private extension PianoRollRenderer {
             height: bandHeight
         )
         context.fill(Path(bandRect), with: .color(color))
-    }
-
-    static func buildPath(
-        frames: [(Double, Float)],
-        rect: CGRect,
-        timeRange: ClosedRange<Double>,
-        midiRange: ClosedRange<Float>
-    ) -> Path {
-        let timeSpan = timeRange.upperBound - timeRange.lowerBound
-        let midiSpan = midiRange.upperBound - midiRange.lowerBound
-        guard timeSpan > 0, midiSpan > 0 else { return Path() }
-
-        var path = Path()
-        var isFirst = true
-
-        for (time, midi) in frames {
-            guard time >= timeRange.lowerBound, time <= timeRange.upperBound else { continue }
-
-            let x = CGFloat((time - timeRange.lowerBound) / timeSpan) * rect.width
-            let y = rect.height - CGFloat((midi - midiRange.lowerBound) / midiSpan) * rect.height
-
-            if isFirst {
-                path.move(to: CGPoint(x: x, y: y))
-                isFirst = false
-            } else {
-                path.addLine(to: CGPoint(x: x, y: y))
-            }
-        }
-
-        return path
     }
 }

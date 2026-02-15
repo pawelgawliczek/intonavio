@@ -38,14 +38,9 @@ final class ScoreRepository {
         phraseIndex: Int?,
         difficulty: DifficultyLevel = .current
     ) -> Double {
-        var descriptor = FetchDescriptor<ScoreRecord>(
-            sortBy: [SortDescriptor(\.score, order: .reverse)]
-        )
-        descriptor.fetchLimit = 1
-        descriptor.predicate = scorePredicate(songId: songId, phraseIndex: phraseIndex, difficulty: difficulty)
-
-        let results = (try? modelContext.fetch(descriptor)) ?? []
-        return results.first?.score ?? 0
+        fetchRecords(songId: songId, phraseIndex: phraseIndex, difficulty: difficulty)
+            .map(\.score)
+            .max() ?? 0
     }
 
     /// Fetch score history, newest first, for a specific difficulty.
@@ -55,32 +50,29 @@ final class ScoreRepository {
         difficulty: DifficultyLevel = .current,
         limit: Int = 50
     ) -> [ScoreRecord] {
-        var descriptor = FetchDescriptor<ScoreRecord>(
-            sortBy: [SortDescriptor(\.date, order: .reverse)]
-        )
-        descriptor.fetchLimit = limit
-        descriptor.predicate = scorePredicate(songId: songId, phraseIndex: phraseIndex, difficulty: difficulty)
-
-        return (try? modelContext.fetch(descriptor)) ?? []
+        let records = fetchRecords(songId: songId, phraseIndex: phraseIndex, difficulty: difficulty)
+        let sorted = records.sorted { $0.date > $1.date }
+        return Array(sorted.prefix(limit))
     }
 }
 
 // MARK: - Private
 
 private extension ScoreRepository {
-    func scorePredicate(
+    /// Fetch records matching songId and difficulty, then filter by phraseIndex in Swift.
+    /// Avoids SwiftData #Predicate issues with optional Int? comparisons.
+    func fetchRecords(
         songId: String,
         phraseIndex: Int?,
         difficulty: DifficultyLevel
-    ) -> Predicate<ScoreRecord> {
+    ) -> [ScoreRecord] {
         let difficultyRaw = difficulty.rawValue
-        if let phraseIndex {
-            return #Predicate<ScoreRecord> {
-                $0.songId == songId && $0.phraseIndex == phraseIndex && $0.difficulty == difficultyRaw
-            }
+        var descriptor = FetchDescriptor<ScoreRecord>()
+        descriptor.predicate = #Predicate<ScoreRecord> {
+            $0.songId == songId && $0.difficulty == difficultyRaw
         }
-        return #Predicate<ScoreRecord> {
-            $0.songId == songId && $0.phraseIndex == nil && $0.difficulty == difficultyRaw
-        }
+
+        let all = (try? modelContext.fetch(descriptor)) ?? []
+        return all.filter { $0.phraseIndex == phraseIndex }
     }
 }

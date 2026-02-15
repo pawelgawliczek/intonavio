@@ -43,7 +43,7 @@ enum DifficultyLevel: Int, CaseIterable, Sendable {
     var excellentCents: Float {
         switch self {
         case .beginner: return 150
-        case .intermediate: return 25
+        case .intermediate: return 75
         case .advanced: return 25
         }
     }
@@ -51,7 +51,7 @@ enum DifficultyLevel: Int, CaseIterable, Sendable {
     var goodCents: Float {
         switch self {
         case .beginner: return 300
-        case .intermediate: return 50
+        case .intermediate: return 150
         case .advanced: return 40
         }
     }
@@ -59,7 +59,7 @@ enum DifficultyLevel: Int, CaseIterable, Sendable {
     var fairCents: Float {
         switch self {
         case .beginner: return 450
-        case .intermediate: return 75
+        case .intermediate: return 225
         case .advanced: return 60
         }
     }
