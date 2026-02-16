@@ -115,6 +115,7 @@ private struct SongPracticeKeyboardShortcuts: ViewModifier {
             }
             .onKeyPress("w", phases: .down) { press in
                 guard press.modifiers.contains(.command) else { return .ignored }
+                viewModel?.saveSongScore()
                 viewModel?.stopPitchDetection()
                 viewModel?.saveSessionIfNeeded()
                 viewModel?.server.stop()
