@@ -98,8 +98,11 @@ intonavio/
 │       │   │   │   ├── LoopState.swift                     # Enum: idle, playing, settingA, settingAB, looping, paused
 │       │   │   │   └── PianoRoll/
 │       │   │   │       ├── PianoRollView.swift             # Container: mode selector, piano keys, canvas, current note
-│       │   │   │       ├── PianoRollCanvas.swift           # SwiftUI Canvas: grid, reference, detected pitch
+│       │   │   │       ├── PianoRollCanvas.swift           # SwiftUI Canvas: grid, reference, detected pitch, browsing indicators
 │       │   │   │       ├── PianoRollRenderer.swift         # Static draw helpers: zones, lines, glow, transposeOffset
+│       │   │   │       ├── PianoRollGestureState.swift     # @Observable browsing state: phase, offset, displayTime
+│       │   │   │       ├── PianoRollGestureOverlay.swift   # Touch/drag/long-press gesture overlay with state machine
+│       │   │   │       ├── PianoRollMomentumEngine.swift   # Timer-based deceleration for momentum scrolling
 │       │   │   │       ├── CurrentNoteView.swift           # Large note name + cents deviation indicator
 │       │   │   │       ├── DetectedPitchPoint.swift        # Struct: time, midi, accuracy, cents
 │       │   │   │       ├── PitchDebugOverlay.swift         # DEBUG: Hz, confidence, MIDI, FPS, scoring

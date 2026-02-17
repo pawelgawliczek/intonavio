@@ -248,11 +248,24 @@ private extension SongPracticeView {
 /// is scoped here and doesn't trigger re-renders of the parent (controls, video).
 private struct PianoRollSection: View {
     let viewModel: PracticeViewModel
+    @State private var gestureState = PianoRollGestureState()
+    @State private var momentumEngine = PianoRollMomentumEngine()
+
+    private var displayTime: Double {
+        let raw = gestureState.displayTime(playbackTime: viewModel.currentTime)
+        return max(0, min(raw, viewModel.duration))
+    }
+
+    private var isPlaying: Bool {
+        viewModel.loopState == .playing || viewModel.loopState == .looping
+    }
 
     var body: some View {
-        let windowStart = viewModel.currentTime - 4.0
-        let windowEnd = viewModel.currentTime + 4.0
-        let frames = viewModel.referenceStore.frames(from: windowStart, to: windowEnd)
+        let windowStart = displayTime - 4.0
+        let windowEnd = displayTime + 4.0
+        let frames = viewModel.referenceStore.frames(
+            from: windowStart, to: windowEnd
+        )
         let visiblePoints = viewModel.detectedPoints.filter {
             $0.time >= windowStart && $0.time <= windowEnd
         }
@@ -265,7 +278,7 @@ private struct PianoRollSection: View {
             referenceFrames: frames,
             hopDuration: viewModel.referenceStore.hopDuration,
             detectedPoints: visiblePoints,
-            currentTime: viewModel.currentTime,
+            currentTime: displayTime,
             currentNoteName: viewModel.pitchDetector?.latestResult?.noteName,
             centsDeviation: viewModel.pitchDetector?.latestResult?.centsDeviation ?? 0,
             accuracy: viewModel.scoringEngine?.currentAccuracy ?? .unvoiced,
@@ -276,8 +289,34 @@ private struct PianoRollSection: View {
             transposeSemitones: viewModel.transposeSemitones,
             zones: DifficultyLevel.current.zones,
             phraseIndex: viewModel.scoringEngine?.currentPhraseIndex,
-            totalPhrases: viewModel.totalPhrases
+            totalPhrases: viewModel.totalPhrases,
+            gestureState: gestureState,
+            momentumEngine: momentumEngine,
+            songDuration: viewModel.duration,
+            referenceStore: viewModel.referenceStore,
+            playbackTime: gestureState.isBrowsing ? viewModel.currentTime : nil,
+            onPause: { if isPlaying { viewModel.pause() } },
+            onSeek: { time in
+                viewModel.seek(to: time)
+                gestureState.exitBrowsing()
+            },
+            onResume: {
+                viewModel.seek(to: displayTime)
+                viewModel.play()
+                gestureState.exitBrowsing()
+            },
+            onSetupPhraseLoop: { phraseIndex in
+                viewModel.setupPhraseLoop(phraseIndex: phraseIndex)
+                gestureState.exitBrowsing()
+            }
         )
+        .onChange(of: viewModel.loopState) { _, newState in
+            guard gestureState.isBrowsing else { return }
+            if newState == .playing || newState == .looping {
+                viewModel.seek(to: displayTime)
+                gestureState.exitBrowsing()
+            }
+        }
     }
 }
 

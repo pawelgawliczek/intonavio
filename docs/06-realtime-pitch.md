@@ -245,6 +245,34 @@ The user toggles between 3 modes via a segmented control on the pitch graph:
 | Dot size             | 4pt                                                                      |
 | Transpose offset     | Applied to reference draws only; detected pitch stays at actual position |
 
+### Interactive Browsing Mode
+
+The piano roll supports touch gestures that decouple the displayed time from playback (see `docs/16-ui-views-flow.md` — Piano Roll Touch Gestures for the full state machine).
+
+**Architecture:**
+
+- `PianoRollGestureState` (`@MainActor @Observable`) tracks browsing mode: `isBrowsing`, `browseOffset`, `browseAnchorTime`, and `InteractionPhase` (idle, touching, dragging, momentum, longPressing)
+- `PianoRollMomentumEngine` (`@MainActor @Observable`) provides timer-based deceleration at 60fps (friction 0.95/frame, stops below 0.01 threshold)
+- `PianoRollGestureOverlay` is a transparent overlay with `DragGesture(minimumDistance: 0)` that classifies gestures and drives state transitions
+- Gesture state lives as `@State` on `PianoRollSection` (not on `PracticeViewModel`) — the ViewModel only receives final commands: `pause()`, `seek(to:)`, `play()`, `setupPhraseLoop(phraseIndex:)`
+
+**Visual indicators during browsing:**
+
+| Element            | Normal                    | Browsing                                   |
+| ------------------ | ------------------------- | ------------------------------------------ |
+| Playhead (center)  | Solid white line          | Dashed white line (increased opacity)      |
+| Playback position  | Not shown                 | Dimmed dashed vertical line at actual time |
+| Canvas time window | Centered on playback time | Centered on browsed time (anchor + offset) |
+
+**Position-to-time conversion:**
+
+```
+touchTime = centerTime - windowDuration/2 + (x / canvasWidth) × windowDuration
+dragOffset = -(translation.width / canvasWidth) × windowDuration
+```
+
+**Long press phrase lookup:** `referenceStore.phrase(at: touchTime)` finds the phrase under the finger. If no exact match, the nearest phrase within ±2 seconds is selected. Haptic feedback on iOS (light impact on touch, medium on loop creation, rigid on no phrase found).
+
 ---
 
 ## Buffer Size vs Latency Tradeoffs

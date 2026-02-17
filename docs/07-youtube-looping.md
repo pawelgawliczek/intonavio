@@ -44,7 +44,7 @@ stateDiagram-v2
 
 ### Phrase Loop Setup
 
-Tapping a phrase in the Progress sheet sets up an A-B loop around that phrase without starting playback:
+Phrase loops can be triggered two ways: tapping a phrase in the Progress sheet, or long-pressing (~1s) on the piano roll at the phrase's time position. Both call `setupPhraseLoop(phraseIndex:)` which sets up an A-B loop without starting playback:
 
 1. All playback is stopped (stems, pitch detection, sync, time polling).
 2. Marker A is placed before the phrase start with up to 1.5 s of breathing room. If the previous phrase's `endTime` falls within that window, marker A is placed at the previous phrase's end to avoid hearing its tail.
@@ -150,6 +150,8 @@ Speed is applied via:
 ## YouTube Video Touch Blocking
 
 The YouTube player's WKWebView is covered by a transparent SwiftUI overlay (`Color.clear.contentShape(Rectangle())`) that absorbs all touch events. This prevents users from interacting with YouTube's built-in play/pause button, seek bar, and other controls. All playback is exclusively controlled through the app's controls bar, ensuring consistent state between the YouTube player, stem player, pitch detection, and loop logic.
+
+Note: The piano roll area below the video _is_ touch-interactive — it has its own gesture overlay for touch-to-pause, swipe-to-scrub, and long-press-to-loop (see `docs/16-ui-views-flow.md` — Piano Roll Touch Gestures). Only the YouTube video area blocks touch events.
 
 ---
 

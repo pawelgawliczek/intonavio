@@ -29,7 +29,7 @@ Existing karaoke apps use limited licensed catalogs. Intonavio leverages YouTube
 | **YouTube Integration**        | Paste any YouTube lyrics video URL to start practicing                                                                                            |
 | **Stem Separation**            | Split audio into vocals + instrumental via StemSplit API (YouTube flow). File upload flow supports up to 6 stems.                                 |
 | **A-B Looping**                | Set loop markers on the video timeline, repeat sections at adjustable speed (0.25x–4x)                                                            |
-| **Real-Time Pitch Detection**  | Detect the singer's pitch via microphone and display on a piano roll                                                                              |
+| **Real-Time Pitch Detection**  | Detect the singer's pitch via microphone and display on an interactive piano roll (touch to pause, swipe to scrub, long-press to loop a phrase)   |
 | **Pitch Comparison**           | Overlay detected pitch against the reference vocal pitch, color-coded by accuracy                                                                 |
 | **Scoring**                    | Per-note and per-session accuracy scores with historical tracking, 3 difficulty levels (Beginner/Intermediate/Advanced) with separate best scores |
 | **Practice Sessions**          | Save and review past sessions with timestamped pitch data                                                                                         |

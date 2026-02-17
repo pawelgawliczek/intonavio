@@ -11,6 +11,9 @@ struct PianoRollCanvas: View {
     let midiMax: Float
     let transposeSemitones: Int
     let zones: [(halfCents: Float, color: Color)]
+    /// Actual playback time when browsing (nil when not browsing).
+    var playbackTime: Double?
+    var isBrowsing: Bool = false
 
     /// 8-second scrolling window: 4s past + 4s future.
     private let windowDuration: Double = 8.0
@@ -32,8 +35,17 @@ struct PianoRollCanvas: View {
             PianoRollRenderer.drawGrid(
                 context: &context,
                 rect: rect,
-                midiRange: midiRange
+                midiRange: midiRange,
+                isBrowsing: isBrowsing
             )
+
+            if isBrowsing, let pbTime = playbackTime {
+                drawPlaybackIndicator(
+                    context: &context,
+                    rect: rect,
+                    playbackTime: pbTime
+                )
+            }
 
             let offset = Float(transposeSemitones)
 
@@ -115,5 +127,29 @@ struct PianoRollCanvas: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.platformBackground)
+    }
+
+    /// Draw a dimmed vertical line showing the actual playback position
+    /// when the user is browsing away from it.
+    private func drawPlaybackIndicator(
+        context: inout GraphicsContext,
+        rect: CGRect,
+        playbackTime: Double
+    ) {
+        let timeSpan = timeRange.upperBound - timeRange.lowerBound
+        guard timeSpan > 0 else { return }
+
+        let normalizedX = (playbackTime - timeRange.lowerBound) / timeSpan
+        guard normalizedX >= 0, normalizedX <= 1 else { return }
+
+        let x = CGFloat(normalizedX) * rect.width
+        var line = Path()
+        line.move(to: CGPoint(x: x, y: 0))
+        line.addLine(to: CGPoint(x: x, y: rect.height))
+        context.stroke(
+            line,
+            with: .color(.white.opacity(0.15)),
+            style: StrokeStyle(lineWidth: 1, dash: [4, 4])
+        )
     }
 }

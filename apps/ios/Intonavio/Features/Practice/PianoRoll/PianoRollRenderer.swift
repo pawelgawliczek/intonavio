@@ -165,7 +165,8 @@ enum PianoRollRenderer {
     static func drawGrid(
         context: inout GraphicsContext,
         rect: CGRect,
-        midiRange: ClosedRange<Float>
+        midiRange: ClosedRange<Float>,
+        isBrowsing: Bool = false
     ) {
         let midiSpan = midiRange.upperBound - midiRange.lowerBound
         guard midiSpan > 0 else { return }
@@ -187,16 +188,25 @@ enum PianoRollRenderer {
             )
         }
 
-        // Draw playhead (center vertical line)
+        // Draw playhead (center vertical line) — dashed when browsing
         var playhead = Path()
         let centerX = rect.width / 2
         playhead.move(to: CGPoint(x: centerX, y: 0))
         playhead.addLine(to: CGPoint(x: centerX, y: rect.height))
-        context.stroke(
-            playhead,
-            with: .color(.white.opacity(0.3)),
-            lineWidth: 1.0
-        )
+
+        if isBrowsing {
+            context.stroke(
+                playhead,
+                with: .color(.white.opacity(0.5)),
+                style: StrokeStyle(lineWidth: 1.0, dash: [6, 4])
+            )
+        } else {
+            context.stroke(
+                playhead,
+                with: .color(.white.opacity(0.3)),
+                lineWidth: 1.0
+            )
+        }
     }
 }
 

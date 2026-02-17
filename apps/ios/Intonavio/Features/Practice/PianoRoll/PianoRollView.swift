@@ -19,6 +19,17 @@ struct PianoRollView: View {
     var phraseIndex: Int?
     var totalPhrases: Int = 0
 
+    // Gesture support
+    var gestureState: PianoRollGestureState?
+    var momentumEngine: PianoRollMomentumEngine?
+    var songDuration: Double = 0
+    var referenceStore: ReferencePitchStore?
+    var playbackTime: Double?
+    var onPause: (() -> Void)?
+    var onSeek: ((Double) -> Void)?
+    var onResume: (() -> Void)?
+    var onSetupPhraseLoop: ((Int) -> Void)?
+
     var body: some View {
         VStack(spacing: 0) {
             if isPitchReady {
@@ -31,6 +42,31 @@ struct PianoRollView: View {
                     totalPhrases: totalPhrases
                 )
 
+                canvasWithGestures
+            } else {
+                pitchUnavailable
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.platformGroupedBackground)
+    }
+}
+
+// MARK: - Canvas with Gesture Overlay
+
+private extension PianoRollView {
+    @ViewBuilder
+    var canvasWithGestures: some View {
+        let isBrowsing = gestureState?.isBrowsing ?? false
+
+        if let gs = gestureState,
+           let me = momentumEngine,
+           let store = referenceStore,
+           let pause = onPause,
+           let seek = onSeek,
+           let resume = onResume,
+           let phraseLoop = onSetupPhraseLoop {
+            GeometryReader { geometry in
                 PianoRollCanvas(
                     mode: mode,
                     referenceFrames: referenceFrames,
@@ -40,14 +76,38 @@ struct PianoRollView: View {
                     midiMin: midiMin,
                     midiMax: midiMax,
                     transposeSemitones: transposeSemitones,
-                    zones: zones
+                    zones: zones,
+                    playbackTime: playbackTime,
+                    isBrowsing: isBrowsing
                 )
-            } else {
-                pitchUnavailable
+                .overlay {
+                    PianoRollGestureOverlay(
+                        gestureState: gs,
+                        momentumEngine: me,
+                        canvasWidth: geometry.size.width,
+                        currentTime: currentTime,
+                        songDuration: songDuration,
+                        referenceStore: store,
+                        onPause: pause,
+                        onSeek: seek,
+                        onResume: resume,
+                        onSetupPhraseLoop: phraseLoop
+                    )
+                }
             }
+        } else {
+            PianoRollCanvas(
+                mode: mode,
+                referenceFrames: referenceFrames,
+                hopDuration: hopDuration,
+                detectedPoints: detectedPoints,
+                currentTime: currentTime,
+                midiMin: midiMin,
+                midiMax: midiMax,
+                transposeSemitones: transposeSemitones,
+                zones: zones
+            )
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.platformGroupedBackground)
     }
 }
 
