@@ -1,7 +1,8 @@
 export interface StemSplitJobResult {
   readonly status: string;
   readonly outputs?: Record<string, { url: string; expiresAt: string }>;
-  readonly input?: { fileName?: string; durationSeconds?: number; fileSizeBytes?: number };
+  readonly videoDuration?: number;
+  readonly durationSeconds?: number;
   readonly error?: string;
 }
 

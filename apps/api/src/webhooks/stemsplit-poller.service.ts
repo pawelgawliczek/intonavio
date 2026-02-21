@@ -58,15 +58,12 @@ export class StemSplitPollerService implements OnModuleInit, OnModuleDestroy {
   private async checkAndProcess(songId: string, externalJobId: string): Promise<void> {
     try {
       const result = await this.stemSplit.getJobStatus(externalJobId);
+      const status = result.status.toLowerCase();
 
-      if (result.status === 'completed' && result.outputs) {
-        await this.handleCompleted(
-          songId,
-          externalJobId,
-          result.outputs,
-          result.input?.durationSeconds,
-        );
-      } else if (result.status === 'failed') {
+      if (status === 'completed' && result.outputs) {
+        const duration = result.videoDuration ?? result.durationSeconds;
+        await this.handleCompleted(songId, externalJobId, result.outputs, duration);
+      } else if (status === 'failed') {
         await this.songs.updateStatus(songId, 'FAILED', result.error ?? 'StemSplit job failed');
         this.logger.warn('Polled job failed', { songId, externalJobId });
       }
