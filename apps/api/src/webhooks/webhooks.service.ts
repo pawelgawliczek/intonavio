@@ -58,7 +58,7 @@ export class WebhooksService {
     await this.processCompletedJob(song.id, rawStems, data.input?.durationSeconds);
   }
 
-  private async processCompletedJob(
+  async processCompletedJob(
     songId: string,
     rawStems: readonly { type: string; download_url: string }[],
     durationSeconds?: number,

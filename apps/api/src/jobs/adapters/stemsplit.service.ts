@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-import type { StemSplitAdapter } from './stemsplit.interface';
+import type { StemSplitAdapter, StemSplitJobResult } from './stemsplit.interface';
 
 interface CreateJobResponse {
   id: string;
@@ -59,6 +59,19 @@ export class StemSplitService implements StemSplitAdapter {
     const data = (await response.json()) as CreateJobResponse;
     this.logger.log('StemSplit job created', { jobId: data.id, youtubeUrl });
     return data.id;
+  }
+
+  async getJobStatus(jobId: string): Promise<StemSplitJobResult> {
+    const response = await fetch(`${this.apiUrl}/api/v1/youtube-jobs/${jobId}`, {
+      headers: { Authorization: `Bearer ${this.apiKey}` },
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new Error(`StemSplit status check failed: ${response.status}: ${errorBody}`);
+    }
+
+    return (await response.json()) as StemSplitJobResult;
   }
 
   async downloadStem(downloadUrl: string): Promise<Buffer> {
