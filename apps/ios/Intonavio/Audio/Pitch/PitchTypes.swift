@@ -40,8 +40,8 @@ enum PitchConstants {
     static let minFrequency: Float = 80.0
     static let maxFrequency: Float = 1100.0
 
-    /// RMS below this value (~-40 dB) is treated as silence.
-    static let rmsNoiseFloor: Float = 0.01
+    /// RMS below this value (~-46 dB) is treated as silence.
+    static let rmsNoiseFloor: Float = 0.005
     /// Maximum MIDI jump (semitones) allowed between consecutive detections.
     static let maxMidiJump: Float = 12.0
     /// Time window (seconds) for evaluating MIDI jumps.
