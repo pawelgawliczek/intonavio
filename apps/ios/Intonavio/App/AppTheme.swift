@@ -1,24 +1,10 @@
 import SwiftUI
 
-/// Theme management via @AppStorage.
+/// Theme is locked to dark mode (Split Spectrum design language).
 enum AppTheme: Int, CaseIterable {
-    case system = 0
-    case light = 1
     case dark = 2
 
-    var label: String {
-        switch self {
-        case .system: "System"
-        case .light: "Light"
-        case .dark: "Dark"
-        }
-    }
+    var label: String { "Dark" }
 
-    var colorScheme: ColorScheme? {
-        switch self {
-        case .system: nil
-        case .light: .light
-        case .dark: .dark
-        }
-    }
+    var colorScheme: ColorScheme { .dark }
 }

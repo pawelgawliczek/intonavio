@@ -1,30 +1,12 @@
 import SwiftUI
 
 extension Color {
-    /// Primary background: iOS `.systemBackground`, macOS `.windowBackgroundColor`.
-    static var platformBackground: Color {
-        #if os(iOS)
-        Color(.systemBackground)
-        #else
-        Color(nsColor: .windowBackgroundColor)
-        #endif
-    }
+    /// Primary background — Deep Charcoal.
+    static var platformBackground: Color { .intonavioBackground }
 
-    /// Grouped content background: iOS `.systemGroupedBackground`, macOS `.controlBackgroundColor`.
-    static var platformGroupedBackground: Color {
-        #if os(iOS)
-        Color(.systemGroupedBackground)
-        #else
-        Color(nsColor: .controlBackgroundColor)
-        #endif
-    }
+    /// Grouped content background — Surface Charcoal.
+    static var platformGroupedBackground: Color { .intonavioSurface }
 
-    /// Tertiary fill: iOS `.tertiarySystemFill`, macOS `.controlColor`.
-    static var platformTertiaryFill: Color {
-        #if os(iOS)
-        Color(.tertiarySystemFill)
-        #else
-        Color(nsColor: .controlColor)
-        #endif
-    }
+    /// Tertiary fill — Surface Charcoal.
+    static var platformTertiaryFill: Color { .intonavioSurface }
 }

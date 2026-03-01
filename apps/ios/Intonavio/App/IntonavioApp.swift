@@ -8,7 +8,7 @@ import AVFoundation
 @main
 struct IntonavioApp: App {
     @State private var appState = AppState()
-    @AppStorage("appTheme") private var themeRaw = AppTheme.system.rawValue
+    @AppStorage("appTheme") private var themeRaw = AppTheme.dark.rawValue
 
     init() {
         #if os(iOS)
@@ -21,7 +21,7 @@ struct IntonavioApp: App {
             ContentView()
                 .environment(appState)
                 .modelContainer(for: ScoreRecord.self)
-                .preferredColorScheme(AppTheme(rawValue: themeRaw)?.colorScheme)
+                .preferredColorScheme(.dark)
         }
         #if os(macOS)
         .defaultSize(width: 1200, height: 800)

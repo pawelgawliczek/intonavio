@@ -114,6 +114,36 @@ All linters run in CI as a pre-merge gate. No warnings allowed — treat warning
 - Use `Codable` structs mirroring API response shapes. No manual JSON parsing.
 - SwiftUI previews for every view with mock data.
 
+#### Split Spectrum Design Language
+
+The app uses a dark-mode-only "Voice Cockpit" aesthetic. All colors are defined in `App/DesignSystem.swift`.
+
+**Color palette** (use these instead of system colors):
+
+| Token                          | Hex             | Usage                                                |
+| ------------------------------ | --------------- | ---------------------------------------------------- |
+| `Color.intonavioBackground`    | `#0E0F12`       | Deep Charcoal — primary backgrounds                  |
+| `Color.intonavioSurface`       | `#1C1E24`       | Lighter Charcoal — cards, surfaces, secondary panels |
+| `Color.intonavioMagenta`       | `#D946EF`       | Gradient start — branding                            |
+| `Color.intonavioAmber`         | `#F59E0B`       | Gradient end — branding                              |
+| `Color.intonavioIce`           | `#E6F6FF`       | Ice — playheads, selected states, icons              |
+| `Color.intonavioTextPrimary`   | `#FFFFFF`       | Primary text                                         |
+| `Color.intonavioTextSecondary` | `#A1A1AA`       | Secondary text / metadata                            |
+| `LinearGradient.intonavio`     | Magenta → Amber | CTA buttons, branding elements                       |
+
+**Rules:**
+
+- **Dark mode only.** `preferredColorScheme(.dark)` is forced at the root. No theme picker.
+- **Backgrounds:** Use `Color.intonavioBackground`, never `Color(.systemBackground)`.
+- **Surfaces/cards:** Use `Color.intonavioSurface`, never `Color(.systemGroupedBackground)`.
+- **CTA buttons:** Use `PrimaryButtonStyle()` (gradient capsule) for primary actions (Sign In, Add Song, Try Again).
+- **Secondary buttons:** Use `SecondaryButtonStyle()` (Ice border capsule).
+- **Selected states:** Use `Color.intonavioIce` for selected controls, playheads, active toggles.
+- **Inactive controls:** Use `Color.intonavioTextSecondary` foreground on `Color.intonavioSurface` background.
+- **Functional accuracy colors are preserved:** Green, yellow, orange, red for pitch accuracy, score indicators, loop markers, and status badges. Do not replace these with design system colors.
+- **Text:** Use `.white` or `Color.intonavioTextPrimary` for primary text, `Color.intonavioTextSecondary` for labels/metadata. Avoid `.secondary`/`.tertiary` semantic colors.
+- **Toast/overlay backgrounds:** Use `Color.intonavioSurface` instead of `.ultraThinMaterial`.
+
 ### Next.js (Web)
 
 - Server Components by default. Only `"use client"` for components needing browser APIs.

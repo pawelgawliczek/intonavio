@@ -47,6 +47,7 @@
 		37B64B9DEEA3007C64CB7CF6 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BC3833EA35109660C0D2E79 /* ContentView.swift */; };
 		38564A214A65811F4C808136 /* YouTubePlayerController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC6E659C858ED0E2451E1E55 /* YouTubePlayerController.swift */; };
 		3CA45A0ACB429A25420E9530 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FC75DFDD56751A36AAF8622 /* APIClient.swift */; };
+		105A9FA98E72B3D732DE7FC4 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5113AEB3FF0010B5D2AC565F /* DesignSystem.swift */; };
 		3E9AA0EF1F23E31CC42C04AF /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 718983613653D4E96648CCDD /* AppTheme.swift */; };
 		3F9AA1360310F10FAF72DF06 /* GuideTone.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29A595D193E0EEC54F803314 /* GuideTone.swift */; };
 		415DA1CDCB6E6172DAB388A5 /* APIError.swift in Sources */ = {isa = PBXBuildFile; fileRef = D73FDEF8391DAEF4CA02313F /* APIError.swift */; };
@@ -135,6 +136,7 @@
 		A0285A25441B4ADEF368F760 /* ReferencePitchStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E84C03F2466B81AD07EAF5 /* ReferencePitchStoreTests.swift */; };
 		A4E777F39F21C61050CE001B /* PracticeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD158E2B7A33E186A33FF9E4 /* PracticeViewModel.swift */; };
 		A578CBDDD457220FE9189F11 /* DetectedPitchPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1963E3CB41E9D646E77D19FC /* DetectedPitchPoint.swift */; };
+		8A1539CF9B71B55CCF2D8956 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5113AEB3FF0010B5D2AC565F /* DesignSystem.swift */; };
 		A794F85EF6A0CD911082F750 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 718983613653D4E96648CCDD /* AppTheme.swift */; };
 		A8BDD0AD049454EAC70E689A /* NoteMapperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CB33B9710330046E639D370 /* NoteMapperTests.swift */; };
 		A92C274CE5B51B742400F0D2 /* SongModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4899195EC6381428FCC674C3 /* SongModels.swift */; };
@@ -285,6 +287,7 @@
 		6ADC13DAC58FDBAE06B6FDAA /* APIClientProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClientProtocol.swift; sourceTree = "<group>"; };
 		6C2F82C1288FD1831969F7AC /* PianoRollGestureState.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PianoRollGestureState.swift; sourceTree = "<group>"; };
 		6D838B316EBD35DBA8F5C732 /* SongStatusBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SongStatusBadge.swift; sourceTree = "<group>"; };
+		5113AEB3FF0010B5D2AC565F /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
 		718983613653D4E96648CCDD /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		79B2EAA4B1D7620FB45E10FD /* ExercisePitchGeneratorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExercisePitchGeneratorTests.swift; sourceTree = "<group>"; };
 		79E86CFBEC3BBF7C1F117A5A /* NoteMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteMapper.swift; sourceTree = "<group>"; };
@@ -412,6 +415,7 @@
 				8436184CAD35E298A54C8C48 /* AppState.swift */,
 				718983613653D4E96648CCDD /* AppTheme.swift */,
 				2BC3833EA35109660C0D2E79 /* ContentView.swift */,
+				5113AEB3FF0010B5D2AC565F /* DesignSystem.swift */,
 				662016CB6238CF710740ECFA /* IntonavioApp.swift */,
 			);
 			path = App;
@@ -819,6 +823,7 @@
 				60EFDC7CC6CD34236713FADE /* AddSongSheet.swift in Sources */,
 				9DB7732D7C116D874E7AD31E /* AppState.swift in Sources */,
 				3E9AA0EF1F23E31CC42C04AF /* AppTheme.swift in Sources */,
+				105A9FA98E72B3D732DE7FC4 /* DesignSystem.swift in Sources */,
 				F7E969F8146B91E7F790F08D /* AppleSignInButton.swift in Sources */,
 				E909DC01BC018C170D9E5F02 /* AudioMode.swift in Sources */,
 				66F6A8F6BAEC57A3C469C858 /* AudioSessionManager.swift in Sources */,
@@ -927,6 +932,7 @@
 				3342B8B910F323E33A559C16 /* AddSongSheet.swift in Sources */,
 				7C0222DE15A046DC45F19E0C /* AppState.swift in Sources */,
 				A794F85EF6A0CD911082F750 /* AppTheme.swift in Sources */,
+				8A1539CF9B71B55CCF2D8956 /* DesignSystem.swift in Sources */,
 				82089B4B292F846FBC1CDEC0 /* AppleSignInButton.swift in Sources */,
 				FC1AEA8498EE1E659FDDF95A /* AudioMode.swift in Sources */,
 				42582A2B6FEFCCDAA9D9F05B /* AudioSessionManager.swift in Sources */,
