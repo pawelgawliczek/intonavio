@@ -129,8 +129,10 @@ final class StemPlayer {
                 player.volume = mode.hasFull ? 1.0 : 0.0
             case .vocals:
                 player.volume = mode.hasVocals ? 1.0 : 0.0
-            default:
+            case .instrumental:
                 player.volume = mode.hasInstrumental ? 1.0 : 0.0
+            case .drums, .bass, .piano, .guitar, .other:
+                player.volume = 0.0
             }
         }
     }
