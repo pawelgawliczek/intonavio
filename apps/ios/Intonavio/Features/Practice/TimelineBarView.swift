@@ -43,7 +43,7 @@ struct TimelineBarView: View {
 private extension TimelineBarView {
     var trackBackground: some View {
         RoundedRectangle(cornerRadius: trackHeight / 2)
-            .fill(Color.gray.opacity(0.3))
+            .fill(Color.intonavioSurface)
             .frame(height: trackHeight)
             .frame(maxWidth: .infinity)
             .padding(.vertical, (markerHitArea - trackHeight) / 2)
@@ -52,7 +52,7 @@ private extension TimelineBarView {
     func progressFill(width: CGFloat) -> some View {
         let fillWidth = timeToX(viewModel.currentTime, width)
         return RoundedRectangle(cornerRadius: trackHeight / 2)
-            .fill(Color.accentColor)
+            .fill(LinearGradient.intonavio)
             .frame(width: max(0, fillWidth), height: trackHeight)
             .padding(.vertical, (markerHitArea - trackHeight) / 2)
     }
@@ -63,7 +63,7 @@ private extension TimelineBarView {
                 let xA = timeToX(a, width)
                 let xB = timeToX(b, width)
                 Rectangle()
-                    .fill(Color.accentColor.opacity(0.15))
+                    .fill(LinearGradient.intonavio.opacity(0.15))
                     .frame(width: max(0, xB - xA), height: trackHeight)
                     .offset(x: xA)
                     .padding(.vertical, (markerHitArea - trackHeight) / 2)
@@ -73,7 +73,7 @@ private extension TimelineBarView {
 
     func playhead(width: CGFloat) -> some View {
         Circle()
-            .fill(Color.accentColor)
+            .fill(Color.intonavioIce)
             .frame(width: 12, height: 12)
             .offset(x: timeToX(viewModel.currentTime, width) - 6)
     }
@@ -181,7 +181,7 @@ private extension TimelineBarView {
             Text(formatTime(viewModel.duration))
         }
         .font(.caption.monospacedDigit())
-        .foregroundStyle(.secondary)
+        .foregroundStyle(Color.intonavioTextSecondary)
     }
 
     func formatTime(_ time: Double) -> String {

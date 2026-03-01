@@ -42,9 +42,9 @@ private extension ControlsBarView {
             Image(systemName: icon)
                 .font(.body)
                 .frame(width: 34, height: 34)
-                .foregroundStyle(isSelected ? .white : .secondary)
+                .foregroundStyle(isSelected ? Color.intonavioIce : Color.intonavioTextSecondary)
                 .background(
-                    isSelected ? Color.accentColor : Color.platformTertiaryFill,
+                    isSelected ? Color.intonavioIce.opacity(0.15) : Color.intonavioSurface,
                     in: RoundedRectangle(cornerRadius: 6)
                 )
         }
@@ -93,9 +93,9 @@ private extension ControlsBarView {
             .font(.body)
             .frame(height: 34)
             .padding(.horizontal, 6)
-            .foregroundStyle(isActive ? .white : .secondary)
+            .foregroundStyle(isActive ? Color.intonavioIce : Color.intonavioTextSecondary)
             .background(
-                isActive ? Color.accentColor : Color.platformTertiaryFill,
+                isActive ? Color.intonavioIce.opacity(0.15) : Color.intonavioSurface,
                 in: RoundedRectangle(cornerRadius: 6)
             )
         }
@@ -114,9 +114,9 @@ private extension ControlsBarView {
                   : "rectangle.bottomthird.inset.filled")
                 .font(.body)
                 .frame(width: 34, height: 34)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.intonavioTextSecondary)
                 .background(
-                    Color.platformTertiaryFill,
+                    Color.intonavioSurface,
                     in: RoundedRectangle(cornerRadius: 6)
                 )
         }

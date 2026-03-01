@@ -8,18 +8,19 @@ struct SessionRowView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Song \(session.songId.prefix(8))...")
                     .font(.body)
+                    .foregroundStyle(.white)
                     .lineLimit(1)
                 HStack(spacing: 8) {
                     Text(formattedDate)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.intonavioTextSecondary)
                     Text(formattedDuration)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.intonavioTextSecondary)
                     if session.speed != 1.0 {
                         Text(String(format: "%.2gx", session.speed))
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.intonavioTextSecondary)
                     }
                 }
             }

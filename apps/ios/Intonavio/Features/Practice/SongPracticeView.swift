@@ -229,13 +229,13 @@ private extension SongPracticeView {
 
     var loadingOverlay: some View {
         ZStack {
-            Color.platformBackground.opacity(0.85)
+            Color.intonavioBackground.opacity(0.85)
             VStack(spacing: 12) {
                 ProgressView()
                     .controlSize(.large)
                 Text("Preparing player...")
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.intonavioTextSecondary)
             }
         }
         .ignoresSafeArea()

@@ -16,7 +16,7 @@ struct SpeedSelectorView: View {
                     viewModel.setSpeed(rate)
                 }
                 .buttonStyle(.bordered)
-                .tint(viewModel.playbackRate == rate ? .blue : .gray)
+                .tint(viewModel.playbackRate == rate ? Color.intonavioIce : Color.intonavioTextSecondary)
                 .controlSize(.mini)
             }
         }

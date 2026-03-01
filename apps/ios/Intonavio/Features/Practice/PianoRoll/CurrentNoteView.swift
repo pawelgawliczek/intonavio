@@ -52,7 +52,7 @@ private extension CurrentNoteView {
         HStack(spacing: 4) {
             Text("Score")
                 .font(.caption2)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.intonavioTextSecondary)
             Text("\(Int(score))")
                 .font(.title3.bold().monospacedDigit())
                 .foregroundStyle(scoreColor)
@@ -62,10 +62,10 @@ private extension CurrentNoteView {
     func phraseIndicator(index: Int) -> some View {
         Text("Phrase \(index + 1)/\(totalPhrases)")
             .font(.caption2.monospacedDigit())
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Color.intonavioTextSecondary)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
-            .background(.ultraThinMaterial, in: Capsule())
+            .background(Color.intonavioSurface, in: Capsule())
     }
 
     var scoreColor: Color {

@@ -66,7 +66,7 @@ private extension ExercisePracticeView {
                     .font(.headline)
                 Text(exercise.description)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.intonavioTextSecondary)
             }
             Spacer()
             HStack(spacing: 4) {
@@ -111,7 +111,7 @@ private extension ExercisePracticeView {
         VStack(spacing: 8) {
             // Progress bar
             ProgressView(value: vm.currentTime, total: max(vm.duration, 0.01))
-                .tint(.accentColor)
+                .tint(Color.intonavioAmber)
                 .padding(.horizontal)
 
             HStack(spacing: 20) {
@@ -164,15 +164,17 @@ private extension ExercisePracticeView {
         VStack(spacing: 8) {
             Text("Exercise Complete")
                 .font(.headline)
+                .foregroundStyle(.white)
             Text("Score: \(Int(vm.score))%")
                 .font(.title.bold())
                 .foregroundStyle(scoreColor(vm.score))
             Button("Try Again") { vm.restart() }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(PrimaryButtonStyle())
+                .frame(maxWidth: 200)
         }
         .frame(maxWidth: .infinity)
         .padding()
-        .background(.regularMaterial)
+        .background(Color.intonavioSurface)
     }
 
     func scoreColor(_ score: Double) -> Color {

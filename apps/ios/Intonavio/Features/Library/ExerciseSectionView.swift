@@ -30,10 +30,12 @@ struct ExerciseSectionView: View {
         VStack(spacing: 8) {
             Image(systemName: category.icon)
                 .font(.title2)
+                .foregroundStyle(Color.intonavioIce)
                 .frame(width: 60, height: 60)
-                .background(Color.accentColor.opacity(0.1), in: RoundedRectangle(cornerRadius: 12))
+                .background(Color.intonavioSurface, in: RoundedRectangle(cornerRadius: 12))
             Text(category.name)
                 .font(.caption)
+                .foregroundStyle(.white)
         }
         .frame(width: 80)
     }

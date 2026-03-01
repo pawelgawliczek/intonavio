@@ -8,6 +8,7 @@ struct SignUpView: View {
             VStack(spacing: 20) {
                 Text("Create Account")
                     .font(.title.bold())
+                    .foregroundStyle(.white)
 
                 formFields
                 registerButton
@@ -46,14 +47,11 @@ private extension SignUpView {
         Button(action: viewModel.register) {
             if viewModel.isLoading {
                 ProgressView()
-                    .frame(maxWidth: .infinity)
             } else {
                 Text("Create Account")
-                    .frame(maxWidth: .infinity)
             }
         }
-        .buttonStyle(.borderedProminent)
-        .controlSize(.large)
+        .buttonStyle(PrimaryButtonStyle())
     }
 }
 

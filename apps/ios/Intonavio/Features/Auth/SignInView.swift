@@ -16,6 +16,7 @@ struct SignInView: View {
                     .padding(.bottom, 16)
             }
             .padding(.horizontal, 24)
+            .background(Color.intonavioBackground.ignoresSafeArea())
             .navigationDestination(isPresented: $viewModel.showSignUp) {
                 SignUpView(viewModel: viewModel)
             }
@@ -44,12 +45,13 @@ private extension SignInView {
         VStack(spacing: 6) {
             Image(systemName: "waveform.circle.fill")
                 .font(.system(size: 48))
-                .foregroundStyle(.tint)
+                .foregroundStyle(LinearGradient.intonavio)
             Text("Intonavio")
                 .font(.title.bold())
+                .foregroundStyle(.white)
             Text("Sing better, every day")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.intonavioTextSecondary)
         }
     }
 
@@ -69,29 +71,29 @@ private extension SignInView {
 
             HStack(spacing: 6) {
                 Image(systemName: "g.circle.fill")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.intonavioTextSecondary)
                 Text("Sign in with Google")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.intonavioTextSecondary)
                 Text("· Coming soon")
                     .font(.caption)
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(Color.intonavioTextSecondary.opacity(0.6))
             }
             .frame(maxWidth: .infinity)
             .frame(height: 44)
             .background(
                 RoundedRectangle(cornerRadius: 8)
-                    .strokeBorder(Color.secondary.opacity(0.2))
+                    .strokeBorder(Color.intonavioTextSecondary.opacity(0.2))
             )
         }
     }
 
     var divider: some View {
         HStack(spacing: 12) {
-            Rectangle().frame(height: 0.5).foregroundStyle(.quaternary)
+            Rectangle().frame(height: 0.5).foregroundStyle(Color.intonavioTextSecondary.opacity(0.3))
             Text("or")
                 .font(.caption2)
-                .foregroundStyle(.tertiary)
-            Rectangle().frame(height: 0.5).foregroundStyle(.quaternary)
+                .foregroundStyle(Color.intonavioTextSecondary)
+            Rectangle().frame(height: 0.5).foregroundStyle(Color.intonavioTextSecondary.opacity(0.3))
         }
     }
 
@@ -109,17 +111,13 @@ private extension SignInView {
                 .textFieldStyle(.roundedBorder)
 
             Button(action: viewModel.login) {
-                Group {
-                    if viewModel.isLoading {
-                        ProgressView()
-                    } else {
-                        Text("Sign In")
-                    }
+                if viewModel.isLoading {
+                    ProgressView()
+                } else {
+                    Text("Sign In")
                 }
-                .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
+            .buttonStyle(PrimaryButtonStyle())
         }
     }
 

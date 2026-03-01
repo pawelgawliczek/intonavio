@@ -48,7 +48,7 @@ struct PianoRollView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.platformGroupedBackground)
+        .background(Color.intonavioBackground)
     }
 }
 
@@ -119,13 +119,13 @@ private extension PianoRollView {
             Spacer()
             Image(systemName: "waveform.slash")
                 .font(.title2)
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(Color.intonavioIce.opacity(0.5))
             Text("Pitch analysis not available")
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.intonavioTextSecondary)
             Text("Switch to instrumental mode with a processed song")
                 .font(.caption)
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(Color.intonavioTextSecondary.opacity(0.7))
             Spacer()
         }
     }

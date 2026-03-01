@@ -18,7 +18,7 @@ struct LoopScoreToastView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
-        .background(.ultraThinMaterial, in: Capsule())
+        .background(Color.intonavioSurface, in: Capsule())
         .transition(.opacity.combined(with: .scale(scale: 0.8)))
     }
 }

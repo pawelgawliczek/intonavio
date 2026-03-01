@@ -31,6 +31,7 @@ struct LoopControlsView: View {
             }
         }
         .buttonStyle(.bordered)
+        .tint(Color.intonavioIce)
         .controlSize(.small)
     }
 }

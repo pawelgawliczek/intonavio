@@ -188,23 +188,24 @@ enum PianoRollRenderer {
             )
         }
 
-        // Draw playhead (center vertical line) — dashed when browsing
+        // Draw playhead "Gate" (center vertical line) — Ice accent
         var playhead = Path()
         let centerX = rect.width / 2
         playhead.move(to: CGPoint(x: centerX, y: 0))
         playhead.addLine(to: CGPoint(x: centerX, y: rect.height))
 
+        let iceColor = Color(hex: 0xE6F6FF)
         if isBrowsing {
             context.stroke(
                 playhead,
-                with: .color(.white.opacity(0.5)),
-                style: StrokeStyle(lineWidth: 1.0, dash: [6, 4])
+                with: .color(iceColor.opacity(0.8)),
+                style: StrokeStyle(lineWidth: 2.0, lineCap: .round, dash: [6, 4])
             )
         } else {
             context.stroke(
                 playhead,
-                with: .color(.white.opacity(0.3)),
-                lineWidth: 1.0
+                with: .color(iceColor.opacity(0.6)),
+                style: StrokeStyle(lineWidth: 2.0, lineCap: .round)
             )
         }
     }

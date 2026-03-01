@@ -126,7 +126,7 @@ struct PianoRollCanvas: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.platformBackground)
+        .background(Color.intonavioBackground)
     }
 
     /// Draw a dimmed vertical line showing the actual playback position
@@ -148,7 +148,7 @@ struct PianoRollCanvas: View {
         line.addLine(to: CGPoint(x: x, y: rect.height))
         context.stroke(
             line,
-            with: .color(.white.opacity(0.15)),
+            with: .color(Color.intonavioIce.opacity(0.25)),
             style: StrokeStyle(lineWidth: 1, dash: [4, 4])
         )
     }

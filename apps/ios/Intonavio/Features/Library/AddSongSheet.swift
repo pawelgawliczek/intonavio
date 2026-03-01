@@ -15,6 +15,7 @@ struct AddSongSheet: View {
             }
             .padding(.horizontal, 24)
             .padding(.top, 20)
+            .background(Color.intonavioBackground.ignoresSafeArea())
             .navigationTitle("Add Song")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -33,12 +34,13 @@ private extension AddSongSheet {
         VStack(spacing: 8) {
             Image(systemName: "link.badge.plus")
                 .font(.title)
-                .foregroundStyle(.tint)
+                .foregroundStyle(LinearGradient.intonavio)
             Text("Paste a YouTube URL")
                 .font(.headline)
+                .foregroundStyle(.white)
             Text("The song will be processed for stem separation and pitch analysis.")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.intonavioTextSecondary)
                 .multilineTextAlignment(.center)
         }
     }
@@ -64,14 +66,11 @@ private extension AddSongSheet {
         Button(action: viewModel.addSong) {
             if viewModel.isAddingSong {
                 ProgressView()
-                    .frame(maxWidth: .infinity)
             } else {
                 Text("Add Song")
-                    .frame(maxWidth: .infinity)
             }
         }
-        .buttonStyle(.borderedProminent)
-        .controlSize(.large)
+        .buttonStyle(PrimaryButtonStyle())
         .disabled(viewModel.isAddingSong)
     }
 }

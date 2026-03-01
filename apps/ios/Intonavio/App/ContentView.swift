@@ -69,6 +69,8 @@ struct ContentView: View {
             }
             #endif
         }
+        .tint(Color.intonavioIce)
+        .background(Color.intonavioBackground)
         .onAppear {
             appState.restoreAuth()
             WebViewPrewarmer.shared.warmUp()

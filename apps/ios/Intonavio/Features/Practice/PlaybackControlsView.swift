@@ -25,6 +25,7 @@ struct PlaybackControlsView: View {
             }
         }
         .font(.title2)
+        .foregroundStyle(.white)
     }
 }
 

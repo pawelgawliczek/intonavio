@@ -8,6 +8,12 @@ struct SongGridItemView: View {
             thumbnail
             songInfo
         }
+        .padding(8)
+        .background(Color.intonavioSurface, in: RoundedRectangle(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .strokeBorder(Color.white.opacity(0.1), lineWidth: 0.5)
+        )
     }
 }
 
@@ -37,11 +43,11 @@ private extension SongGridItemView {
 
     var placeholder: some View {
         RoundedRectangle(cornerRadius: 8)
-            .fill(Color.gray.opacity(0.2))
+            .fill(Color.intonavioSurface)
             .aspectRatio(16 / 9, contentMode: .fit)
             .overlay {
                 Image(systemName: "music.note")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.intonavioTextSecondary)
             }
     }
 
@@ -49,17 +55,18 @@ private extension SongGridItemView {
         VStack(alignment: .leading, spacing: 2) {
             Text(song.title)
                 .font(.caption)
+                .foregroundStyle(.white)
                 .lineLimit(2)
             if let artist = song.artist, !artist.isEmpty {
                 Text(artist)
                     .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.intonavioTextSecondary)
                     .lineLimit(1)
             }
             if song.duration > 0 {
                 Text(formatDuration(song.duration))
                     .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.intonavioTextSecondary)
             }
         }
     }

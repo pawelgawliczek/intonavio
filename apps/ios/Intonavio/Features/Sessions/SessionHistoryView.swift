@@ -49,12 +49,13 @@ private extension SessionHistoryView {
         VStack(spacing: 12) {
             Image(systemName: "clock.arrow.circlepath")
                 .font(.largeTitle)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.intonavioTextSecondary)
             Text("No sessions yet")
                 .font(.headline)
+                .foregroundStyle(.white)
             Text("Practice a song to see your history here")
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.intonavioTextSecondary)
         }
     }
 }

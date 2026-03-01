@@ -4,7 +4,6 @@ struct SettingsView: View {
     @Environment(AppState.self) private var appState
     @State private var viewModel = SettingsViewModel()
     @State private var pitchCacheCleared = false
-    @AppStorage("appTheme") private var themeRaw = AppTheme.system.rawValue
     @AppStorage("difficultyLevel") private var difficultyRaw = DifficultyLevel.beginner.rawValue
 
     var body: some View {
@@ -13,7 +12,6 @@ struct SettingsView: View {
             audioInputSection
             guideToneSection
             difficultySection
-            themeSection
             dataSection
             aboutSection
             #if DEBUG
@@ -173,17 +171,6 @@ private extension SettingsView {
         }
     }
 
-    var themeSection: some View {
-        Section("Appearance") {
-            Picker("Theme", selection: $themeRaw) {
-                ForEach(AppTheme.allCases, id: \.rawValue) { theme in
-                    Text(theme.label).tag(theme.rawValue)
-                }
-            }
-            .pickerStyle(.segmented)
-        }
-    }
-
     var dataSection: some View {
         Section {
             Button {
@@ -195,7 +182,7 @@ private extension SettingsView {
                     Spacer()
                     if pitchCacheCleared {
                         Text("Cleared")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.intonavioTextSecondary)
                     }
                 }
             }
@@ -213,7 +200,7 @@ private extension SettingsView {
                 Text("Version")
                 Spacer()
                 Text(appVersion)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.intonavioTextSecondary)
             }
         }
     }

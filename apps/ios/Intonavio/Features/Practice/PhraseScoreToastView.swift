@@ -17,7 +17,7 @@ struct PhraseScoreToastView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
-        .background(.ultraThinMaterial, in: Capsule())
+        .background(Color.intonavioSurface, in: Capsule())
         .transition(.asymmetric(
             insertion: .scale(scale: 0.5).combined(with: .opacity),
             removal: .opacity
@@ -37,7 +37,7 @@ private extension PhraseScoreToastView {
     var phraseLabel: some View {
         Text("Phrase \(phraseIndex + 1)/\(totalPhrases)")
             .font(.caption.monospacedDigit())
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Color.intonavioTextSecondary)
     }
 
     var newBestBadge: some View {
@@ -80,7 +80,7 @@ struct SongBestToastView: View {
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 16)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .background(Color.intonavioSurface, in: RoundedRectangle(cornerRadius: 16))
         .transition(.asymmetric(
             insertion: .scale(scale: 0.5).combined(with: .opacity),
             removal: .opacity

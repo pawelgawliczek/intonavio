@@ -24,6 +24,7 @@ struct HomeView: View {
             }
             .padding(.vertical)
         }
+        .background(Color.intonavioBackground.ignoresSafeArea())
         .navigationTitle("Library")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -97,12 +98,13 @@ private extension HomeView {
         VStack(spacing: 12) {
             Image(systemName: "music.note.list")
                 .font(.largeTitle)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.intonavioIce)
             Text("No songs yet")
                 .font(.headline)
+                .foregroundStyle(.white)
             Text("Tap + to add a YouTube song")
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.intonavioTextSecondary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 40)
