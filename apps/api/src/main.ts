@@ -28,7 +28,10 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalInterceptors(new TraceIdInterceptor(), new LoggingInterceptor());
 
-  app.enableCors();
+  const corsOrigins = process.env['CORS_ORIGINS'];
+  app.enableCors({
+    origin: corsOrigins ? corsOrigins.split(',') : 'http://localhost:3001',
+  });
 
   const port = process.env['PORT'] ?? 3000;
   await app.listen(port);

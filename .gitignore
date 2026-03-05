@@ -55,6 +55,9 @@ coverage/
 npm-debug.log*
 pnpm-debug.log*
 
+# Claude Code local config
+.claude/
+
 # Misc
 *.tgz
 .cache/

@@ -12,7 +12,7 @@ Intonavio is a singing practice app (iOS → macOS → Web SaaS) that uses YouTu
 - **Pitch Worker**: Python 3.11, librosa, pYIN
 - **Storage**: Cloudflare R2 (stems + pitch data)
 - **Auth**: Apple Sign In, Google OAuth, Email/Password, JWT
-- **Infrastructure**: Hostinger KVM, Docker Compose, Caddy reverse proxy
+- **Infrastructure**: Docker Compose, Caddy reverse proxy
 - **CI/CD**: GitHub Actions
 - **Monorepo**: Turborepo, pnpm workspaces
 
@@ -110,7 +110,6 @@ Do not deviate from documented architecture without updating the relevant doc fi
 
 ## Deployment
 
-- SSH into the production server: `ssh hostinger`
-- Source code on server: `/opt/intonavio-src` (shallow clone of `main`)
-- Docker Compose: `/opt/intonavio/docker-compose.yml`
-- Deploy flow: push to `main` → `ssh hostinger` → `cd /opt/intonavio-src && git pull` → `cd /opt/intonavio && docker compose build api && docker compose up -d api`
+- Deploy flow: push to `main` → CI builds Docker images → deploys via SSH → runs migrations → health check
+- See `docs/08-infrastructure.md` for full infrastructure details
+- See `.github/workflows/deploy.yml` for the deploy pipeline

@@ -195,7 +195,7 @@ private extension DeveloperView {
         if let url = bundleURL, !url.isEmpty, !url.contains("$(") {
             return url
         }
-        return "https://api.intonavio.pawelgawliczek.cloud/v1"
+        return "http://localhost:3000/v1"
     }
 
     func loadSongs() {

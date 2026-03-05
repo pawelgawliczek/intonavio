@@ -365,15 +365,15 @@ Updated all docs to reflect implementation decisions:
 1. **Unit tests**: `cd apps/api && pnpm test` — ✅ 92 tests, 15 suites, all passing
 2. **Lint**: `cd apps/api && pnpm lint` — ✅ zero warnings
 3. **Build**: `cd apps/api && pnpm build` — ✅ compiles cleanly
-4. **Docker**: image builds on Hostinger — ✅ 621MB image
-5. **Production deployment** (Hostinger KVM):
+4. **Docker**: image builds successfully — ✅ 621MB image
+5. **Production deployment**:
    - PostgreSQL + Redis containers — ✅ running
    - `prisma migrate deploy` — ✅ 2 migrations applied (init + update_stem_type_enum)
    - Nest application started — ✅ all routes mapped
    - `GET /v1/health` — ✅ `{"status":"ok"}`, database up, redis up
    - `POST /v1/auth/register` — ✅ user created, JWT tokens returned
    - `POST /v1/songs` with YouTube URL — ✅ returns 202, song QUEUED
-   - TLS certs provisioned — ✅ `https://api.intonavio.pawelgawliczek.cloud`
+   - TLS certs provisioned — ✅
 6. **E2E test**: `cd apps/api && pnpm test:e2e` — ✅ 23 tests, all passing
 
 **Total: 115 tests (92 unit + 23 e2e), lint clean, build clean, deployed and verified on production.**

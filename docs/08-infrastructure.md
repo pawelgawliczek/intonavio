@@ -15,7 +15,7 @@ graph TD
         R2[(R2 Object Storage<br/>Stems + Pitch Data)]
     end
 
-    subgraph Hostinger KVM
+    subgraph Production Server
         Caddy[Caddy Reverse Proxy<br/>Auto TLS]
         subgraph Docker Compose - Intonavio
             API[NestJS API Container]
@@ -75,7 +75,7 @@ sequenceDiagram
     Note over Client,Storage: API Request
     Client->>CF: GET /v1/songs/song_xyz
     CF->>Caddy: Forward
-    Caddy->>API: reverse_proxy (auto TLS)
+    Caddy->>API: reverse_proxy (TLS)
     API->>Cache: Check song cache
     alt Cache hit
         Cache-->>API: Cached song data
@@ -99,7 +99,7 @@ sequenceDiagram
 
 ## Infrastructure Components
 
-### Hostinger KVM Server
+### Production Server
 
 Single VPS running all backend services via Docker Compose.
 
@@ -113,7 +113,7 @@ Single VPS running all backend services via Docker Compose.
 
 ### Reverse Proxy
 
-Caddy runs as a shared reverse proxy at `/opt/caddy` on the Hostinger KVM, serving all projects on the server. It handles automatic TLS certificate provisioning and renewal. Intonavio containers join the `stack_appnet` Docker network so Caddy can route to them by container name.
+Caddy runs as a reverse proxy handling automatic TLS certificate provisioning and renewal. Intonavio containers join a shared Docker network so Caddy can route to them by container name.
 
 ### Docker Services
 
@@ -138,16 +138,16 @@ Caddy runs as a shared reverse proxy at `/opt/caddy` on the Hostinger KVM, servi
 
 ## Docker Compose Overview
 
-The production compose file lives at `/opt/intonavio/docker-compose.yml` on Hostinger. Source code is at `/opt/intonavio-src` (shallow clone, pulled before each build).
+The production compose file defines all backend services.
 
 Currently deployed: **API + Worker + PostgreSQL + Redis** (web not yet implemented).
 
 ```yaml
-# /opt/intonavio/docker-compose.yml (current)
+# docker-compose.yml (production)
 services:
   api:
     build:
-      context: /opt/intonavio-src
+      context: .
       dockerfile: apps/api/Dockerfile
     env_file: .env.production
     depends_on:
@@ -160,7 +160,7 @@ services:
 
   worker:
     build:
-      context: /opt/intonavio-src/workers/pitch-analyzer
+      context: ./workers/pitch-analyzer
       dockerfile: Dockerfile
     env_file: .env.production
     depends_on:
@@ -218,15 +218,15 @@ Key details:
 
 ## Caddy Configuration
 
-Caddy runs as a shared instance at `/opt/caddy` on the Hostinger KVM, managed via its own `docker-compose.yml`. It serves all projects on the server. Intonavio entries in the Caddyfile:
+Caddy handles TLS termination and reverse proxying. Example Caddyfile entries:
 
 ```caddyfile
-intonavio.pawelgawliczek.cloud {
+app.example.com {
     reverse_proxy intonavio-web-1:3001
     encode gzip zstd
 }
 
-api.intonavio.pawelgawliczek.cloud {
+api.example.com {
     reverse_proxy intonavio-api-1:3000
     encode gzip zstd
 }
@@ -238,10 +238,10 @@ Caddy automatically provisions and renews TLS certificates for these domains. No
 
 ## Environments
 
-| Environment    | Infrastructure                            | Database                                | Purpose                 |
-| -------------- | ----------------------------------------- | --------------------------------------- | ----------------------- |
-| **Local dev**  | `docker-compose.dev.yml`                  | PostgreSQL + Redis containers           | Development and testing |
-| **Production** | Hostinger KVM + `docker-compose.prod.yml` | PostgreSQL container with volume backup | Live service            |
+| Environment    | Infrastructure             | Database                                | Purpose                 |
+| -------------- | -------------------------- | --------------------------------------- | ----------------------- |
+| **Local dev**  | `docker-compose.dev.yml`   | PostgreSQL + Redis containers           | Development and testing |
+| **Production** | VPS + `docker-compose.yml` | PostgreSQL container with volume backup | Live service            |
 
 ### Local Development
 
@@ -275,7 +275,7 @@ API, Web, and Worker run natively via `pnpm dev` (not containerized in dev) for 
 
 | Item           | Cost      | Notes                             |
 | -------------- | --------- | --------------------------------- |
-| Hostinger KVM  | ~$15–25   | 4 vCPU, 8GB RAM VPS               |
+| VPS            | ~$15–25   | 4 vCPU, 8GB RAM                   |
 | Cloudflare R2  | ~$2       | ~150GB stems storage              |
 | Cloudflare DNS | $0        | Free plan                         |
 | Domain         | ~$1       | Annual amortized                  |
@@ -286,7 +286,7 @@ API, Web, and Worker run natively via `pnpm dev` (not containerized in dev) for 
 
 | Item          | Cost      | Notes                                  |
 | ------------- | --------- | -------------------------------------- |
-| Hostinger KVM | ~$40–60   | Upgrade to 8 vCPU, 16GB RAM            |
+| VPS           | ~$40–60   | Upgrade to 8 vCPU, 16GB RAM            |
 | Cloudflare R2 | ~$45      | ~3TB stems                             |
 | StemSplit API | ~$400     | 1,000 new songs/mo × 4 min × $0.10/min |
 | **Total**     | **~$500** |                                        |
@@ -295,7 +295,7 @@ API, Web, and Worker run natively via `pnpm dev` (not containerized in dev) for 
 
 ## Scaling Considerations
 
-### Vertical Scaling (Hostinger KVM)
+### Vertical Scaling
 
 - **First approach**: Upgrade VPS plan (more CPU, RAM, SSD)
 - PostgreSQL and Redis performance scales well vertically up to ~16 vCPU
@@ -307,7 +307,7 @@ If the single VPS is no longer sufficient:
 
 - **API**: Run multiple API containers behind Caddy with round-robin load balancing
 - **Worker**: Run additional worker containers (BullMQ supports multiple consumers)
-- **Database**: Move PostgreSQL to a managed service (Supabase, Neon, or Hostinger managed DB) when the VPS can't handle DB + app load together
+- **Database**: Move PostgreSQL to a managed service (Supabase, Neon) when the VPS can't handle DB + app load together
 - **Split services**: Move the Python worker to a second VPS dedicated to CPU-intensive pitch analysis
 
 ### Backup Strategy

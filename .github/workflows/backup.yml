@@ -14,12 +14,12 @@ jobs:
       - name: Backup PostgreSQL to R2
         uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.HOSTINGER_HOST }}
-          username: ${{ secrets.HOSTINGER_USER }}
-          key: ${{ secrets.HOSTINGER_SSH_KEY }}
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
             set -euo pipefail
-            cd /opt/intonavio
+            cd ${{ secrets.DEPLOY_PATH }}
 
             # Load production env vars (POSTGRES_*, R2_*)
             set -a

@@ -99,7 +99,7 @@ graph LR
 
 **Goal:** Fully functional API server that handles auth, song processing, and session storage.
 
-> **Status:** All 11 sub-phases implemented and verified. 92 unit tests + 23 e2e tests passing, lint clean, build clean. Deployed to Hostinger KVM, verified: health check (DB + Redis up), user registration (JWT tokens), song submission (202 QUEUED). Live at `https://api.intonavio.pawelgawliczek.cloud`. See `docs/implementation_plans/backend.md` for detailed sub-phase breakdown.
+> **Status:** All 11 sub-phases implemented and verified. 92 unit tests + 23 e2e tests passing, lint clean, build clean. Deployed to production, verified: health check (DB + Redis up), user registration (JWT tokens), song submission (202 QUEUED). See `docs/implementation_plans/backend.md` for detailed sub-phase breakdown.
 
 **Deliverables:**
 
@@ -115,7 +115,7 @@ graph LR
 - 80% line coverage minimum, 95% branch coverage on algorithmic modules (see `docs/12-code-quality.md` — Test Coverage)
 - Structured JSON logging with mandatory fields: `traceId`, `module`, `durationMs` (see `docs/13-observability.md` — Structured Logging)
 - Health endpoints: `GET /health` and `GET /health/detailed` (see `docs/13-observability.md` — Health Checks)
-- Deployed to Hostinger KVM via Docker Compose (see `docs/08-infrastructure.md`)
+- Deployed via Docker Compose (see `docs/08-infrastructure.md`)
 
 **Quality gates:**
 
@@ -130,7 +130,7 @@ graph LR
 
 **Goal:** Python worker that extracts reference pitch from vocal stems.
 
-> **Status:** All 8 sub-phases implemented and verified. 43 unit tests passing, ruff lint/format clean, mypy strict clean, 83% overall coverage (80% threshold), 100% coverage on `analyzer.py` (95% threshold). Deployed to Hostinger KVM, verified on 2 songs — both transitioned from ANALYZING → READY with valid pitch data. See `docs/implementation_plans/pitch-worker.md` for detailed sub-phase breakdown.
+> **Status:** All 8 sub-phases implemented and verified. 43 unit tests passing, ruff lint/format clean, mypy strict clean, 83% overall coverage (80% threshold), 100% coverage on `analyzer.py` (95% threshold). Deployed to production, verified on 2 songs — both transitioned from ANALYZING → READY with valid pitch data. See `docs/implementation_plans/pitch-worker.md` for detailed sub-phase breakdown.
 
 **Deliverables:**
 
@@ -146,7 +146,7 @@ graph LR
 - Type hints on all function signatures, mypy strict mode
 - Process-isolated: download stem → extract pitch → upload JSON → update DB. No shared mutable state
 - 83% overall line coverage, 100% branch coverage on `analyzer.py` (pYIN extraction and MIDI math)
-- Deployed to Hostinger KVM as Docker container with CPU/memory limits (2 CPU, 2G RAM)
+- Deployed as Docker container with CPU/memory limits (2 CPU, 2G RAM)
 
 **Quality gates:**
 
@@ -161,15 +161,15 @@ graph LR
 
 **Goal:** Automated build/test/deploy pipeline and production infrastructure.
 
-> **Status:** All deliverables implemented. CI workflow (lint + test + Docker build for api/web/worker), deploy workflow (builds and pushes api + worker images to ghcr.io, deploys to Hostinger with health checks), backup workflow (daily pg_dump to R2). Sentry error monitoring integrated in API (`@sentry/nestjs` with 5xx capture and traceId/userId tags) and worker (`sentry-sdk` with job exception capture and traceId/songId tags). Docker build contexts configured correctly for worker (uses `./workers/pitch-analyzer` context). Repo configured for squash-merge only with auto-delete branches. Branch protection rules (required status checks) require GitHub Pro for private repos — not yet enabled.
+> **Status:** All deliverables implemented. CI workflow (lint + test + Docker build for api/web/worker), deploy workflow (builds and pushes api + worker images to ghcr.io, deploys via SSH with health checks), backup workflow (daily pg_dump to R2). Sentry error monitoring integrated in API (`@sentry/nestjs` with 5xx capture and traceId/userId tags) and worker (`sentry-sdk` with job exception capture and traceId/songId tags). Docker build contexts configured correctly for worker (uses `./workers/pitch-analyzer` context). Repo configured for squash-merge only with auto-delete branches. Branch protection rules (required status checks) require GitHub Pro for private repos — not yet enabled.
 
 **Deliverables:**
 
 - CI workflow (`ci.yml`): pnpm install → lint → test → coverage check → build → Docker image build (api, web, worker with correct build contexts) on every PR (see `docs/15-development-workflow.md`)
-- Deploy workflow (`deploy.yml`): build api + worker images → push to ghcr.io → SSH to Hostinger → pull + up → migrate → health check on merge to `main`
+- Deploy workflow (`deploy.yml`): build api + worker images → push to ghcr.io → SSH to server → pull + up → migrate → health check on merge to `main`
 - Backup workflow (`backup.yml`): daily pg_dump → R2, retain 30 days
 - Docker Compose production setup with all containers: api, web, worker, postgres, redis on `stack_appnet` network (see `docs/08-infrastructure.md`)
-- Caddy reverse proxy with automatic TLS (shared instance at `/opt/caddy` on Hostinger)
+- Caddy reverse proxy with automatic TLS
 - Sentry integration for API and worker with `traceId` tags — no-op when `SENTRY_DSN` is empty (see `docs/13-observability.md` — Error Reporting)
 - Coverage thresholds enforced in CI: 80% overall, 95% algorithmic, 80% new code in PR (see `docs/12-code-quality.md`)
 - All linter configs: ESLint strict + sonarjs, SwiftLint strict, Ruff + mypy strict — warnings treated as errors
@@ -277,7 +277,7 @@ graph LR
 - `performance.mark()` / `performance.measure()` around pitch detection cycle
 - No `any` in component props — explicit prop interfaces
 - 70% line coverage minimum, 95% branch coverage on pitch detection and scoring
-- Deployed to Hostinger KVM as Docker container behind Caddy (see `docs/08-infrastructure.md`)
+- Deployed as Docker container behind Caddy (see `docs/08-infrastructure.md`)
 
 **Quality gates:**
 

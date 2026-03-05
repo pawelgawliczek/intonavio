@@ -236,7 +236,7 @@ intonavio/
     │   └── feature_request.md
     └── workflows/
         ├── ci.yml                  # Lint + test on every PR
-        ├── deploy.yml              # Build images + deploy to Hostinger KVM
+        ├── deploy.yml              # Build images + deploy to production
         └── backup.yml              # Scheduled DB backup to R2
 ```
 

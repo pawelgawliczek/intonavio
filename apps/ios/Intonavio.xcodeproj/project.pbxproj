@@ -1059,7 +1059,7 @@
 		02E7091BC72D3A6EA0B37FB3 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				API_BASE_URL = "https://api.intonavio.pawelgawliczek.cloud/v1";
+				API_BASE_URL = "http://localhost:3000/v1";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Intonavio/IntonavioMac.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -1095,7 +1095,7 @@
 		13B518CC88EBA40A5BE019C7 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				API_BASE_URL = "https://api.intonavio.pawelgawliczek.cloud/v1";
+				API_BASE_URL = "http://localhost:3000/v1";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Intonavio/IntonavioMac.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -1131,7 +1131,7 @@
 		76075146DCD615CDC40F4AC6 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				API_BASE_URL = "https://api.intonavio.pawelgawliczek.cloud/v1";
+				API_BASE_URL = "http://localhost:3000/v1";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Intonavio/Intonavio.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
@@ -1281,7 +1281,7 @@
 		ED7A5A688140F4990A8EE958 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				API_BASE_URL = "https://api.intonavio.pawelgawliczek.cloud/v1";
+				API_BASE_URL = "http://localhost:3000/v1";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Intonavio/Intonavio.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";

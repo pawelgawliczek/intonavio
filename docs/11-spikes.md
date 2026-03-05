@@ -95,7 +95,7 @@ Does the StemSplit API produce stems of sufficient quality for practice purposes
 
 ### Approach
 
-Used the production Intonavio API (`api.intonavio.pawelgawliczek.cloud`) to submit songs through the full pipeline: API → BullMQ → StemSplit → webhook → stem download.
+Used the production Intonavio API to submit songs through the full pipeline: API → BullMQ → StemSplit → webhook → stem download.
 
 ### Test Songs
 

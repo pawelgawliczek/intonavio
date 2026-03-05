@@ -2,7 +2,7 @@
 
 ## Context
 
-Phases 1–3 (Backend, Pitch Worker, Infrastructure) are complete. The API is live at `https://api.intonavio.pawelgawliczek.cloud`. Two iOS spikes validated real-time pitch detection (Spike A) and YouTube WKWebView looping (Spike B). No production iOS project exists yet — this phase creates it from scratch.
+Phases 1–3 (Backend, Pitch Worker, Infrastructure) are complete. Two iOS spikes validated real-time pitch detection (Spike A) and YouTube WKWebView looping (Spike B). No production iOS project exists yet — this phase creates it from scratch.
 
 Phase 4 delivers: authentication, song library, YouTube playback with A-B looping, stem playback via AVAudioEngine, and session history. It does **not** include pitch detection, piano roll, or scoring (those are Phase 5).
 
@@ -46,7 +46,7 @@ Protocol-based API client with all models mirroring backend DTOs.
 - `apps/ios/IntonavioTests/Networking/APIClientTests.swift`
 - `apps/ios/IntonavioTests/Networking/CodableModelTests.swift`
 
-**API base URL:** from `Info.plist` build config, defaulting to `https://api.intonavio.pawelgawliczek.cloud/v1`
+**API base URL:** from `Info.plist` build config (`API_BASE_URL`), defaulting to `http://localhost:3000/v1`
 
 **Token refresh flow:** intercept 401 → call `POST /v1/auth/refresh` → retry original request once → if refresh fails, clear Keychain + set `isAuthenticated = false`
 

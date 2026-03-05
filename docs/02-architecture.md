@@ -12,7 +12,7 @@ graph TD
         Web[Web App<br/>Next.js]
     end
 
-    subgraph Hostinger KVM - Docker
+    subgraph Production Server - Docker
         Caddy[Caddy Reverse Proxy]
         API[NestJS API<br/>REST + WebSocket]
         Auth[Auth Module<br/>Apple + Google + Email]
@@ -112,7 +112,7 @@ graph LR
 | **Object Storage**   | Cloudflare R2                                    | Stems (MP3/WAV), pitch data (JSON)                                        |
 | **CDN**              | Cloudflare                                       | DNS, DDoS protection, R2 public access                                    |
 | **Reverse Proxy**    | Caddy (Docker)                                   | TLS termination, routing                                                  |
-| **Containerization** | Docker Compose                                   | All backend services on Hostinger KVM                                     |
+| **Containerization** | Docker Compose                                   | All backend services on production VPS                                    |
 | **Auth**             | Apple Sign In, Google OAuth, Email/Password, JWT | Multi-provider authentication                                             |
 | **CI/CD**            | GitHub Actions                                   | Build, test, deploy                                                       |
 

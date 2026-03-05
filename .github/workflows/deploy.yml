@@ -54,18 +54,18 @@ jobs:
     environment: production
 
     steps:
-      - name: Deploy to Hostinger
+      - name: Deploy to production
         uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.HOSTINGER_HOST }}
-          username: ${{ secrets.HOSTINGER_USER }}
-          key: ${{ secrets.HOSTINGER_SSH_KEY }}
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
-            cd /opt/intonavio
+            cd ${{ secrets.DEPLOY_PATH }}
             docker compose pull api worker
             docker compose up -d
             sleep 10
             docker exec intonavio-api-1 npx prisma migrate deploy
             sleep 5
-            curl -sf https://api.intonavio.pawelgawliczek.cloud/v1/health || exit 1
+            curl -sf ${{ secrets.HEALTH_CHECK_URL }} || exit 1
             docker logs --tail 5 intonavio-worker-1 2>&1 || echo "Warning: could not read worker logs"
