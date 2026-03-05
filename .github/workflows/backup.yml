@@ -5,6 +5,8 @@ on:
     - cron: '0 3 * * *'
   workflow_dispatch:
 
+# Uses the same DEPLOY_* secrets as deploy.yml — see that file for docs.
+
 jobs:
   backup:
     runs-on: ubuntu-latest
@@ -14,9 +16,9 @@ jobs:
       - name: Backup PostgreSQL to R2
         uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          host: ${{ secrets.DEPLOY_HOST || secrets.HOSTINGER_HOST }}
+          username: ${{ secrets.DEPLOY_USER || secrets.HOSTINGER_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY || secrets.HOSTINGER_SSH_KEY }}
           script: |
             set -euo pipefail
             cd ${{ secrets.DEPLOY_PATH }}

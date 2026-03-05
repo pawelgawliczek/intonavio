@@ -8,6 +8,14 @@ concurrency:
   group: deploy
   cancel-in-progress: false
 
+# ─── Deployment configuration ─────────────────────────────────
+# To deploy, set these GitHub repository secrets:
+#   DEPLOY_HOST      — SSH hostname or IP of production server
+#   DEPLOY_USER      — SSH username
+#   DEPLOY_SSH_KEY   — SSH private key
+#   DEPLOY_PATH      — Absolute path to docker-compose.yml on server
+#   HEALTH_CHECK_URL — Full URL to GET for post-deploy verification
+
 env:
   REGISTRY: ghcr.io
   IMAGE_PREFIX: ghcr.io/${{ github.repository }}
@@ -57,9 +65,9 @@ jobs:
       - name: Deploy to production
         uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          host: ${{ secrets.DEPLOY_HOST || secrets.HOSTINGER_HOST }}
+          username: ${{ secrets.DEPLOY_USER || secrets.HOSTINGER_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY || secrets.HOSTINGER_SSH_KEY }}
           script: |
             cd ${{ secrets.DEPLOY_PATH }}
             docker compose pull api worker
