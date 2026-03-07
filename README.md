@@ -4,7 +4,7 @@ A singing practice app that turns any YouTube song into a pitch trainer. Paste a
 
 I built this because I started taking singing lessons and realized that practicing at home without feedback is mostly guesswork. In class, the teacher plays notes and tells you higher or lower. At home, you're on your own. Intonavio gives you that visual feedback loop.
 
-**[Read the blog post](https://pawelgawliczek.cloud/blog/i-built-a-singing-practice-app-because-my-ear-wasnt-ready)** · **[App page](https://pawelgawliczek.cloud/apps/intonavio)**
+**[Read the blog post](https://pawelgawliczek.cloud/blog/using-ai-to-help-my-singing)** · **[App page](https://pawelgawliczek.cloud/apps/intonavio)**
 
 ## Screenshots
 
