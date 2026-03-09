@@ -174,3 +174,5 @@ The entire app was designed in documentation before writing any code. Docs are i
 ## License
 
 [MIT](LICENSE)
+
+![](https://analytics.pawelgawliczek.cloud/p/intonavio)
