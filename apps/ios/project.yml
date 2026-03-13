@@ -56,6 +56,9 @@ targets:
     platform: macOS
     sources:
       - path: Intonavio
+        excludes:
+          - '**/GeneralUser-GS/README.md'
+          - '**/GeneralUser-GS/documentation/**'
     info:
       path: Intonavio/Info-macOS.plist
       properties:
