@@ -37,10 +37,11 @@ jobs:
             # Configure rclone for R2 via env vars (no config file needed)
             export RCLONE_CONFIG_R2_TYPE=s3
             export RCLONE_CONFIG_R2_PROVIDER=Cloudflare
-            export RCLONE_CONFIG_R2_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID"
-            export RCLONE_CONFIG_R2_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY"
+            export RCLONE_CONFIG_R2_ACCESS_KEY_ID="$R2_BACKUP_ACCESS_KEY_ID"
+            export RCLONE_CONFIG_R2_SECRET_ACCESS_KEY="$R2_BACKUP_SECRET_ACCESS_KEY"
             export RCLONE_CONFIG_R2_ENDPOINT="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
             export RCLONE_CONFIG_R2_ACL=private
+            export RCLONE_CONFIG_R2_NO_CHECK_BUCKET=true
 
             rclone copy "/tmp/$BACKUP_FILE" r2:intonavio-backups/db/
             rm "/tmp/$BACKUP_FILE"
