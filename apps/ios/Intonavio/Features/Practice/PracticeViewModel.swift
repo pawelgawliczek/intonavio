@@ -227,6 +227,7 @@ final class PracticeViewModel {
 
     func seek(to time: Double) {
         currentTime = time
+        detectedPoints.removeAll { $0.time >= time }
         controller.seek(to: time)
         if isInStemMode {
             stemPlayer.seek(to: time)
@@ -412,6 +413,8 @@ private extension PracticeViewModel {
                 loopState = .idle
                 controller.stopTimePolling()
                 stopLoopCheck()
+                stopPitchDetection()
+                saveSongScore()
                 if isInStemMode {
                     stemPlayer.stop()
                     sync?.stop()

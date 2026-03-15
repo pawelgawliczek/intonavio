@@ -12,6 +12,7 @@ struct ProgressLogView: View {
     var body: some View {
         NavigationStack {
             List {
+                scoreChartSection
                 songSummarySection
                 if totalPhrases > 0 {
                     phraseBreakdownSection
@@ -40,6 +41,12 @@ struct ProgressLogView: View {
 // MARK: - Sections
 
 private extension ProgressLogView {
+    var scoreChartSection: some View {
+        Section("Score History") {
+            ScoreHistoryChartView(scores: songHistory)
+        }
+    }
+
     var songSummarySection: some View {
         Section("Overall") {
             HStack {
@@ -110,6 +117,10 @@ private extension ProgressLogView {
 // MARK: - Data
 
 private extension ProgressLogView {
+    var songHistory: [ScoreRecord] {
+        scoreRepository?.fetchHistory(songId: songId, phraseIndex: nil) ?? []
+    }
+
     var songBestScore: Double {
         scoreRepository?.fetchBestScore(songId: songId, phraseIndex: nil) ?? 0
     }
