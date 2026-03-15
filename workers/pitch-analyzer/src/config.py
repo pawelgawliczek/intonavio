@@ -32,6 +32,6 @@ class WorkerConfig(BaseSettings):
     # Worker behavior
     heartbeat_interval_seconds: int = 60
     queue_name: str = "pitch-analysis"
-    lock_duration_ms: int = 300_000  # 5 min — pYIN extraction takes ~110s
+    lock_duration_ms: int = 600_000  # 10 min — large stems can take ~7 min
 
     model_config = {"env_prefix": "", "case_sensitive": False}
