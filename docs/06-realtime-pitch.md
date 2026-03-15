@@ -319,7 +319,7 @@ The iOS and Web clients use classic YIN for real-time detection. The Python work
 
 ## Reference Pitch Sources
 
-The piano roll and scoring pipeline consume the same `{t, hz, midi, voiced, rms}` frame array regardless of whether the reference comes from a song or an exercise. The only difference is how the reference is produced.
+The piano roll and scoring pipeline consume the same `{t, hz, midi, voiced, rms}` frame array regardless of whether the reference comes from a song, an exercise, or a guitar recording. The only difference is how the reference is produced.
 
 ```mermaid
 flowchart TD
@@ -333,8 +333,14 @@ flowchart TD
         E --> F[reference.json]
     end
 
+    subgraph Recording Path
+        G2[Instrument Recording PCM] --> H2[Offline YIN Analysis<br/>client-side]
+        H2 --> I2[ReferencePitchData<br/>in memory]
+    end
+
     C --> G[Same frame format<br/>t hz midi voiced]
     F --> G
+    I2 --> G
     G --> H[Piano Roll + Scoring<br/>identical pipeline]
 ```
 

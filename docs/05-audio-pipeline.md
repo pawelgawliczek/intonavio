@@ -257,6 +257,75 @@ Per-frame RMS energy is computed alongside pitch extraction using `librosa.featu
 
 ---
 
+## Instrument Recording Pipeline
+
+User-recorded instrument audio (guitar, piano, any pitched source) follows a local-only pipeline — no server processing needed.
+
+### Recording Flow
+
+```mermaid
+flowchart TD
+    A[User taps Record] --> B[AudioEngine mic tap<br/>feeds AudioRecorder]
+    B --> C[PCM samples accumulated<br/>in pre-allocated buffer]
+    C --> D[User taps Stop]
+    D --> E[Write buffer to CAF file<br/>via AVAudioFile]
+    E --> F[Offline YIN analysis<br/>2048-sample window, 256-hop]
+    F --> G[Note segmentation<br/>group consecutive pitched frames]
+    G --> H[ReferencePitchData<br/>same format as songs/exercises]
+    H --> I[Save Recording locally<br/>SwiftData + Documents/]
+```
+
+### Audio Recording Architecture
+
+`AudioRecorder` is a new component that captures mic input alongside the existing `PitchDetector`. Both consume the same tap on the shared `AudioEngine`.
+
+```
+Microphone --> inputNode (VP) --> tap --> AudioRecorder (accumulates PCM to buffer)
+                                     --> PitchDetector (optional real-time display)
+```
+
+Key constraints:
+
+- **No allocation on audio thread** — `AudioRecorder` uses a pre-allocated buffer (30s at 44.1kHz = ~2.6MB).
+- **No file I/O on audio thread** — the buffer is written to disk after recording stops.
+- **Coexists with PitchDetector** — both can run simultaneously from the same tap.
+
+### Offline Pitch Analysis
+
+After recording, `RecordingAnalyzer` runs YIN over the saved buffer:
+
+1. Slide a 2048-sample window with 256-sample hops (same as real-time detection).
+2. Apply RMS noise gate (`rms < 0.005` = skip) and confidence threshold (0.85).
+3. Build `[ReferencePitchFrame]` array — identical format to song/exercise pitch data.
+4. Segment into discrete `DetectedNote` objects by grouping consecutive frames at the same MIDI note.
+
+Processing time: <1 second for a 30-second recording on modern iOS hardware.
+
+### Why Client-Side Analysis
+
+| Factor          | Server-side (pYIN)                           | Client-side (YIN)                      |
+| --------------- | -------------------------------------------- | -------------------------------------- |
+| Latency         | Network round-trip + queue + processing      | <1 second on-device                    |
+| Offline support | No                                           | Yes                                    |
+| Cost            | R2 storage + worker CPU                      | Zero                                   |
+| Accuracy        | Better for noisy/reverberant audio           | Sufficient for close-mic'd instruments |
+| Complexity      | New API endpoint + job type + worker changes | Self-contained on iOS                  |
+
+For clean, close-microphone instrument recordings, YIN's accuracy is comparable to pYIN. The server path adds complexity without meaningful quality improvement.
+
+### Reuse of Practice Infrastructure
+
+Once `ReferencePitchData` is produced from the recording, all existing components work without modification:
+
+- `ReferencePitchStore.load(from:)` — loads the pitch frames for O(1) time-based lookup
+- `ScoringEngine.evaluate()` — compares detected voice against recording reference
+- `PianoRollRenderer` — renders reference zones/lines from recording pitch data
+- `GuideTone` — can play back detected notes via SoundFont as an audio guide
+
+See `docs/17-instrument-recording.md` for the full feature spec.
+
+---
+
 ## Cost Optimization
 
 | Strategy               | Description                                                                      |

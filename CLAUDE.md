@@ -77,6 +77,7 @@ Before writing any code, read the docs relevant to the work:
 - **Any infra or CI change** → read `docs/15-development-workflow.md`, `docs/08-infrastructure.md`
 - **Any data model change** → read `docs/04-data-models.md`, `docs/12-code-quality.md` (Prisma section)
 - **Any audio pipeline change** → read `docs/05-audio-pipeline.md`, `docs/06-realtime-pitch.md`
+- **Any instrument recording change** → read `docs/17-instrument-recording.md`, `docs/05-audio-pipeline.md` (Instrument Recording Pipeline section), `docs/16-ui-views-flow.md`
 
 Always read `docs/12-code-quality.md` — it applies to every change.
 
@@ -100,6 +101,7 @@ Always read `docs/12-code-quality.md` — it applies to every change.
 | Testing strategy             | `docs/14-testing-strategy.md`      |
 | Development workflow & CI/CD | `docs/15-development-workflow.md`  |
 | UI views & navigation flow   | `docs/16-ui-views-flow.md`         |
+| Instrument recording feature | `docs/17-instrument-recording.md`  |
 
 Do not deviate from documented architecture without updating the relevant doc first.
 

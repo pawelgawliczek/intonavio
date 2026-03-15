@@ -11,6 +11,7 @@ enum AppLogger {
     static let library = Logger(subsystem: subsystem, category: "Library")
     static let sessions = Logger(subsystem: subsystem, category: "Sessions")
     static let pitch = Logger(subsystem: subsystem, category: "Pitch")
+    static let recording = Logger(subsystem: subsystem, category: "Recording")
     static let general = Logger(subsystem: subsystem, category: "General")
 
     private static let subsystem = Bundle.main.bundleIdentifier

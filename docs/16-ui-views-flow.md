@@ -6,7 +6,7 @@ Defining all views, navigation, and layout decisions for the Intonavio singing p
 
 ---
 
-## Views (11 total)
+## Views (15 total)
 
 ### Auth
 
@@ -15,12 +15,19 @@ Defining all views, navigation, and layout decisions for the Intonavio singing p
 
 ### Home (Tab 1: Library)
 
-3. **Home** — Two sections stacked vertically:
+3. **Home** — Three sections stacked vertically:
    - **Song Library** — Grid of user's songs (thumbnail, title, artist, status badge). "Add Song" button.
    - **Exercises** — Horizontal scrollable categories (Scales, Arpeggios, Intervals, Vibrato, Breathing). Pre-built exercises ship with app; community-shared exercises available via browse/search.
+   - **Recordings** — Horizontal scroll of user-recorded instrument notes/phrases. Each card shows name, note count, duration, date. `[+ Record]` card opens RecordView. See `docs/17-instrument-recording.md`.
 
 4. **Add Song Sheet** — YouTube URL input, validation, submit. Shows processing progress after submission.
 5. **Exercise Browser** — Browse/search community exercises, filter by category/difficulty.
+
+### Recordings
+
+6. **Record View** — Full-screen recording interface. Big circular record button (red when active), live audio level meter. Auto-stops at 30 seconds. After stopping: shows detected notes list, name field, save/re-record buttons. Also serves as import mode when given a file URL (title changes to "Import", skips to analyzing). See `docs/17-instrument-recording.md`.
+7. **Recording Practice** — Same piano roll + scoring as exercise practice. Plays back recorded audio via AVAudioPlayerNode + AVAudioUnitTimePitch. Controls: play/pause, restart, transpose picker, speed selector (0.5x–1.5x), visualization mode. Loop indicator in header. Toolbar edit button opens note editor. Score saved on completion.
+8. **Recording Note Editor** — Sheet for editing detected notes: swipe-to-delete, +/- semitone pitch shift, loop-from-editor button. Saves edits back to SwiftData.
 
 ### Practice
 
@@ -35,6 +42,7 @@ Defining all views, navigation, and layout decisions for the Intonavio singing p
    - **Piano roll**: Interactive — touch to pause, swipe to scrub with momentum, long-press to loop a phrase (see Piano Roll Touch Gestures below).
 
 7. **Exercise Practice** — Same pitch graph as song practice but no video. Shows exercise name, target notes as reference, and tempo/metronome guide.
+8. **Recording Practice** — Same pitch graph as exercise practice. Plays back recorded audio as reference with transpose, speed, loop, and note editing. See Recording Practice above.
 
 ### Pitch Graph Component (shared by views 6 & 7)
 
@@ -68,9 +76,15 @@ Tab Bar (3 tabs)
 │   ├── Song Library grid
 │   │   ├── Add Song (sheet)
 │   │   └── Song → Song Practice (full-screen push)
-│   └── Exercises section
-│       ├── Exercise → Exercise Practice (full-screen push)
-│       └── Browse Community (push)
+│   ├── Exercises section
+│   │   ├── Exercise → Exercise Practice (full-screen push)
+│   │   └── Browse Community (push)
+│   └── Recordings section
+│       ├── [+ Record] → Record View (sheet)
+│       ├── [+ Import] → File picker → Record View in import mode (sheet)
+│       ├── Recording → Recording Practice (push)
+│       │   └── [✎ toolbar] → Recording Note Editor (sheet)
+│       └── [Long-press] → Delete confirmation
 ├── Sessions
 │   └── Session → Session Detail (push)
 └── Settings
@@ -97,6 +111,18 @@ Home → Tap song → Song Practice (toggle to pitch-focused) → Set A-B loop �
 
 ```
 Home → Scroll to Exercises → Tap scale exercise → Exercise Practice → Sing along to target notes → Score → Session saved
+```
+
+### Instrument Recording Exercise
+
+```
+Home → Scroll to Recordings → Tap [+ Record] → Record instrument note → Stop → Review detected notes → Save → Tap recording → Recording Practice → Sing the note → Score
+```
+
+### Import from Voice Memos
+
+```
+Home → Scroll to Recordings → Tap [+ Import] → Select .m4a file → Analyze → Review → Save → Practice
 ```
 
 ### Browse Community Exercises

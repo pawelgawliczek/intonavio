@@ -35,6 +35,7 @@ Existing karaoke apps use limited licensed catalogs. Intonavio leverages YouTube
 | **Practice Sessions**          | Save and review past sessions with timestamped pitch data                                                                                         |
 | **Audio Mode Toggle**          | Switch between original audio, instrumental only, or vocals only during practice                                                                  |
 | **Exercises**                  | Pre-built vocal exercises (scales, arpeggios, intervals, vibrato, breathing) with community sharing                                               |
+| **Instrument Recording**       | Record notes from any instrument (guitar, piano, etc.) or import from Voice Memos, auto-analyze pitch, and use as custom vocal exercises          |
 | **Toggleable Practice Layout** | Switch between lyrics-focused (video 65%, pitch 35%) and pitch-focused (video 25%, pitch 75%) modes                                               |
 
 ## Platform Strategy
@@ -58,7 +59,7 @@ iOS is first because:
 
 - Not a karaoke app with a licensed song catalog
 - Not a music production tool (no editing, mixing, or export)
-- Not a vocal lesson platform (no instructional content)
+- Not a vocal lesson platform (no instructional content — though guitar recordings enable self-directed vocal exercises)
 - Not a social/sharing platform (exercise sharing is limited to community browse, not a social feed)
 
-Intonavio is a **practice tool** — focused, personal, and built around the singer's workflow of picking a song, isolating parts, looping sections, and improving pitch accuracy over time.
+Intonavio is a **practice tool** — focused, personal, and built around the singer's workflow of picking a song, isolating parts, looping sections, improving pitch accuracy over time, and creating custom vocal exercises from instrument recordings (guitar, piano, etc.).

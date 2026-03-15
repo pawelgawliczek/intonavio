@@ -21,6 +21,8 @@ struct HomeView: View {
                 songSection
                 Divider()
                 exerciseSection
+                Divider()
+                recordingsSection
             }
             .padding(.vertical)
         }
@@ -118,6 +120,10 @@ private extension HomeView {
 
             ExerciseSectionView()
         }
+    }
+
+    var recordingsSection: some View {
+        RecordingsSectionView()
     }
 
     var songs: [SongResponse] {

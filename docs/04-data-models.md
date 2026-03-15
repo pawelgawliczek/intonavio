@@ -314,6 +314,56 @@ model ExerciseAttempt {
 
 ---
 
+## Local-Only Models (SwiftData — iOS)
+
+### Recording
+
+Guitar recordings and their analyzed pitch data are stored locally on-device using SwiftData. No server-side model — recordings are personal practice tools that don't need cross-device sync in Phase 1.
+
+```swift
+@Model
+final class Recording {
+    var id: UUID
+    var name: String                    // User-provided name, e.g. "E4 open string"
+    var duration: TimeInterval          // Recording length in seconds (max 30s)
+    var audioFileName: String           // Relative path: "recordings/{uuid}/audio.caf"
+    var pitchFrames: Data               // JSON-encoded [ReferencePitchFrame]
+    var detectedNotes: Data             // JSON-encoded [DetectedNote]
+    var createdAt: Date
+
+    // Derived from detectedNotes for display
+    var noteCount: Int
+    var lowestMidi: Int
+    var highestMidi: Int
+}
+```
+
+```swift
+struct DetectedNote: Codable {
+    let midi: Int                       // MIDI note number (rounded from average)
+    let name: String                    // Note name, e.g. "E4", "A3"
+    let startTime: TimeInterval         // Seconds from recording start
+    let duration: TimeInterval          // Note duration in seconds
+    let averageHz: Double               // Mean frequency across frames in this note
+    let confidence: Double              // Average YIN confidence for this note
+}
+```
+
+**Storage layout:**
+
+```
+Documents/
+  recordings/
+    {uuid}/
+      audio.caf                         // Core Audio Format (lossless PCM)
+```
+
+CAF is used for recording because it supports raw PCM writes with no encoding overhead — important for real-time audio capture. The lossless format ensures accurate offline pitch analysis.
+
+See `docs/17-instrument-recording.md` for the full feature spec.
+
+---
+
 ## Enum Definitions
 
 ### AuthProviderType

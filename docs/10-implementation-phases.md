@@ -51,8 +51,16 @@ gantt
     AudioWorklet Pitch Detection        :web-pitch, after web-yt, 7d
     Piano Roll + Scoring                :web-piano, after web-pitch, 5d
 
+    section Instrument Recording
+    AudioRecorder component             :rec-audio, after ios-test, 3d
+    RecordingAnalyzer (offline YIN)     :rec-analyze, after rec-audio, 3d
+    RecordView UI                       :rec-ui, after rec-analyze, 3d
+    RecordingPracticeView               :rec-practice, after rec-ui, 3d
+    File Import (Voice Memos)           :rec-import, after rec-practice, 3d
+    Recording Polish + Testing          :rec-test, after rec-import, 3d
+
     section macOS
-    macOS Target from iOS Codebase      :macos, after ios-test, 10d
+    macOS Target from iOS Codebase      :macos, after rec-test, 10d
 ```
 
 ## Phase Dependency Graph
@@ -72,7 +80,8 @@ graph LR
     iOSCore --> iOSPitch[iOS Pitch<br/>YIN + Piano Roll]
     WebApp --> WebPitch[Web Pitch<br/>AudioWorklet]
 
-    iOSPitch --> macOS[macOS<br/>Shared codebase]
+    iOSPitch --> InstrRec[Instrument Recording<br/>Record + Analyze + Practice]
+    InstrRec --> macOS[macOS<br/>Shared codebase]
 ```
 
 ---
@@ -284,6 +293,40 @@ graph LR
 - ESLint strict + sonarjs + Prettier passes, no warnings
 - Max 150 lines per component, 300 lines per file
 - E2E tests (Playwright): sign in → submit URL → READY, play + loop, practice + score (see `docs/14-testing-strategy.md` — Level 4)
+
+---
+
+### Phase 6.5: Instrument Recording
+
+**Goal:** Record instrument notes (guitar, piano, etc.) or import from Voice Memos, analyze pitch client-side, and practice singing against the detected notes.
+
+> **Status:** Complete (all 3 phases implemented).
+
+**Deliverables:**
+
+- `AudioRecorder` component: captures mic input to pre-allocated PCM buffer via shared `AudioEngine` tap, writes to CAF file on stop. No allocation on audio thread. Coexists with `PitchDetector` on the same tap.
+- `RecordingAnalyzer`: runs offline YIN over recorded buffer (2048-sample window, 256-hop), applies RMS noise gate + confidence threshold, segments pitched regions into `DetectedNote` objects, produces `[ReferencePitchFrame]` in <1 second for 30s recordings.
+- `Recording` SwiftData model: stores recording metadata, audio file path, pitch frames, and detected notes locally on-device. No server-side model changes.
+- `RecordView`: full-screen recording UI with record button, live audio level meter, 30-second auto-stop, post-recording review with detected notes list, name field, save/re-record. Also serves as import mode via `RecordView(importURL:)`.
+- `RecordingsSection` in `HomeView`: horizontal scroll of recording cards below Exercises section, with `[+ Record]` and `[+ Import]` cards. Long-press context menu for deletion.
+- `RecordingPracticeView` + `RecordingPracticeViewModel`: reuses `ExercisePracticeView` pattern — loads recording pitch frames into `ReferencePitchStore`, plays back recording audio via `AVAudioPlayerNode → AVAudioUnitTimePitch → mainMixer`, real-time voice detection via `PitchDetector`, scoring via `ScoringEngine`. Includes transpose picker, speed selector (0.5x–1.5x), loop support, MIDI jump filter, score history via `ScoreRepository`.
+- `RecordingNoteEditorView`: sheet for editing detected notes — swipe-to-delete, pitch shift (+/- semitones), loop-from-editor. Saves edits back to SwiftData pitch frames.
+- File import via SwiftUI `.fileImporter()` (UTType.audio): supports .m4a (Voice Memos), .mp3, .wav, .caf, .aiff. Reads via `AVAudioFile` with security-scoped resource access, stereo-to-mono mixdown, saves as CAF.
+- All practice infrastructure reused without modification: `PianoRollView`, `ScoringEngine`, `ReferencePitchStore`, `NoteMapper`, `TransposeInterval`, `ScoreRepository`.
+
+**Quality gates:**
+
+- Offline YIN correctly identifies known pitches from various instruments (guitar open strings, piano keys, humming) within +/-2Hz
+- Note segmentation produces correct note count and durations for a recorded scale
+- Recording → practice transition works without audio session glitches
+- 30-second limit enforced with graceful auto-stop
+- File import handles Voice Memos .m4a files without error
+- Transpose shifts both visual reference and scoring target correctly
+- Speed control adjusts playback without pitch shift
+- Loop resets audio and clears detected points
+- Note editor edits persist to SwiftData
+- Recording deletion removes both data and audio files
+- All existing tests continue to pass (no regressions from shared `AudioEngine` changes)
 
 ---
 
