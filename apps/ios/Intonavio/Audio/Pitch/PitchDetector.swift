@@ -96,9 +96,12 @@ private extension PitchDetector {
         let frameCount = Int(buffer.frameLength)
         let rawPtr = channelData[0]
         let ringSize = ringBuffer.count
+        let gain = audioEngine.isBluetoothRoute
+            ? PitchConstants.bluetoothMicGain
+            : Float(1.0)
 
         for i in 0..<frameCount {
-            ringBuffer[writeIndex] = rawPtr[i]
+            ringBuffer[writeIndex] = rawPtr[i] * gain
             writeIndex = (writeIndex + 1) % ringSize
             samplesAccumulated += 1
 

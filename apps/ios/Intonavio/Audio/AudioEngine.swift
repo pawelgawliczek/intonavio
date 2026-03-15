@@ -20,6 +20,10 @@ final class AudioEngine {
     private(set) var isRunning = false
     private var isPrepared = false
 
+    /// Whether the current audio route uses Bluetooth output (e.g. AirPods).
+    /// When true, voice processing (AEC) is skipped and mic gain is boosted.
+    private(set) var isBluetoothRoute = false
+
     #if os(iOS)
     private var interruptionObserver: NSObjectProtocol?
     private var routeChangeObserver: NSObjectProtocol?
@@ -40,6 +44,7 @@ final class AudioEngine {
 
         #if os(iOS)
         try AudioSessionManager.configure()
+        isBluetoothRoute = detectBluetoothRoute()
         #endif
 
         let inputNode = engine.inputNode
@@ -50,9 +55,16 @@ final class AudioEngine {
         matchOutputSampleRateToInput()
         #endif
 
+        // Always enable VP — toggling it disrupts the audio graph and resets
+        // mixer connections. With Bluetooth (no speaker bleed), AEC is a no-op
+        // but harmless. PitchDetector compensates with a mic gain boost instead.
         if !inputNode.isVoiceProcessingEnabled {
             try inputNode.setVoiceProcessingEnabled(true)
             AppLogger.audio.info("Voice processing (AEC) enabled on shared engine")
+        }
+
+        if isBluetoothRoute {
+            AppLogger.audio.info("Bluetooth route detected — mic gain boost active")
         }
 
         isPrepared = true
@@ -168,6 +180,21 @@ final class AudioEngine {
     }
 }
 
+// MARK: - Bluetooth Route Detection (iOS)
+
+#if os(iOS)
+extension AudioEngine {
+    func detectBluetoothRoute() -> Bool {
+        let outputs = AVAudioSession.sharedInstance().currentRoute.outputs
+        return outputs.contains { output in
+            output.portType == .bluetoothA2DP
+                || output.portType == .bluetoothLE
+                || output.portType == .bluetoothHFP
+        }
+    }
+}
+#endif
+
 // MARK: - Interruption & Route Change Handling (iOS)
 
 #if os(iOS)
@@ -235,6 +262,8 @@ private extension AudioEngine {
         switch reason {
         case .newDeviceAvailable, .oldDeviceUnavailable:
             AppLogger.audio.info("Audio route changed: \(reason.rawValue)")
+            isBluetoothRoute = detectBluetoothRoute()
+            AppLogger.audio.info("Bluetooth route: \(self.isBluetoothRoute)")
             ensureRunning()
             onRouteChange?()
         default:

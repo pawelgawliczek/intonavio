@@ -42,6 +42,10 @@ enum PitchConstants {
 
     /// RMS below this value (~-46 dB) is treated as silence.
     static let rmsNoiseFloor: Float = 0.005
+
+    /// Gain multiplier applied to mic input when using Bluetooth (e.g. AirPods).
+    /// Compensates for weaker AirPods mic + VP attenuation (~14 dB combined).
+    static let bluetoothMicGain: Float = 5.0
     /// Maximum MIDI jump (semitones) allowed between consecutive detections.
     static let maxMidiJump: Float = 12.0
     /// Time window (seconds) for evaluating MIDI jumps.
