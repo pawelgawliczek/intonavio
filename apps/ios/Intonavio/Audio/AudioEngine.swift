@@ -1,4 +1,7 @@
 import AVFoundation
+#if os(macOS)
+import CoreAudio
+#endif
 
 /// Shared AVAudioEngine wrapper that owns a single engine instance.
 /// Enables voice processing (AEC) on the input node so the microphone
@@ -40,6 +43,13 @@ final class AudioEngine {
         #endif
 
         let inputNode = engine.inputNode
+
+        #if os(macOS)
+        // macOS VP requires matching input/output hardware sample rates.
+        // Use CoreAudio HAL to set the default output device rate to match input.
+        matchOutputSampleRateToInput()
+        #endif
+
         if !inputNode.isVoiceProcessingEnabled {
             try inputNode.setVoiceProcessingEnabled(true)
             AppLogger.audio.info("Voice processing (AEC) enabled on shared engine")
@@ -230,6 +240,78 @@ private extension AudioEngine {
         default:
             break
         }
+    }
+}
+#endif
+
+// MARK: - macOS Sample Rate Matching
+
+#if os(macOS)
+private extension AudioEngine {
+    /// Set the default output device's sample rate to match the default input
+    /// device. VP creates an aggregate device and requires both sides to agree.
+    func matchOutputSampleRateToInput() {
+        guard let inputRate = hardwareSampleRate(forDefaultDevice: true),
+              let outputRate = hardwareSampleRate(forDefaultDevice: false),
+              inputRate != outputRate, inputRate > 0
+        else { return }
+
+        let outputID = defaultAudioDeviceID(input: false)
+        guard outputID != kAudioObjectUnknown else { return }
+
+        var rate = inputRate
+        var address = AudioObjectPropertyAddress(
+            mSelector: kAudioDevicePropertyNominalSampleRate,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+        let status = AudioObjectSetPropertyData(
+            outputID, &address, 0, nil,
+            UInt32(MemoryLayout<Float64>.size), &rate
+        )
+        if status == noErr {
+            AppLogger.audio.info(
+                "Set output device sample rate from \(outputRate) to \(inputRate)"
+            )
+        } else {
+            AppLogger.audio.error(
+                "Failed to set output sample rate: \(status)"
+            )
+        }
+    }
+
+    func defaultAudioDeviceID(input: Bool) -> AudioDeviceID {
+        var address = AudioObjectPropertyAddress(
+            mSelector: input
+                ? kAudioHardwarePropertyDefaultInputDevice
+                : kAudioHardwarePropertyDefaultOutputDevice,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+        var deviceID: AudioDeviceID = kAudioObjectUnknown
+        var size = UInt32(MemoryLayout<AudioDeviceID>.size)
+        AudioObjectGetPropertyData(
+            AudioObjectID(kAudioObjectSystemObject),
+            &address, 0, nil, &size, &deviceID
+        )
+        return deviceID
+    }
+
+    func hardwareSampleRate(forDefaultDevice input: Bool) -> Float64? {
+        let deviceID = defaultAudioDeviceID(input: input)
+        guard deviceID != kAudioObjectUnknown else { return nil }
+
+        var address = AudioObjectPropertyAddress(
+            mSelector: kAudioDevicePropertyNominalSampleRate,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+        var rate: Float64 = 0
+        var size = UInt32(MemoryLayout<Float64>.size)
+        let status = AudioObjectGetPropertyData(
+            deviceID, &address, 0, nil, &size, &rate
+        )
+        return status == noErr ? rate : nil
     }
 }
 #endif
