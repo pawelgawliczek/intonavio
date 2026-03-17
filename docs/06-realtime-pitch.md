@@ -148,10 +148,10 @@ Thresholds and point rewards are controlled by `DifficultyLevel` (stored in User
 
 | Category  | Beginner             | Intermediate        | Advanced            | Color  |
 | --------- | -------------------- | ------------------- | ------------------- | ------ |
-| Excellent | ±150 cents → 100 pts | ±25 cents → 100 pts | ±25 cents → 100 pts | Green  |
-| Good      | ±300 cents → 75 pts  | ±50 cents → 60 pts  | ±40 cents → 50 pts  | Yellow |
-| Fair      | ±450 cents → 40 pts  | ±75 cents → 25 pts  | ±60 cents → 20 pts  | Orange |
-| Poor      | >450 cents → 0 pts   | >75 cents → 0 pts   | >60 cents → 0 pts   | Gray   |
+| Excellent | ±150 cents → 100 pts | ±75 cents → 100 pts | ±25 cents → 100 pts | Green  |
+| Good      | ±300 cents → 75 pts  | ±150 cents → 60 pts | ±40 cents → 50 pts  | Yellow |
+| Fair      | ±450 cents → 40 pts  | ±225 cents → 25 pts | ±60 cents → 20 pts  | Orange |
+| Poor      | >450 cents → 0 pts   | >225 cents → 0 pts  | >60 cents → 0 pts   | Gray   |
 
 Piano roll zone bands visually reflect the selected difficulty (wider bands = easier). Best scores are tracked per difficulty level via a `difficulty` field on `ScoreRecord` (SwiftData).
 
@@ -414,3 +414,39 @@ When an A-B loop is active, the scoring engine provides per-pass feedback to sho
 ### MIDI Range Recalibration
 
 When a loop is activated, the piano roll's Y-axis range recalibrates to the looped section's pitch range (with ±3 semitone padding) instead of using the full song's range. This zooms in to show the relevant notes for the section being practiced. The range reverts to full-song when the loop is cleared.
+
+---
+
+## Song Score Saving
+
+Song-level scores are saved automatically when the **last phrase completes** (not at video end), so users don't have to wait through an instrumental outro. A guard prevents double-saving if `saveSongScore()` is also triggered by song end or the "Done" button.
+
+### Score Invalidation
+
+If the user **seeks** (scrubs the piano roll) or **activates a loop** (A-B markers or phrase loop) during a session, the song score is **invalidated** — it will not be recorded. This prevents skewed results from repeated or skipped sections.
+
+- `isSongScoreInvalidated` is set on `seek()`, `setMarkerB()`, and `setupPhraseLoop()`
+- A capsule banner appears on the practice screen: "Song score won't be recorded (seeked or looped)"
+- Phrase-level scores are still saved normally regardless of invalidation
+- Loop-pass scores continue to work as usual (they reset per pass)
+
+### Score Display
+
+All score displays use **percentage format** (`XX%`) consistently:
+
+- Piano roll header (`CurrentNoteView`) — running session score
+- Phrase score toast — per-phrase score after each phrase
+- Loop score toast — per-pass score during A-B loops
+- Song best toast — celebration overlay on new personal best
+- Progress sheet — best score, phrase breakdown, score history chart
+
+### Score History
+
+The Progress sheet shows two charts:
+
+1. **Score History** — Line chart of song-level scores over time (X-axis: dates, Y-axis: 0–100%)
+2. **Practice Activity** — Bar chart of practice attempts per day, with a day/week/month toggle
+
+### Global Score Reset
+
+Settings > Data > "Reset All Scores" deletes all score records across all songs and difficulties (with destructive confirmation dialog).

@@ -47,6 +47,7 @@ final class PracticeViewModel {
     var isSongNewBest = false
     var songBestScore: Double = 0
     var isSongScoreInvalidated = false
+    var isSongScoreSaved = false
     var scoreRepository: ScoreRepository?
 
     var transposedMidiMin: Float {

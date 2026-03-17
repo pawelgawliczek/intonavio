@@ -37,7 +37,8 @@ Defining all views, navigation, and layout decisions for the Intonavio singing p
    - Swipe or tap button to toggle between layouts
    - **Controls overlay**: Play/pause, A-B loop markers, stem mode selector (Original / Vocals / Instrumental), transpose picker (musical intervals from -2 octaves to +2 octaves)
    - **Loop score toast**: When A-B loop is active, a toast overlay appears after each pass showing the score percentage and improvement delta (green arrow up / red arrow down). Auto-dismisses after 2 seconds.
-   - **Progress sheet** (toolbar button, chart icon): Shows overall best score and per-phrase score breakdown. Tapping a phrase row sets up an A-B loop around that phrase (with breathing room), dismisses the sheet, and seeks to the phrase start — without auto-playing. User presses play to start the loop.
+   - **Score invalidation banner**: When the user seeks or activates a loop, a capsule at the bottom shows "Song score won't be recorded (seeked or looped)". Song score saves automatically after the last phrase; invalidated sessions skip saving.
+   - **Progress sheet** (toolbar button, chart icon): Shows score history chart (dates on X-axis), practice frequency bar chart (day/week/month toggle), overall best score, and per-phrase score breakdown. Tapping a phrase row sets up an A-B loop around that phrase (with breathing room), dismisses the sheet, and seeks to the phrase start — without auto-playing. User presses play to start the loop.
    - **YouTube video**: Non-interactive — covered by a transparent touch-blocking overlay. All playback controlled via controls bar.
    - **Piano roll**: Interactive — touch to pause, swipe to scrub with momentum, long-press to loop a phrase (see Piano Roll Touch Gestures below).
 
@@ -63,7 +64,7 @@ Defining all views, navigation, and layout decisions for the Intonavio singing p
 
 ### Settings (Tab 3)
 
-10. **Settings** — Account management, audio input selection, theme (dark/light), pitch data cache management (clear & re-download)
+10. **Settings** — Account management, audio input selection, theme (dark/light), pitch data cache management (clear & re-download), global score reset (all songs/difficulties)
 11. **Profile / Community** — User's shared exercises, stats, linked accounts
 
 ---
