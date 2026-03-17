@@ -70,6 +70,21 @@ final class ScoreRepository {
         return Array(sorted.prefix(limit))
     }
 
+    /// Fetch all score records for a song (all phrases, all difficulties), newest first.
+    func fetchAllScores(songId: String, limit: Int = 1000) -> [ScoreRecord] {
+        var descriptor = FetchDescriptor<ScoreRecord>()
+        descriptor.predicate = #Predicate<ScoreRecord> { $0.songId == songId }
+        descriptor.sortBy = [SortDescriptor(\.date, order: .reverse)]
+        descriptor.fetchLimit = limit
+
+        do {
+            return try modelContext.fetch(descriptor)
+        } catch {
+            AppLogger.pitch.error("fetchAllScores FAILED: \(error.localizedDescription)")
+            return []
+        }
+    }
+
     /// Delete all score records for a song (all phrases, all difficulties).
     func deleteAllScores(songId: String) {
         var descriptor = FetchDescriptor<ScoreRecord>()
@@ -81,6 +96,17 @@ final class ScoreRepository {
         }
         try? modelContext.save()
         AppLogger.pitch.info("Deleted \(records.count) score records for song \(songId)")
+    }
+
+    /// Delete all score records across all songs.
+    func deleteAllScoresGlobally() {
+        let descriptor = FetchDescriptor<ScoreRecord>()
+        guard let records = try? modelContext.fetch(descriptor) else { return }
+        for record in records {
+            modelContext.delete(record)
+        }
+        try? modelContext.save()
+        AppLogger.pitch.info("Deleted all \(records.count) score records globally")
     }
 
     /// Debug: total records in the store (no filters).

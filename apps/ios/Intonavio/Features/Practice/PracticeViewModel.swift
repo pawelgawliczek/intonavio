@@ -46,6 +46,7 @@ final class PracticeViewModel {
     var isPhraseNewBest = false
     var isSongNewBest = false
     var songBestScore: Double = 0
+    var isSongScoreInvalidated = false
     var scoreRepository: ScoreRepository?
 
     var transposedMidiMin: Float {
@@ -228,6 +229,7 @@ final class PracticeViewModel {
     func seek(to time: Double) {
         currentTime = time
         detectedPoints.removeAll { $0.time >= time }
+        isSongScoreInvalidated = true
         controller.seek(to: time)
         if isInStemMode {
             stemPlayer.seek(to: time)
@@ -259,6 +261,7 @@ final class PracticeViewModel {
         loopScores = []
         lastLoopScore = nil
         loopScoreImprovement = nil
+        isSongScoreInvalidated = true
 
         if let range = referenceStore.midiRange(from: a, to: currentTime) {
             loopMidiMin = range.min
@@ -283,6 +286,7 @@ final class PracticeViewModel {
     /// Adds breathing room before the phrase start so the singer can prepare.
     func setupPhraseLoop(phraseIndex: Int) {
         guard phraseIndex >= 0, phraseIndex < referenceStore.phrases.count else { return }
+        isSongScoreInvalidated = true
 
         let phrase = referenceStore.phrases[phraseIndex]
 

@@ -4,6 +4,9 @@ struct SettingsView: View {
     @Environment(AppState.self) private var appState
     @State private var viewModel = SettingsViewModel()
     @State private var pitchCacheCleared = false
+    @State private var isShowingScoreResetConfirmation = false
+    @State private var scoresCleared = false
+    @Environment(\.modelContext) private var modelContext
     @AppStorage("difficultyLevel") private var difficultyRaw = DifficultyLevel.beginner.rawValue
 
     var body: some View {
@@ -187,10 +190,36 @@ private extension SettingsView {
                 }
             }
             .disabled(pitchCacheCleared)
+
+            Button {
+                isShowingScoreResetConfirmation = true
+            } label: {
+                HStack {
+                    Text("Reset All Scores")
+                    Spacer()
+                    if scoresCleared {
+                        Text("Cleared")
+                            .foregroundStyle(Color.intonavioTextSecondary)
+                    }
+                }
+            }
+            .disabled(scoresCleared)
+            .confirmationDialog(
+                "Reset all scores?",
+                isPresented: $isShowingScoreResetConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("Reset All Scores", role: .destructive) {
+                    ScoreRepository(modelContext: modelContext).deleteAllScoresGlobally()
+                    scoresCleared = true
+                }
+            } message: {
+                Text("This will delete all scores for all songs across all difficulties. This cannot be undone.")
+            }
         } header: {
             Text("Data")
         } footer: {
-            Text("Re-downloads pitch data from the server next time you practice a song.")
+            Text("Clear Pitch Cache re-downloads pitch data next time you practice. Reset All Scores clears your score history.")
         }
     }
 

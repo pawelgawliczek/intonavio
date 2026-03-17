@@ -18,17 +18,16 @@ struct ScoreHistoryChartView: View {
 
 private extension ScoreHistoryChartView {
     var chart: some View {
-        Chart(chronological.indices, id: \.self) { index in
-            let record = chronological[index]
+        Chart(chronological) { record in
             LineMark(
-                x: .value("Attempt", index + 1),
+                x: .value("Date", record.date),
                 y: .value("Score", record.score)
             )
             .foregroundStyle(LinearGradient.intonavio)
             .interpolationMethod(.catmullRom)
 
             PointMark(
-                x: .value("Attempt", index + 1),
+                x: .value("Date", record.date),
                 y: .value("Score", record.score)
             )
             .foregroundStyle(colorForScore(record.score))
@@ -49,10 +48,11 @@ private extension ScoreHistoryChartView {
             }
         }
         .chartXAxis {
-            AxisMarks { value in
+            AxisMarks(values: .automatic(desiredCount: 4)) { value in
+                AxisGridLine()
                 AxisValueLabel {
-                    if let v = value.as(Int.self) {
-                        Text("#\(v)")
+                    if let date = value.as(Date.self) {
+                        Text(date, format: .dateTime.month(.abbreviated).day())
                             .font(.caption2)
                             .foregroundStyle(Color.intonavioTextSecondary)
                     }

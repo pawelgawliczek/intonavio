@@ -49,14 +49,9 @@ private extension CurrentNoteView {
     }
 
     var scoreDisplay: some View {
-        HStack(spacing: 4) {
-            Text("Score")
-                .font(.caption2)
-                .foregroundStyle(Color.intonavioTextSecondary)
-            Text("\(Int(score))")
-                .font(.title3.bold().monospacedDigit())
-                .foregroundStyle(scoreColor)
-        }
+        Text("\(Int(score.rounded()))%")
+            .font(.title3.bold().monospacedDigit())
+            .foregroundStyle(scoreColor)
     }
 
     func phraseIndicator(index: Int) -> some View {

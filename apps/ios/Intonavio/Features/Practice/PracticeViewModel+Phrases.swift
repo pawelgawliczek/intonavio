@@ -34,8 +34,10 @@ extension PracticeViewModel {
     }
 
     /// Save song-level score when session ends. Returns true if new best.
+    /// Skips saving if the user seeked or looped during the session.
     @discardableResult
     func saveSongScore() -> Bool {
+        guard !isSongScoreInvalidated else { return false }
         guard let engine = scoringEngine else { return false }
         engine.finalizeCurrentPhrase()
 

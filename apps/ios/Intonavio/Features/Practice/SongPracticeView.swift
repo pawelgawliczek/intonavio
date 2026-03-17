@@ -193,6 +193,14 @@ private extension SongPracticeView {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .animation(.spring(response: 0.4, dampingFraction: 0.7), value: vm.isSongNewBest)
                 }
+
+                if vm.isSongScoreInvalidated {
+                    scoreInvalidatedBanner
+                        .frame(maxHeight: .infinity, alignment: .bottom)
+                        .padding(.bottom, 120)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                        .animation(.easeInOut(duration: 0.3), value: vm.isSongScoreInvalidated)
+                }
             }
         }
     }
@@ -225,6 +233,18 @@ private extension SongPracticeView {
     func controlsSection(_ vm: PracticeViewModel) -> some View {
         ControlsBarView(viewModel: vm)
             .padding()
+    }
+
+    var scoreInvalidatedBanner: some View {
+        Label(
+            "Song score won't be recorded (seeked or looped)",
+            systemImage: "info.circle"
+        )
+        .font(.caption)
+        .foregroundStyle(Color.intonavioTextSecondary)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(Color.intonavioSurface.opacity(0.9), in: Capsule())
     }
 
     var loadingOverlay: some View {

@@ -142,6 +142,7 @@
 		7AA5321CCCEB783A4772145B /* YouTubeURLValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4E440DFF19E6DE4A7B5737D /* YouTubeURLValidator.swift */; };
 		7B71A0F36CC753563A0EF65A /* NoteMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79E86CFBEC3BBF7C1F117A5A /* NoteMapper.swift */; };
 		7B75C390E8CC15E46D6E91CE /* ScoreHistoryChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF5EECD3833A7DE48C7D639 /* ScoreHistoryChartView.swift */; };
+		B3C762B691DDBD3E6B0016CE /* PracticeFrequencyChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD447DA5547B268CE4322568 /* PracticeFrequencyChartView.swift */; };
 		7B7E38481A0C06C8A37485C9 /* PracticeViewModel+Phrases.swift in Sources */ = {isa = PBXBuildFile; fileRef = 203C906CB1D328DA6F3DC10F /* PracticeViewModel+Phrases.swift */; };
 		7BA95A089C4D5F49FEE5D146 /* J-cycle.ogg in Resources */ = {isa = PBXBuildFile; fileRef = C43C8F808C7B02819614C0C3 /* J-cycle.ogg */; };
 		7C0222DE15A046DC45F19E0C /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8436184CAD35E298A54C8C48 /* AppState.swift */; };
@@ -215,6 +216,7 @@
 		BBAC6A2DA9F98CBDF4B1700E /* CodableModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60B2C125F8F2F63801D9E99 /* CodableModelTests.swift */; };
 		BCC5E694ABE36F8492440B4C /* TokenManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7A10D37B355161804C8D491 /* TokenManager.swift */; };
 		BE5F65F0E574334E9310AFF6 /* ScoreHistoryChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF5EECD3833A7DE48C7D639 /* ScoreHistoryChartView.swift */; };
+		89D63387C9689AD6FD2F444C /* PracticeFrequencyChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD447DA5547B268CE4322568 /* PracticeFrequencyChartView.swift */; };
 		BFBABD729B100AB445B2FFA0 /* ExercisePitchGeneratorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79B2EAA4B1D7620FB45E10FD /* ExercisePitchGeneratorTests.swift */; };
 		C049C37888170FA739DFBF64 /* PianoRollGestureState.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7288B8927E632EBF1D3EAEA /* PianoRollGestureState.swift */; };
 		C1DBD05E1071319F05F7569B /* APIClientProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6ADC13DAC58FDBAE06B6FDAA /* APIClientProtocol.swift */; };
@@ -370,6 +372,7 @@
 		79B2EAA4B1D7620FB45E10FD /* ExercisePitchGeneratorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExercisePitchGeneratorTests.swift; sourceTree = "<group>"; };
 		79E86CFBEC3BBF7C1F117A5A /* NoteMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteMapper.swift; sourceTree = "<group>"; };
 		7AF5EECD3833A7DE48C7D639 /* ScoreHistoryChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreHistoryChartView.swift; sourceTree = "<group>"; };
+		FD447DA5547B268CE4322568 /* PracticeFrequencyChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeFrequencyChartView.swift; sourceTree = "<group>"; };
 		7B02866C705BCEAF0EA7B9BD /* YINDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YINDetector.swift; sourceTree = "<group>"; };
 		7CE79DBF676DB40ABC0BF92A /* PlaybackControlsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackControlsView.swift; sourceTree = "<group>"; };
 		7F1667169734EC5B97FE9F2F /* YINDetectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YINDetectorTests.swift; sourceTree = "<group>"; };
@@ -717,6 +720,7 @@
 				D8C3AD9981A7F29F12E705ED /* PhraseScoreRowView.swift */,
 				8420BFCEE4D3512CBFBBBFF3 /* ProgressLogView.swift */,
 				7AF5EECD3833A7DE48C7D639 /* ScoreHistoryChartView.swift */,
+				FD447DA5547B268CE4322568 /* PracticeFrequencyChartView.swift */,
 			);
 			path = Progress;
 			sourceTree = "<group>";
@@ -1093,6 +1097,7 @@
 				B74CE9669226A57359D41A6B /* ReferencePitchFrame.swift in Sources */,
 				492FF5E88238E96DC3F0997C /* ReferencePitchStore.swift in Sources */,
 				7B75C390E8CC15E46D6E91CE /* ScoreHistoryChartView.swift in Sources */,
+				B3C762B691DDBD3E6B0016CE /* PracticeFrequencyChartView.swift in Sources */,
 				EB3F1EDE59F57F05ABA3D951 /* ScoreRecord.swift in Sources */,
 				AE6B9C29CDE8232DC99C9837 /* ScoreRepository.swift in Sources */,
 				4E9EDB51DDD898BE6C04B921 /* ScoringEngine.swift in Sources */,
@@ -1212,6 +1217,7 @@
 				B48957EFC5802CE187D9901C /* ReferencePitchFrame.swift in Sources */,
 				CA4ACE791D70CCCE53B105D5 /* ReferencePitchStore.swift in Sources */,
 				BE5F65F0E574334E9310AFF6 /* ScoreHistoryChartView.swift in Sources */,
+				89D63387C9689AD6FD2F444C /* PracticeFrequencyChartView.swift in Sources */,
 				5E4D2F91422E1A3DF8BA1179 /* ScoreRecord.swift in Sources */,
 				6B5A6C729549F780C9FD5E82 /* ScoreRepository.swift in Sources */,
 				916BDEA5214726B7895A58C4 /* ScoringEngine.swift in Sources */,
