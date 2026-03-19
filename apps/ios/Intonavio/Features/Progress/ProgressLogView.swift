@@ -5,6 +5,7 @@ struct ProgressLogView: View {
     let songId: String
     let totalPhrases: Int
     let scoreRepository: ScoreRepository?
+    var instrumentalURL: URL?
     var onPhraseTap: ((Int) -> Void)?
 
     @State private var isShowingResetConfirmation = false
@@ -15,6 +16,7 @@ struct ProgressLogView: View {
                 scoreChartSection
                 practiceFrequencySection
                 songSummarySection
+                bestTakeSection
                 if totalPhrases > 0 {
                     phraseBreakdownSection
                 }
@@ -31,6 +33,7 @@ struct ProgressLogView: View {
             ) {
                 Button("Reset Scores", role: .destructive) {
                     scoreRepository?.deleteAllScores(songId: songId)
+                    BestTakeStorage.delete(for: songId)
                 }
             } message: {
                 Text("This will delete all phrase and song scores across all difficulties. This cannot be undone.")
@@ -77,6 +80,26 @@ private extension ProgressLogView {
                 Spacer()
                 Text("\(songAttemptCount)")
                     .font(.subheadline.monospacedDigit())
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    @ViewBuilder
+    var bestTakeSection: some View {
+        Section("Best Take") {
+            if BestTakeStorage.exists(for: songId), instrumentalURL != nil {
+                BestTakeRowView(
+                    songId: songId,
+                    instrumentalURL: instrumentalURL
+                )
+            } else if instrumentalURL == nil {
+                Text("Instrumental stem required for Best Take")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else {
+                Text("Sing the full song to save your best take")
+                    .font(.caption)
                     .foregroundStyle(.secondary)
             }
         }
@@ -149,5 +172,5 @@ private extension ProgressLogView {
 }
 
 #Preview {
-    ProgressLogView(songId: "test", totalPhrases: 5, scoreRepository: nil)
+    ProgressLogView(songId: "test", totalPhrases: 5, scoreRepository: nil, instrumentalURL: nil)
 }

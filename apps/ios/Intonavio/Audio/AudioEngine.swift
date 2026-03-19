@@ -20,6 +20,9 @@ final class AudioEngine {
     private(set) var isRunning = false
     private var isPrepared = false
 
+    /// Fan-out single input tap to multiple consumers (pitch detection + recording).
+    private(set) lazy var inputTapRouter = InputTapRouter(engine: self)
+
     /// Whether the current audio route uses Bluetooth output (e.g. AirPods).
     /// When true, voice processing (AEC) is skipped and mic gain is boosted.
     private(set) var isBluetoothRoute = false

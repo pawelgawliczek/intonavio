@@ -62,6 +62,7 @@ struct SongPracticeView: View {
                     songId: vm.songId,
                     totalPhrases: vm.totalPhrases,
                     scoreRepository: vm.scoreRepository,
+                    instrumentalURL: vm.instrumentalStemURL,
                     onPhraseTap: { phraseIndex in
                         vm.setupPhraseLoop(phraseIndex: phraseIndex)
                         isShowingProgress = false
@@ -71,6 +72,7 @@ struct SongPracticeView: View {
         }
         .onAppear { setupIfNeeded() }
         .onDisappear {
+            viewModel?.cleanupBestTakeTemp()
             viewModel?.stopPitchDetection()
             viewModel?.saveSessionIfNeeded()
             viewModel?.sync?.stop()

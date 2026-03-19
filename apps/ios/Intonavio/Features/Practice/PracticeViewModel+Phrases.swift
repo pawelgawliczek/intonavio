@@ -45,12 +45,15 @@ extension PracticeViewModel {
     func saveSongScore() -> Bool {
         guard !isSongScoreInvalidated, !isSongScoreSaved else { return false }
         guard let engine = scoringEngine else { return false }
+
+        // Set early to prevent re-entrancy: finalizeCurrentPhrase() fires
+        // onPhraseCompleted, which calls handlePhraseCompleted, which calls
+        // saveSongScore() again for the last phrase.
+        isSongScoreSaved = true
         engine.finalizeCurrentPhrase()
 
         let score = engine.overallScore
         guard score > 0 else { return false }
-
-        isSongScoreSaved = true
 
         let isNewBest = scoreRepository?.saveScore(
             songId: songId,
@@ -63,6 +66,7 @@ extension PracticeViewModel {
             songBestScore = score
         }
 
+        finalizeBestTake(isNewBest: isNewBest)
         return isNewBest
     }
 }

@@ -82,6 +82,13 @@ final class PracticeViewModel {
     let referenceStore = ReferencePitchStore()
     var scoringEngine: ScoringEngine?
 
+    // Best take recording
+    var streamingRecorder: StreamingRecorder?
+    var bestTakeStartTime: Double = 0
+    var bestTakeTempURL: URL?
+    /// Deferred until first YouTube time update, like stems.
+    var pendingBestTakeStart = false
+
     private weak var webViewRef: WKWebView?
     var loopCheckTask: Task<Void, Never>?
     var isWaitingForLoopSeek = false
@@ -187,6 +194,7 @@ final class PracticeViewModel {
         }
 
         startPitchDetection()
+        pendingBestTakeStart = streamingRecorder == nil && !isSongScoreInvalidated
 
         if markerA != nil, markerB != nil {
             loopState = .looping
@@ -199,6 +207,7 @@ final class PracticeViewModel {
     func pause() {
         isWaitingForLoopSeek = false
         pendingStemStart = false
+        pendingBestTakeStart = false
         controller.pause()
         controller.stopTimePolling()
         loopState = .paused
@@ -231,6 +240,7 @@ final class PracticeViewModel {
         currentTime = time
         detectedPoints.removeAll { $0.time >= time }
         isSongScoreInvalidated = true
+        invalidateBestTakeRecording()
         controller.seek(to: time)
         if isInStemMode {
             stemPlayer.seek(to: time)
@@ -263,6 +273,7 @@ final class PracticeViewModel {
         lastLoopScore = nil
         loopScoreImprovement = nil
         isSongScoreInvalidated = true
+        invalidateBestTakeRecording()
 
         if let range = referenceStore.midiRange(from: a, to: currentTime) {
             loopMidiMin = range.min
@@ -380,10 +391,16 @@ private extension PracticeViewModel {
     }
 
     func startStemsIfPending(at time: Double) {
-        guard pendingStemStart else { return }
-        pendingStemStart = false
-        stemPlayer.play(from: time)
-        sync?.start()
+        if pendingStemStart {
+            pendingStemStart = false
+            stemPlayer.play(from: time)
+            sync?.start()
+        }
+
+        if pendingBestTakeStart {
+            pendingBestTakeStart = false
+            startBestTakeRecording()
+        }
     }
 
     func handleAudioRouteChange() {
