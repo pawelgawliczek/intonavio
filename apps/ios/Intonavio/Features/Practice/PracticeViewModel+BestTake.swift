@@ -72,17 +72,32 @@ extension PracticeViewModel {
 
         if isNewBest {
             let session = AVAudioSession.sharedInstance()
-            let ioLatency = session.inputLatency + session.outputLatency
+            let isBluetooth = audioEngine.isBluetoothRoute
 
-            // Auto-detect sync offset by comparing first phrase time
-            // with first vocal onset in the recording.
-            let syncOffset = detectSyncOffset(
-                vocalURL: tempURL,
-                ioLatency: ioLatency
-            )
+            let ioLatency: TimeInterval
+            let syncOffset: TimeInterval
+
+            if isBluetooth {
+                // Bluetooth: reported latency is unreliable for codec delay,
+                // use onset detection to find actual vocal offset.
+                ioLatency = session.inputLatency + session.outputLatency
+                syncOffset = detectSyncOffset(
+                    vocalURL: tempURL,
+                    ioLatency: ioLatency
+                )
+            } else {
+                // Wired/built-in: I/O latency is deterministic and small (<10ms).
+                // The dominant delay is TimePitch processing latency (~1-2s):
+                // the recording starts immediately but no stem audio reaches
+                // the speakers until TimePitch fills its buffer, so the user
+                // sings that many seconds into the recording.
+                let timePitchLatency = stemPlayer.processingLatency
+                ioLatency = session.outputLatency + timePitchLatency
+                syncOffset = 0
+            }
 
             AppLogger.recording.info(
-                "Best take: ioLatency=\(ioLatency) syncOffset=\(syncOffset)"
+                "Best take: bluetooth=\(isBluetooth) ioLatency=\(ioLatency) syncOffset=\(syncOffset)"
             )
             let metadata = BestTakeMetadata(
                 startOffset: bestTakeStartTime,
