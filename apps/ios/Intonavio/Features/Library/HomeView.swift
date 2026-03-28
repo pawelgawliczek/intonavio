@@ -3,6 +3,7 @@ import SwiftUI
 struct HomeView: View {
     @Environment(AppState.self) private var appState
     @State private var viewModel = LibraryViewModel()
+    private var network: NetworkMonitor { NetworkMonitor.shared }
 
     #if os(iOS)
     private let columns = [
@@ -29,12 +30,20 @@ struct HomeView: View {
         .background(Color.intonavioBackground.ignoresSafeArea())
         .navigationTitle("Library")
         .toolbar {
+            if !network.isConnected {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Label("Offline", systemImage: "wifi.slash")
+                        .font(.caption)
+                        .foregroundStyle(Color.intonavioTextSecondary)
+                }
+            }
             ToolbarItem(placement: .primaryAction) {
                 Button {
                     viewModel.showAddSheet = true
                 } label: {
                     Image(systemName: "plus")
                 }
+                .disabled(!network.isConnected)
             }
         }
         .sheet(isPresented: $viewModel.showAddSheet) {
@@ -82,18 +91,41 @@ private extension HomeView {
     var songGrid: some View {
         LazyVGrid(columns: columns, spacing: 16) {
             ForEach(songs) { song in
-                NavigationLink(value: song.id) {
-                    SongGridItemView(song: song)
+                let isAvailableOffline = isSongAvailableOffline(song)
+                if !network.isConnected && !isAvailableOffline {
+                    SongGridItemView(
+                        song: song,
+                        isOfflineUnavailable: true
+                    )
+                } else {
+                    NavigationLink(value: song.id) {
+                        SongGridItemView(song: song)
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             }
         }
         .padding(.horizontal)
         .navigationDestination(for: String.self) { songId in
             if let song = viewModel.songs.first(where: { $0.id == songId }) {
-                SongPracticeView(songId: song.id, videoId: song.videoId, stems: song.stems, hasPitchData: song.pitchData != nil)
+                let isOffline = !network.isConnected
+                SongPracticeView(
+                    songId: song.id,
+                    videoId: song.videoId,
+                    stems: song.stems,
+                    hasPitchData: song.pitchData != nil,
+                    isOffline: isOffline,
+                    songTitle: song.title,
+                    songArtist: song.artist
+                )
             }
         }
+    }
+
+    func isSongAvailableOffline(_ song: SongResponse) -> Bool {
+        song.status == .ready
+            && StemDownloader.isCached(songId: song.id, stems: song.stems)
+            && PitchDataDownloader.isCached(songId: song.id)
     }
 
     var emptyState: some View {

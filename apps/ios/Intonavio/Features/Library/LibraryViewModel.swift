@@ -13,6 +13,7 @@ final class LibraryViewModel {
 
     private let apiClient: any APIClientProtocol
     private var pollingTask: Task<Void, Never>?
+    private let network = NetworkMonitor.shared
 
     init(apiClient: any APIClientProtocol = APIClient()) {
         self.apiClient = apiClient
@@ -36,14 +37,20 @@ final class LibraryViewModel {
         isLoading = true
         errorMessage = nil
 
-        do {
-            let response = try await apiClient.listSongs(page: 1, limit: 100)
-            songs = response.data
-            startPollingIfNeeded()
-            cacheMissingPitchData()
-        } catch {
-            errorMessage = (error as? APIError)?.message ?? error.localizedDescription
-            AppLogger.library.error("Failed to load songs: \(error.localizedDescription)")
+        if network.isConnected {
+            do {
+                let response = try await apiClient.listSongs(page: 1, limit: 100)
+                songs = response.data
+                persistSongsToCache()
+                startPollingIfNeeded()
+                cacheMissingPitchData()
+            } catch {
+                loadSongsFromCacheIfEmpty()
+                errorMessage = (error as? APIError)?.message ?? error.localizedDescription
+                AppLogger.library.error("Failed to load songs: \(error.localizedDescription)")
+            }
+        } else {
+            loadSongsFromCacheIfEmpty()
         }
 
         isLoading = false
@@ -156,6 +163,45 @@ private extension LibraryViewModel {
             return false
         }
         return true
+    }
+
+    // MARK: - Library Cache
+
+    static let libraryCacheURL: URL = {
+        let caches = FileManager.default.urls(
+            for: .cachesDirectory,
+            in: .userDomainMask
+        )[0]
+        return caches
+            .appendingPathComponent("library", isDirectory: true)
+            .appendingPathComponent("songs.json")
+    }()
+
+    func persistSongsToCache() {
+        do {
+            let dir = Self.libraryCacheURL.deletingLastPathComponent()
+            try FileManager.default.createDirectory(
+                at: dir,
+                withIntermediateDirectories: true
+            )
+            let data = try JSONEncoder().encode(songs)
+            try data.write(to: Self.libraryCacheURL)
+        } catch {
+            AppLogger.library.error(
+                "Failed to cache song library: \(error.localizedDescription)"
+            )
+        }
+    }
+
+    func loadSongsFromCacheIfEmpty() {
+        guard songs.isEmpty else { return }
+        guard let data = try? Data(contentsOf: Self.libraryCacheURL),
+              let cached = try? JSONDecoder().decode(
+                  [SongResponse].self, from: data
+              )
+        else { return }
+        songs = cached
+        AppLogger.library.info("Loaded \(cached.count) songs from cache")
     }
 
     // MARK: - Polling

@@ -132,9 +132,45 @@ Home → Scroll to Recordings → Tap [+ Import] → Select .m4a file → Analyz
 Home → Exercises → Browse Community → Search/filter → Add to library → Practice
 ```
 
+### Offline Practice
+
+```
+[No network] → Home (cached library, "Offline" badge) → Tap cached song → Offline Song Practice (fullscreen pitch-only) → Stems play → Pitch detection → Score
+```
+
+Songs without cached stems/pitch are dimmed with "Not downloaded" label and not tappable.
+
 ---
 
 ## Practice Screen Detail
+
+### Song Practice Layout (Offline)
+
+When offline, `SongPracticeView` hides the YouTube video and shows a fullscreen pitch-only layout:
+
+```
+┌─────────────────────────────┐
+│  Song Title — Artist  [Offline] Done │
+├─────────────────────────────┤
+│                             │
+│   Piano Roll Pitch Graph    │
+│   (fullscreen, same as      │
+│    online pitch-focused)    │
+│          ~85%               │
+│                             │
+├─────────────────────────────┤
+│ ▶  LoopA LoopB  Stems  T   │
+│      [controls bar]        │
+└─────────────────────────────┘
+```
+
+Key differences from online practice:
+
+- No YouTube video — header shows song title, artist, and "Offline" label
+- `StemPlayer` is the master clock (timer polls `stemPlayer.currentTime` at 50fps)
+- No `VideoAudioSync` — stems run independently
+- All controls (loop, speed, audio mode, transpose) work identically
+- Auto-detected via `NetworkMonitor` — no user action needed
 
 ### Song Practice Layout (Toggleable)
 

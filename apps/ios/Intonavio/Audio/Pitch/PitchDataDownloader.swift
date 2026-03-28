@@ -56,7 +56,7 @@ enum PitchDataDownloader {
         AppLogger.pitch.info("All pitch data cache cleared")
     }
 
-    private static func cacheURL(for songId: String) -> URL {
+    static func cacheURL(for songId: String) -> URL {
         let caches = fileManager.urls(
             for: .cachesDirectory,
             in: .userDomainMask

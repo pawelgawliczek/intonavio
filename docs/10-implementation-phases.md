@@ -59,8 +59,13 @@ gantt
     File Import (Voice Memos)           :rec-import, after rec-practice, 3d
     Recording Polish + Testing          :rec-test, after rec-import, 3d
 
+    section Offline Practice
+    NetworkMonitor + Library caching    :offline-net, after rec-test, 2d
+    Offline PracticeVM + View           :offline-vm, after offline-net, 3d
+    HomeView offline indicators         :offline-ui, after offline-vm, 1d
+
     section macOS
-    macOS Target from iOS Codebase      :macos, after rec-test, 10d
+    macOS Target from iOS Codebase      :macos, after offline-ui, 10d
 ```
 
 ## Phase Dependency Graph
@@ -81,7 +86,8 @@ graph LR
     WebApp --> WebPitch[Web Pitch<br/>AudioWorklet]
 
     iOSPitch --> InstrRec[Instrument Recording<br/>Record + Analyze + Practice]
-    InstrRec --> macOS[macOS<br/>Shared codebase]
+    InstrRec --> Offline[Offline Practice<br/>Cached stems + pitch-only]
+    Offline --> macOS[macOS<br/>Shared codebase]
 ```
 
 ---
@@ -327,6 +333,33 @@ graph LR
 - Note editor edits persist to SwiftData
 - Recording deletion removes both data and audio files
 - All existing tests continue to pass (no regressions from shared `AudioEngine` changes)
+
+---
+
+### Phase 6.6: Offline Practice
+
+**Goal:** Allow users to practice previously-loaded songs without internet connectivity using cached stems and pitch data.
+
+> **Status:** Complete.
+
+**Deliverables:**
+
+- `NetworkMonitor` singleton (`@Observable`, `NWPathMonitor`): detects connectivity changes, used by `AppState`, `LibraryViewModel`, `HomeView`, `SongPracticeView`.
+- `LibraryViewModel` song library caching: persists last API response to `~/Library/Caches/library/songs.json`, loads from cache when offline or API fails.
+- `StemDownloader.isCached(songId:stems:)`: static method checking all stem files exist locally in `~/Library/Caches/stems/{songId}/`.
+- `PitchDataDownloader.cacheURL(for:)`: exposed as internal (was private) for offline availability checks.
+- `PracticeViewModel.isOffline` mode: timer-driven time updates (50fps polling `stemPlayer.currentTime`), `StemPlayer` as master clock, no YouTube server/bridge/controller/sync, simplified loop transitions.
+- `SongPracticeView` offline layout: hides YouTube video, shows fullscreen piano roll with song title/artist header and "Offline" label. All controls (loop, speed, audio mode, transpose, scoring) work identically.
+- `HomeView` offline indicators: "Offline" toolbar badge (`wifi.slash`), dimmed unavailable songs with "Not downloaded" label, disabled "Add Song" button, automatic routing to offline practice.
+- `AppState` offline auth tolerance: skips token refresh when offline, preserves auth state on refresh failure.
+
+**Quality gates:**
+
+- Build succeeds (0 errors, 0 new warnings)
+- Online practice unchanged — `isOffline` defaults to `false`
+- Exercises and recordings continue to work offline as before
+- Songs with cached stems + pitch data are tappable offline
+- Songs without cached data are visually distinguished and not tappable
 
 ---
 

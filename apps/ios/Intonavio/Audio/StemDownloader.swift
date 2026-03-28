@@ -56,6 +56,23 @@ final class StemDownloader {
         return localFile
     }
 
+    /// Check if all stems for a song are already cached locally.
+    static func isCached(songId: String, stems: [StemResponse]) -> Bool {
+        guard !stems.isEmpty else { return false }
+        let caches = FileManager.default.urls(
+            for: .cachesDirectory,
+            in: .userDomainMask
+        )[0]
+        let dir = caches.appendingPathComponent("stems")
+            .appendingPathComponent(songId)
+
+        return stems.allSatisfy { stem in
+            let fileName = "\(stem.type.rawValue.lowercased()).mp3"
+            let path = dir.appendingPathComponent(fileName).path
+            return FileManager.default.fileExists(atPath: path)
+        }
+    }
+
     /// Remove cached stems for a song.
     func clearCache(songId: String) {
         let dir = cacheDir.appendingPathComponent(songId)

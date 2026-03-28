@@ -10,7 +10,9 @@ extension PracticeViewModel {
         guard mode != audioMode else { return }
 
         guard isStemsReady else {
-            downloadStemsAndSwitch(to: mode)
+            if !isOffline {
+                downloadStemsAndSwitch(to: mode)
+            }
             return
         }
 
@@ -18,26 +20,28 @@ extension PracticeViewModel {
         let resumeTime = currentTime
 
         if wasPlaying {
-            sync?.stop()
             stemPlayer.stop()
+            if !isOffline { sync?.stop() }
         }
 
-        // Mute YouTube once stems are ready (for songs with FULL stem)
-        if hasFullStem && !isMuted {
-            controller.mute()
-            isMuted = true
-        }
-
-        // Legacy fallback: songs without FULL stem use YouTube for original mode
-        if !hasFullStem {
-            if mode == .original {
-                switchToOriginal()
-                audioMode = mode
-                return
-            }
-            if audioMode == .original && !isMuted {
+        if !isOffline {
+            // Mute YouTube once stems are ready (for songs with FULL stem)
+            if hasFullStem && !isMuted {
                 controller.mute()
                 isMuted = true
+            }
+
+            // Legacy fallback: songs without FULL stem use YouTube for original mode
+            if !hasFullStem {
+                if mode == .original {
+                    switchToOriginal()
+                    audioMode = mode
+                    return
+                }
+                if audioMode == .original && !isMuted {
+                    controller.mute()
+                    isMuted = true
+                }
             }
         }
 
@@ -47,7 +51,7 @@ extension PracticeViewModel {
 
         if wasPlaying {
             stemPlayer.play(from: resumeTime)
-            sync?.start()
+            if !isOffline { sync?.start() }
         }
     }
 

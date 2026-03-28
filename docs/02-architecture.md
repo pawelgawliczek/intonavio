@@ -213,5 +213,5 @@ Worker fails → Job marked FAILED in DB → song.errorMessage set
 - Clients are renderers of server state. The API is the source of truth. Clients fetch, display, and send user actions. No client-side business logic that duplicates server logic.
 - Exception: real-time pitch detection runs client-side for latency reasons. Scoring can be verified server-side if needed.
 - Exception: guitar recording pitch analysis runs client-side (offline YIN) because recordings are short (<30s), the signal is clean, and it avoids a server round-trip. See `docs/17-instrument-recording.md`.
-- Offline tolerance, not offline-first. Cache the last-fetched song list and stems for playback without network. Don't build a sync engine.
+- Offline tolerance, not offline-first. Cache the last-fetched song list and stems for playback without network. Don't build a sync engine. When offline: `NetworkMonitor` (NWPathMonitor) detects connectivity, `LibraryViewModel` loads songs from cached JSON, `SongPracticeView` uses fullscreen pitch-only layout (no YouTube), `StemPlayer` is the master clock via timer polling, auth tokens are preserved without refresh.
 - One API client wrapper per platform. iOS has `APIClient`, Web has `apiClient` — typed, centralized, handles auth token refresh. No scattered `fetch()` calls.

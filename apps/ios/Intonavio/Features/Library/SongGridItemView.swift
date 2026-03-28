@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SongGridItemView: View {
     let song: SongResponse
+    var isOfflineUnavailable = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -14,6 +15,18 @@ struct SongGridItemView: View {
             RoundedRectangle(cornerRadius: 12)
                 .strokeBorder(Color.white.opacity(0.1), lineWidth: 0.5)
         )
+        .opacity(isOfflineUnavailable ? 0.4 : 1.0)
+        .overlay(alignment: .bottom) {
+            if isOfflineUnavailable {
+                Text("Not downloaded")
+                    .font(.caption2)
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(Color.black.opacity(0.7), in: Capsule())
+                    .padding(.bottom, 8)
+            }
+        }
     }
 }
 

@@ -34,6 +34,9 @@ final class AppState {
 
         isAuthenticated = true
 
+        // Skip token refresh when offline — keep existing auth state
+        guard NetworkMonitor.shared.isConnected else { return }
+
         Task { @MainActor in
             await refreshTokenInBackground()
         }
@@ -84,8 +87,11 @@ private extension AppState {
             AppLogger.auth.info("Token refreshed successfully")
         } catch {
             AppLogger.auth.warning("Token refresh failed: \(error.localizedDescription)")
-            tokenManager.clearTokens()
-            isAuthenticated = false
+            // Don't sign out when offline — tokens may still be valid
+            if NetworkMonitor.shared.isConnected {
+                tokenManager.clearTokens()
+                isAuthenticated = false
+            }
         }
     }
 }

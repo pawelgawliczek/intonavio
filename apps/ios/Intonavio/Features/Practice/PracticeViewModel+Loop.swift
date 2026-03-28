@@ -40,6 +40,14 @@ extension PracticeViewModel {
         if currentTime >= b - 0.05 {
             captureLoopScore()
             detectedPoints.removeAll()
+            loopCount += 1
+
+            if isOffline {
+                // Offline: just restart stems from marker A.
+                stemPlayer.stop()
+                stemPlayer.play(from: a)
+                return
+            }
 
             // Stop everything for a clean loop transition.
             controller.pause()
@@ -51,7 +59,6 @@ extension PracticeViewModel {
             // Seek YouTube while paused, then restart both in sync.
             controller.seek(to: a)
             isWaitingForLoopSeek = true
-            loopCount += 1
 
             let targetA = a
             Task { @MainActor in

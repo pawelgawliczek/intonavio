@@ -6,6 +6,9 @@ struct SongPracticeView: View {
     var videoId: String = ""
     var stems: [StemResponse] = []
     var hasPitchData: Bool = false
+    var isOffline: Bool = false
+    var songTitle: String = ""
+    var songArtist: String?
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
@@ -40,8 +43,11 @@ struct SongPracticeView: View {
                     Button("Done") {
                         vm.saveSongScore()
                         vm.stopPitchDetection()
-                        vm.saveSessionIfNeeded()
-                        vm.server.stop()
+                        vm.stopOfflineTimer()
+                        if !isOffline {
+                            vm.saveSessionIfNeeded()
+                            vm.server.stop()
+                        }
                         dismiss()
                     }
                 }
@@ -74,10 +80,13 @@ struct SongPracticeView: View {
         .onDisappear {
             viewModel?.cleanupBestTakeTemp()
             viewModel?.stopPitchDetection()
-            viewModel?.saveSessionIfNeeded()
-            viewModel?.sync?.stop()
+            viewModel?.stopOfflineTimer()
+            if !isOffline {
+                viewModel?.saveSessionIfNeeded()
+                viewModel?.sync?.stop()
+                viewModel?.server.stop()
+            }
             viewModel?.stemPlayer.teardown()
-            viewModel?.server.stop()
             viewModel?.audioEngine.shutdown()
         }
     }
@@ -145,7 +154,9 @@ private extension View {
 private extension SongPracticeView {
     func practiceContent(_ vm: PracticeViewModel) -> some View {
         ZStack {
-            if vm.isPitchReady {
+            if vm.isOffline {
+                offlineLayout(vm)
+            } else if vm.isPitchReady {
                 pitchLayout(vm)
             } else {
                 standardLayout(vm)
@@ -155,6 +166,76 @@ private extension SongPracticeView {
                 loadingOverlay
             }
         }
+    }
+
+    /// Offline layout: no video, fullscreen piano roll with song header.
+    func offlineLayout(_ vm: PracticeViewModel) -> some View {
+        GeometryReader { geometry in
+            ZStack(alignment: .top) {
+                VStack(spacing: 0) {
+                    offlineSongHeader
+                    Divider()
+                    PianoRollSection(viewModel: vm)
+                    Divider()
+                    controlsSection(vm)
+                }
+
+                if vm.isShowingLoopScore, let score = vm.lastLoopScore {
+                    LoopScoreToastView(
+                        score: score,
+                        change: vm.loopScoreImprovement
+                    )
+                    .padding(.top, 56)
+                    .animation(.easeInOut(duration: 0.3), value: vm.isShowingLoopScore)
+                }
+
+                if vm.isShowingPhraseScore, let score = vm.currentPhraseScore {
+                    PhraseScoreToastView(
+                        score: score,
+                        phraseIndex: vm.currentPhraseIndex ?? 0,
+                        totalPhrases: vm.totalPhrases,
+                        isNewBest: vm.isPhraseNewBest
+                    )
+                    .padding(.top, 56)
+                    .animation(.spring(response: 0.4, dampingFraction: 0.7), value: vm.isShowingPhraseScore)
+                }
+
+                if vm.isSongNewBest {
+                    SongBestToastView(score: vm.songBestScore)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .animation(.spring(response: 0.4, dampingFraction: 0.7), value: vm.isSongNewBest)
+                }
+
+                if vm.isSongScoreInvalidated {
+                    scoreInvalidatedBanner
+                        .frame(maxHeight: .infinity, alignment: .bottom)
+                        .padding(.bottom, 120)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                        .animation(.easeInOut(duration: 0.3), value: vm.isSongScoreInvalidated)
+                }
+            }
+        }
+    }
+
+    var offlineSongHeader: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(songTitle.isEmpty ? "Offline Practice" : songTitle)
+                    .font(.headline)
+                    .lineLimit(1)
+                if let artist = songArtist, !artist.isEmpty {
+                    Text(artist)
+                        .font(.caption)
+                        .foregroundStyle(Color.intonavioTextSecondary)
+                }
+            }
+            Spacer()
+            Label("Offline", systemImage: "wifi.slash")
+                .font(.caption)
+                .foregroundStyle(Color.intonavioTextSecondary)
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 8)
     }
 
     /// Layout when pitch detection is active: video + piano roll split.
@@ -347,15 +428,24 @@ private struct PianoRollSection: View {
 private extension SongPracticeView {
     func setupIfNeeded() {
         guard viewModel == nil else { return }
-        let vm = PracticeViewModel(songId: songId, videoId: videoId)
+        let vm = PracticeViewModel(
+            songId: songId,
+            videoId: videoId,
+            isOffline: isOffline
+        )
         vm.stems = stems
         vm.scoreRepository = ScoreRepository(modelContext: modelContext)
         vm.configure()
         vm.preloadStems()
-        vm.downloadPitchDataIfNeeded(
-            hasPitchData: hasPitchData,
-            apiClient: APIClient()
-        )
+
+        if isOffline {
+            vm.setDurationFromStems()
+        } else {
+            vm.downloadPitchDataIfNeeded(
+                hasPitchData: hasPitchData,
+                apiClient: APIClient()
+            )
+        }
         viewModel = vm
     }
 }

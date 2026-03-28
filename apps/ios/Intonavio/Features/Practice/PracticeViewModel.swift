@@ -1,3 +1,4 @@
+import AVFoundation
 import Foundation
 import WebKit
 
@@ -20,6 +21,11 @@ final class PracticeViewModel {
     var audioMode: AudioMode = .original
     var isDownloadingStems = false
     var isStemsReady = false
+
+    // Offline mode
+    let isOffline: Bool
+    private var offlineTimer: Timer?
+    private let offlineTimerInterval: TimeInterval = 0.02
 
     // Pitch
     var isPitchReady = false
@@ -117,10 +123,12 @@ final class PracticeViewModel {
     init(
         songId: String,
         videoId: String,
-        sessionsViewModel: SessionsViewModel? = nil
+        sessionsViewModel: SessionsViewModel? = nil,
+        isOffline: Bool = false
     ) {
         self.songId = songId
         self.videoId = videoId
+        self.isOffline = isOffline
         self.server = YouTubeLocalServer(videoId: videoId)
         self.stemPlayer = StemPlayer(engine: audioEngine)
         self.sessionsViewModel = sessionsViewModel
@@ -128,7 +136,8 @@ final class PracticeViewModel {
 
     deinit {
         loopCheckTask?.cancel()
-        server.stop()
+        offlineTimer?.invalidate()
+        if !isOffline { server.stop() }
         audioEngine.stop()
     }
 
@@ -146,13 +155,21 @@ final class PracticeViewModel {
         }
         #endif
 
+        scoringEngine = ScoringEngine(referenceStore: referenceStore)
+        loadPitchDataIfAvailable()
+        setupPhraseScoring()
+
+        if isOffline {
+            // Offline: no YouTube, stems are the master clock.
+            // Duration is set after stems are loaded.
+            isPlayerReady = true
+            return
+        }
+
         sync = VideoAudioSync(
             controller: controller,
             stemPlayer: stemPlayer
         )
-        scoringEngine = ScoringEngine(referenceStore: referenceStore)
-        loadPitchDataIfAvailable()
-        setupPhraseScoring()
         bridge.onEvent = { [weak self] event in
             self?.handleEvent(event)
         }
@@ -177,9 +194,28 @@ final class PracticeViewModel {
     // MARK: - Playback Controls
 
     func play() {
+        playStartTime = playStartTime ?? Date()
+
+        if isOffline {
+            stemPlayer.play(from: currentTime)
+            startOfflineTimer()
+            startPitchDetection()
+            pendingBestTakeStart = streamingRecorder == nil && !isSongScoreInvalidated
+            if pendingBestTakeStart {
+                pendingBestTakeStart = false
+                startBestTakeRecording()
+            }
+            if markerA != nil, markerB != nil {
+                loopState = .looping
+                startLoopCheck()
+            } else {
+                loopState = .playing
+            }
+            return
+        }
+
         controller.play()
         controller.startTimePolling(intervalMs: 50)
-        playStartTime = playStartTime ?? Date()
 
         // Mute YouTube from the first play when FULL stem is available
         if hasFullStem && isStemsReady && !isMuted {
@@ -208,11 +244,18 @@ final class PracticeViewModel {
         isWaitingForLoopSeek = false
         pendingStemStart = false
         pendingBestTakeStart = false
-        controller.pause()
-        controller.stopTimePolling()
         loopState = .paused
         stopLoopCheck()
         stopPitchDetection()
+
+        if isOffline {
+            stemPlayer.pause()
+            stopOfflineTimer()
+            return
+        }
+
+        controller.pause()
+        controller.stopTimePolling()
 
         if isInStemMode {
             stemPlayer.pause()
@@ -223,12 +266,19 @@ final class PracticeViewModel {
     func stop() {
         isWaitingForLoopSeek = false
         pendingStemStart = false
-        controller.stop()
-        controller.stopTimePolling()
         loopState = .idle
         stopLoopCheck()
         clearLoop()
         stopPitchDetection()
+
+        if isOffline {
+            stemPlayer.stop()
+            stopOfflineTimer()
+            return
+        }
+
+        controller.stop()
+        controller.stopTimePolling()
 
         if isInStemMode {
             stemPlayer.stop()
@@ -241,6 +291,12 @@ final class PracticeViewModel {
         detectedPoints.removeAll { $0.time >= time }
         isSongScoreInvalidated = true
         invalidateBestTakeRecording()
+
+        if isOffline {
+            stemPlayer.seek(to: time)
+            return
+        }
+
         controller.seek(to: time)
         if isInStemMode {
             stemPlayer.seek(to: time)
@@ -249,9 +305,9 @@ final class PracticeViewModel {
 
     func setSpeed(_ rate: Double) {
         playbackRate = rate
-        controller.setPlaybackRate(rate)
-        if isInStemMode {
-            stemPlayer.rate = Float(rate)
+        stemPlayer.rate = Float(rate)
+        if !isOffline {
+            controller.setPlaybackRate(rate)
         }
     }
 
@@ -316,16 +372,21 @@ final class PracticeViewModel {
         // Stop stems, pitch detection, sync, and loop checking
         isWaitingForLoopSeek = false
         pendingStemStart = false
-        controller.stopTimePolling()
         stopLoopCheck()
         stopPitchDetection()
-        if isInStemMode {
+
+        if isOffline {
             stemPlayer.stop()
-            sync?.stop()
+            stopOfflineTimer()
+        } else {
+            controller.stopTimePolling()
+            if isInStemMode {
+                stemPlayer.stop()
+                sync?.stop()
+            }
+            controller.pauseAndSeek(to: loopStart)
         }
 
-        // Atomic pause + seek so YouTube doesn't resume from the seek
-        controller.pauseAndSeek(to: loopStart)
         currentTime = loopStart
         loopState = .paused
 
@@ -358,6 +419,70 @@ final class PracticeViewModel {
         stopLoopCheck()
         if loopState == .looping || loopState == .settingA {
             loopState = .playing
+        }
+    }
+}
+
+// MARK: - Offline Timer
+
+extension PracticeViewModel {
+    func startOfflineTimer() {
+        stopOfflineTimer()
+        offlineTimer = Timer.scheduledTimer(
+            withTimeInterval: offlineTimerInterval,
+            repeats: true
+        ) { [weak self] _ in
+            self?.offlineTick()
+        }
+    }
+
+    func stopOfflineTimer() {
+        offlineTimer?.invalidate()
+        offlineTimer = nil
+    }
+
+    /// Set duration from loaded stem audio files.
+    func setDurationFromStems() {
+        // Use the FULL stem if available, otherwise any stem
+        let preferred: [StemType] = [.full, .vocals, .instrumental]
+        let caches = FileManager.default.urls(
+            for: .cachesDirectory,
+            in: .userDomainMask
+        )[0]
+        let stemDir = caches
+            .appendingPathComponent("stems", isDirectory: true)
+            .appendingPathComponent(songId, isDirectory: true)
+
+        for type in preferred {
+            guard stems.contains(where: { $0.type == type }) else { continue }
+            let url = stemDir.appendingPathComponent(
+                "\(type.rawValue.lowercased()).mp3"
+            )
+            guard let file = try? AVAudioFile(forReading: url) else { continue }
+            duration = Double(file.length) / file.processingFormat.sampleRate
+            AppLogger.audio.info("Offline duration from \(type.rawValue): \(self.duration)s")
+            return
+        }
+    }
+
+    private func offlineTick() {
+        guard let time = stemPlayer.currentTime(for: .full)
+            ?? stemPlayer.currentTime(for: .vocals)
+            ?? stemPlayer.currentTime(for: .instrumental) else {
+            return
+        }
+
+        // Adjust for TimePitch latency (same as playbackStartOffset in StemPlayer)
+        let adjusted = time - stemPlayer.processingLatency
+        currentTime = max(0, adjusted)
+
+        checkLoopBoundary()
+
+        // Handle end of song
+        if currentTime >= duration - 0.1 {
+            stop()
+            loopState = .idle
+            saveSongScore()
         }
     }
 }
@@ -404,8 +529,22 @@ private extension PracticeViewModel {
     }
 
     func handleAudioRouteChange() {
-        guard isInStemMode else { return }
         let isPlaying = loopState == .playing || loopState == .looping
+
+        if isOffline {
+            guard isPlaying else {
+                stemPlayer.applyMode(audioMode)
+                return
+            }
+            stemPlayer.stop()
+            stemPlayer.applyMode(audioMode)
+            stemPlayer.rate = Float(playbackRate)
+            stemPlayer.play(from: currentTime)
+            AppLogger.audio.info("Re-synced stems after route change (offline)")
+            return
+        }
+
+        guard isInStemMode else { return }
 
         guard isPlaying else {
             stemPlayer.applyMode(audioMode)
