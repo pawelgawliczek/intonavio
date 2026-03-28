@@ -19,6 +19,10 @@ struct PianoRollView: View {
     var phraseIndex: Int?
     var totalPhrases: Int = 0
 
+    // Lyrics
+    var currentLyricLine: String?
+    var nextLyricLine: String?
+
     // Gesture support
     var gestureState: PianoRollGestureState?
     var momentumEngine: PianoRollMomentumEngine?
@@ -41,6 +45,13 @@ struct PianoRollView: View {
                     phraseIndex: phraseIndex,
                     totalPhrases: totalPhrases
                 )
+
+                if currentLyricLine != nil || nextLyricLine != nil {
+                    LyricsOverlayView(
+                        currentLine: currentLyricLine,
+                        nextLine: nextLyricLine
+                    )
+                }
 
                 canvasWithGestures
             } else {

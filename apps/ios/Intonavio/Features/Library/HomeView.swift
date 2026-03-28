@@ -116,7 +116,8 @@ private extension HomeView {
                     hasPitchData: song.pitchData != nil,
                     isOffline: isOffline,
                     songTitle: song.title,
-                    songArtist: song.artist
+                    songArtist: song.artist,
+                    songDuration: song.duration
                 )
             }
         }

@@ -9,6 +9,7 @@ struct SongPracticeView: View {
     var isOffline: Bool = false
     var songTitle: String = ""
     var songArtist: String?
+    var songDuration: Int = 0
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
@@ -393,6 +394,8 @@ private struct PianoRollSection: View {
             zones: DifficultyLevel.current.zones,
             phraseIndex: viewModel.scoringEngine?.currentPhraseIndex,
             totalPhrases: viewModel.totalPhrases,
+            currentLyricLine: viewModel.lyricsProvider.currentLine(at: displayTime)?.text,
+            nextLyricLine: viewModel.lyricsProvider.nextLine(at: displayTime)?.text,
             gestureState: gestureState,
             momentumEngine: momentumEngine,
             songDuration: viewModel.duration,
@@ -446,6 +449,13 @@ private extension SongPracticeView {
                 apiClient: APIClient()
             )
         }
+
+        vm.fetchLyricsIfNeeded(
+            title: songTitle,
+            artist: songArtist,
+            duration: songDuration
+        )
+
         viewModel = vm
     }
 }

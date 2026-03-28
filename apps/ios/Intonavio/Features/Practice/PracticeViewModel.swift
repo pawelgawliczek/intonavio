@@ -88,6 +88,9 @@ final class PracticeViewModel {
     let referenceStore = ReferencePitchStore()
     var scoringEngine: ScoringEngine?
 
+    // Lyrics
+    let lyricsProvider = LyricsProvider()
+
     // Best take recording
     var streamingRecorder: StreamingRecorder?
     var bestTakeStartTime: Double = 0
