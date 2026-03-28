@@ -26,6 +26,7 @@
 		1681626AD31A43F10FE81A9A /* ExercisePracticeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C682B6234C631299654F8E6B /* ExercisePracticeViewModel.swift */; };
 		175238CFD858B0BB9074A7DE /* RecordingNoteEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C764FAFFCE4019F4DC0AF560 /* RecordingNoteEditorView.swift */; };
 		18239F3DCE0A3FD281D951F4 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9637DFE1383806910AB44110 /* Logger.swift */; };
+		A1B2C3D4E5F60718293A4B5C /* CachedAsyncImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4E5F6071829A1B2C3D43A5B /* CachedAsyncImage.swift */; };
 		B270D8D033F84EEF7CEF8366 /* NetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38EA2F9D38AA9D171B4A1142 /* NetworkMonitor.swift */; };
 		194450C21A694DB1898475D3 /* Bond.mid in Resources */ = {isa = PBXBuildFile; fileRef = 08BD7DCD9FD56215DD6F470D /* Bond.mid */; };
 		198BA39B9BA1880F2E251B82 /* RecordingAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6511BDB635B73F471F95B591 /* RecordingAnalyzer.swift */; };
@@ -420,6 +421,7 @@
 		940557B2DD52D2A827EF2330 /* GeneralUser-GS.sf2 */ = {isa = PBXFileReference; path = "GeneralUser-GS.sf2"; sourceTree = "<group>"; };
 		9599FF7799AB1A9E728BE069 /* PitchDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchDetector.swift; sourceTree = "<group>"; };
 		9637DFE1383806910AB44110 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
+		D4E5F6071829A1B2C3D43A5B /* CachedAsyncImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachedAsyncImage.swift; sourceTree = "<group>"; };
 		38EA2F9D38AA9D171B4A1142 /* NetworkMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkMonitor.swift; sourceTree = "<group>"; };
 		96771944D29E6114AD258E69 /* AddSongSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddSongSheet.swift; sourceTree = "<group>"; };
 		97CBE0920EF935138DF6FC7C /* MetronomeTick.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetronomeTick.swift; sourceTree = "<group>"; };
@@ -637,6 +639,7 @@
 			children = (
 				FD06120A65578A080033C797 /* DriftLogger.swift */,
 				9637DFE1383806910AB44110 /* Logger.swift */,
+				D4E5F6071829A1B2C3D43A5B /* CachedAsyncImage.swift */,
 				38EA2F9D38AA9D171B4A1142 /* NetworkMonitor.swift */,
 				DB8A307C4CE851A699727E97 /* PlatformColors.swift */,
 				2E9321A422E306664C50F59E /* PlatformModifiers.swift */,
@@ -1107,6 +1110,7 @@
 				C6A862208DB98DAB56DD5C32 /* IntonavioApp.swift in Sources */,
 				3542BD3F32FE3A60186475BD /* LibraryViewModel.swift in Sources */,
 				18239F3DCE0A3FD281D951F4 /* Logger.swift in Sources */,
+				A1B2C3D4E5F60718293A4B5C /* CachedAsyncImage.swift in Sources */,
 				B270D8D033F84EEF7CEF8366 /* NetworkMonitor.swift in Sources */,
 				B71DCC9D91AF341C853CFC1E /* LoopControlsView.swift in Sources */,
 				22403B6DC6484694DDF81E04 /* LoopScoreToastView.swift in Sources */,

@@ -69,6 +69,17 @@ Defining all views, navigation, and layout decisions for the Intonavio singing p
 
 ---
 
+## App Launch Flow
+
+On launch, `ContentView` shows a branded launch screen (waveform icon + "Intonavio" text on dark background) while `AppState.restoreAuth()` checks Keychain for valid tokens. Once auth state is resolved, the app transitions directly to either:
+
+- **Authenticated**: Tab bar with library (songs loaded instantly from disk cache, network refresh in background)
+- **Not authenticated**: Full-screen sign-in cover
+
+`LibraryViewModel` eagerly loads the song list from its JSON cache (`~/Library/Caches/library/songs.json`) during `init()`, so the library is never empty on a returning user's launch. The network fetch runs in the background and silently updates the list. The loading spinner only shows when there is no cached data.
+
+---
+
 ## Navigation Structure (iOS)
 
 ```

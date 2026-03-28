@@ -84,12 +84,10 @@ struct ContentView: View {
     private var launchScreen: some View {
         ZStack {
             Color.intonavioBackground.ignoresSafeArea()
-            VStack(spacing: 16) {
-                Image("AppIconImage")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 80, height: 80)
-                    .clipShape(RoundedRectangle(cornerRadius: 18))
+            VStack(spacing: 12) {
+                Image(systemName: "waveform.path")
+                    .font(.system(size: 48))
+                    .foregroundStyle(Color.intonavioIce)
                 Text("Intonavio")
                     .font(.title2)
                     .fontWeight(.bold)

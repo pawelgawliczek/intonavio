@@ -34,33 +34,12 @@ struct SongGridItemView: View {
 
 private extension SongGridItemView {
     var thumbnail: some View {
-        AsyncImage(url: URL(string: song.thumbnailUrl)) { phase in
-            switch phase {
-            case .success(let image):
-                image
-                    .resizable()
-                    .aspectRatio(16 / 9, contentMode: .fill)
-            case .failure:
-                placeholder
-            default:
-                placeholder.overlay { ProgressView() }
-            }
-        }
-        .frame(height: 100)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-        .overlay(alignment: .topTrailing) {
-            SongStatusBadge(status: song.status.rawValue)
-                .padding(6)
-        }
-    }
-
-    var placeholder: some View {
-        RoundedRectangle(cornerRadius: 8)
-            .fill(Color.intonavioSurface)
-            .aspectRatio(16 / 9, contentMode: .fit)
-            .overlay {
-                Image(systemName: "music.note")
-                    .foregroundStyle(Color.intonavioTextSecondary)
+        CachedAsyncImage(url: URL(string: song.thumbnailUrl))
+            .frame(height: 100)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .overlay(alignment: .topTrailing) {
+                SongStatusBadge(status: song.status.rawValue)
+                    .padding(6)
             }
     }
 

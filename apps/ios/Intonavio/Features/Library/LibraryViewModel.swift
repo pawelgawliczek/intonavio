@@ -17,6 +17,7 @@ final class LibraryViewModel {
 
     init(apiClient: any APIClientProtocol = APIClient()) {
         self.apiClient = apiClient
+        loadSongsFromCache()
     }
 
     deinit {
@@ -34,7 +35,8 @@ final class LibraryViewModel {
 
     @MainActor
     func loadSongs() async {
-        isLoading = true
+        let hasCachedSongs = !songs.isEmpty
+        isLoading = !hasCachedSongs
         errorMessage = nil
 
         if network.isConnected {
@@ -45,12 +47,12 @@ final class LibraryViewModel {
                 startPollingIfNeeded()
                 cacheMissingPitchData()
             } catch {
-                loadSongsFromCacheIfEmpty()
+                loadSongsFromCache()
                 errorMessage = (error as? APIError)?.message ?? error.localizedDescription
                 AppLogger.library.error("Failed to load songs: \(error.localizedDescription)")
             }
         } else {
-            loadSongsFromCacheIfEmpty()
+            loadSongsFromCache()
         }
 
         isLoading = false
@@ -193,8 +195,7 @@ private extension LibraryViewModel {
         }
     }
 
-    func loadSongsFromCacheIfEmpty() {
-        guard songs.isEmpty else { return }
+    func loadSongsFromCache() {
         guard let data = try? Data(contentsOf: Self.libraryCacheURL),
               let cached = try? JSONDecoder().decode(
                   [SongResponse].self, from: data
