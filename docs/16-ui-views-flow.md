@@ -32,9 +32,9 @@ Defining all views, navigation, and layout decisions for the Intonavio singing p
 ### Practice
 
 6. **Song Practice** — Full-screen, toggleable layout between two modes:
-   - **Lyrics-focused**: Video ~65%, pitch graph ~35%
-   - **Pitch-focused**: Video ~25% (small strip), pitch graph ~75%
-   - Swipe or tap button to toggle between layouts
+   - **Lyrics mode (default)**: Lyrics panel ~35%, piano roll ~65%. Video hidden but running for audio sync.
+   - **Video mode**: YouTube video ~40%, piano roll ~60%. Small lyrics overlay on piano roll.
+   - Tap button in controls bar to toggle between lyrics/video
    - **Controls overlay**: Play/pause, A-B loop markers, stem mode selector (Original / Vocals / Instrumental), transpose picker (musical intervals from -2 octaves to +2 octaves)
    - **Loop score toast**: When A-B loop is active, a toast overlay appears after each pass showing the score percentage and improvement delta (green arrow up / red arrow down). Auto-dismisses after 2 seconds.
    - **Score invalidation banner**: When the user seeks or activates a loop, a capsule at the bottom shows "Song score won't be recorded (seeked or looped)". Song score saves automatically after the last phrase; invalidated sessions skip saving.
@@ -174,38 +174,42 @@ Key differences from online practice:
 
 ### Song Practice Layout (Toggleable)
 
-**Lyrics-focused mode:**
+**Lyrics mode (default):**
 
 ```
 ┌─────────────────────────────┐
 │                             │
-│     YouTube Video           │
-│     (lyrics visible)        │
-│          ~65%               │
+│   ♪ previous line (dimmed)  │
+│   Current lyric line (bold) │  ~35%
+│   Next line (dimmed)        │
 │                             │
 ├─────────────────────────────┤
-│  Piano Roll Pitch Graph     │
-│  [ref bands + user line]    │
-│          ~35%               │
+│                             │
+│   Piano Roll Pitch Graph    │
+│   [ref bands + user line]   │  ~65%
+│   Current note: C4  +5¢    │
+│                             │
 ├─────────────────────────────┤
 │ ▶  LoopA LoopB  Stems  T    │
 │      [controls bar]         │
 └─────────────────────────────┘
 ```
 
-**Pitch-focused mode:**
+YouTube video is hidden but running in zero-size frame for audio sync. When no lyrics are available, the lyrics panel shows "No lyrics available" with a hint to switch to video mode.
+
+**Video mode:**
 
 ```
 ┌─────────────────────────────┐
-│  Small video strip    ~25%  │
-│  [touch-blocked overlay]    │
-├─────────────────────────────┤
 │                             │
+│     YouTube Video     ~40%  │
+│  [touch-blocked overlay]    │
+│                             │
+├─────────────────────────────┤
+│   [current lyric | next]    │  ← small overlay
 │   Piano Roll Pitch Graph    │
-│   [Loop Score Toast: 78%↑5] │
-│   [ref bands + user line]   │
+│   [ref bands + user line]   │  ~60%
 │   Current note: C4  +5¢    │
-│          ~75%               │
 │                             │
 ├─────────────────────────────┤
 │ ▶  LoopA LoopB  Stems  T    │

@@ -5,6 +5,7 @@ import SwiftUI
 @Observable
 final class AppState {
     var isAuthenticated = false
+    var isRestoringAuth = true
     var selectedTab: Tab = .library
     var currentUser: AuthUser?
 
@@ -27,6 +28,8 @@ final class AppState {
 
     /// Check Keychain for tokens on launch and verify validity.
     func restoreAuth() {
+        defer { isRestoringAuth = false }
+
         guard tokenManager.hasValidTokens else {
             isAuthenticated = false
             return

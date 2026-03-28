@@ -136,10 +136,12 @@ private extension LyricsProvider {
         artist: String?,
         duration: Int
     ) async throws -> String {
-        // Try exact match first
+        let cleanTitle = Self.cleanYouTubeTitle(title)
+
+        // Try exact match with cleaned title
         if let artist, !artist.isEmpty {
             if let lrc = try? await fetchExact(
-                title: title,
+                title: cleanTitle,
                 artist: artist,
                 duration: duration
             ) {
@@ -147,8 +149,37 @@ private extension LyricsProvider {
             }
         }
 
-        // Fall back to search
-        return try await fetchSearch(title: title, artist: artist)
+        // Search with title + artist
+        if let lrc = try? await fetchSearch(
+            title: cleanTitle, artist: artist
+        ) {
+            return lrc
+        }
+
+        // Search with title only (artist from YouTube is often wrong)
+        return try await fetchSearch(title: cleanTitle, artist: nil)
+    }
+
+    /// Strip common YouTube video title suffixes to improve LRCLIB matching.
+    static func cleanYouTubeTitle(_ title: String) -> String {
+        var cleaned = title
+        let patterns = [
+            #"\s*\((?:Official\s+)?(?:Lyrics?|Video|Audio|Music\s+Video|Visualizer|Live)\)"#,
+            #"\s*\[(?:Official\s+)?(?:Lyrics?|Video|Audio|Music\s+Video|Visualizer|Live)\]"#,
+            #"\s*-\s*(?:Official\s+)?(?:Lyrics?\s+Video|Music\s+Video|Audio)"#,
+            #"\s*\|\s*(?:Official\s+)?(?:Lyrics?\s+Video|Music\s+Video|Audio)"#,
+        ]
+        for pattern in patterns {
+            if let regex = try? NSRegularExpression(
+                pattern: pattern, options: .caseInsensitive
+            ) {
+                let range = NSRange(cleaned.startIndex..., in: cleaned)
+                cleaned = regex.stringByReplacingMatches(
+                    in: cleaned, range: range, withTemplate: ""
+                )
+            }
+        }
+        return cleaned.trimmingCharacters(in: .whitespaces)
     }
 
     func fetchExact(

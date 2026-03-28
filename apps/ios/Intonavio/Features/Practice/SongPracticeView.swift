@@ -178,51 +178,25 @@ private extension SongPracticeView {
         }
     }
 
-    /// Offline layout: no video, fullscreen piano roll with song header.
+    /// Offline layout: no video, lyrics panel or song header + piano roll.
     func offlineLayout(_ vm: PracticeViewModel) -> some View {
         GeometryReader { geometry in
             ZStack(alignment: .top) {
                 VStack(spacing: 0) {
-                    offlineSongHeader
+                    if vm.lyricsProvider.hasLyrics {
+                        LyricsPanelSection(viewModel: vm)
+                            .frame(height: geometry.size.height * 0.35)
+                    } else {
+                        offlineSongHeader
+                    }
                     Divider()
                     PianoRollSection(viewModel: vm)
                     Divider()
                     controlsSection(vm)
                 }
 
-                if vm.isShowingLoopScore, let score = vm.lastLoopScore {
-                    LoopScoreToastView(
-                        score: score,
-                        change: vm.loopScoreImprovement
-                    )
-                    .padding(.top, 56)
-                    .animation(.easeInOut(duration: 0.3), value: vm.isShowingLoopScore)
-                }
-
-                if vm.isShowingPhraseScore, let score = vm.currentPhraseScore {
-                    PhraseScoreToastView(
-                        score: score,
-                        phraseIndex: vm.currentPhraseIndex ?? 0,
-                        totalPhrases: vm.totalPhrases,
-                        isNewBest: vm.isPhraseNewBest
-                    )
-                    .padding(.top, 56)
-                    .animation(.spring(response: 0.4, dampingFraction: 0.7), value: vm.isShowingPhraseScore)
-                }
-
-                if vm.isSongNewBest {
-                    SongBestToastView(score: vm.songBestScore)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .animation(.spring(response: 0.4, dampingFraction: 0.7), value: vm.isSongNewBest)
-                }
-
-                if vm.isSongScoreInvalidated {
-                    scoreInvalidatedBanner
-                        .frame(maxHeight: .infinity, alignment: .bottom)
-                        .padding(.bottom, 120)
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
-                        .animation(.easeInOut(duration: 0.3), value: vm.isSongScoreInvalidated)
-                }
+                toastOverlays(vm, topOffset: vm.lyricsProvider.hasLyrics
+                    ? geometry.size.height * 0.35 + 12 : 56)
             }
         }
     }
@@ -248,52 +222,83 @@ private extension SongPracticeView {
         .padding(.vertical, 8)
     }
 
-    /// Layout when pitch detection is active: video + piano roll split.
-    func pitchLayout(_ vm: PracticeViewModel) -> some View {
+    /// Layout with YouTube video on top, piano roll below.
+    func videoLayout(_ vm: PracticeViewModel) -> some View {
         GeometryReader { geometry in
+            let topHeight = geometry.size.height * vm.layoutMode.topFraction
             ZStack(alignment: .top) {
                 VStack(spacing: 0) {
                     videoPlayer(vm)
-                        .frame(height: geometry.size.height * vm.layoutMode.videoFraction)
+                        .frame(height: topHeight)
                     Divider()
                     PianoRollSection(viewModel: vm)
                     Divider()
                     controlsSection(vm)
                 }
 
-                if vm.isShowingLoopScore, let score = vm.lastLoopScore {
-                    LoopScoreToastView(
-                        score: score,
-                        change: vm.loopScoreImprovement
-                    )
-                    .padding(.top, geometry.size.height * vm.layoutMode.videoFraction + 12)
-                    .animation(.easeInOut(duration: 0.3), value: vm.isShowingLoopScore)
+                toastOverlays(vm, topOffset: topHeight + 12)
+            }
+        }
+    }
+
+    /// Layout with lyrics panel on top, piano roll below, video hidden.
+    func lyricsLayout(_ vm: PracticeViewModel) -> some View {
+        GeometryReader { geometry in
+            let topHeight = geometry.size.height * vm.layoutMode.topFraction
+            ZStack(alignment: .top) {
+                VStack(spacing: 0) {
+                    LyricsPanelSection(viewModel: vm)
+                        .frame(height: topHeight)
+                    Divider()
+                    PianoRollSection(viewModel: vm)
+                    Divider()
+                    controlsSection(vm)
                 }
 
-                if vm.isShowingPhraseScore, let score = vm.currentPhraseScore {
-                    PhraseScoreToastView(
-                        score: score,
-                        phraseIndex: vm.currentPhraseIndex ?? 0,
-                        totalPhrases: vm.totalPhrases,
-                        isNewBest: vm.isPhraseNewBest
-                    )
-                    .padding(.top, geometry.size.height * vm.layoutMode.videoFraction + 12)
-                    .animation(.spring(response: 0.4, dampingFraction: 0.7), value: vm.isShowingPhraseScore)
-                }
+                // Hidden video player for audio sync
+                videoPlayer(vm)
+                    .frame(width: 0, height: 0)
+                    .opacity(0)
 
-                if vm.isSongNewBest {
-                    SongBestToastView(score: vm.songBestScore)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .animation(.spring(response: 0.4, dampingFraction: 0.7), value: vm.isSongNewBest)
-                }
+                toastOverlays(vm, topOffset: topHeight + 12)
+            }
+        }
+    }
 
-                if vm.isSongScoreInvalidated {
-                    scoreInvalidatedBanner
-                        .frame(maxHeight: .infinity, alignment: .bottom)
-                        .padding(.bottom, 120)
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
-                        .animation(.easeInOut(duration: 0.3), value: vm.isSongScoreInvalidated)
-                }
+    func toastOverlays(_ vm: PracticeViewModel, topOffset: CGFloat) -> some View {
+        ZStack(alignment: .top) {
+            if vm.isShowingLoopScore, let score = vm.lastLoopScore {
+                LoopScoreToastView(
+                    score: score,
+                    change: vm.loopScoreImprovement
+                )
+                .padding(.top, topOffset)
+                .animation(.easeInOut(duration: 0.3), value: vm.isShowingLoopScore)
+            }
+
+            if vm.isShowingPhraseScore, let score = vm.currentPhraseScore {
+                PhraseScoreToastView(
+                    score: score,
+                    phraseIndex: vm.currentPhraseIndex ?? 0,
+                    totalPhrases: vm.totalPhrases,
+                    isNewBest: vm.isPhraseNewBest
+                )
+                .padding(.top, topOffset)
+                .animation(.spring(response: 0.4, dampingFraction: 0.7), value: vm.isShowingPhraseScore)
+            }
+
+            if vm.isSongNewBest {
+                SongBestToastView(score: vm.songBestScore)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .animation(.spring(response: 0.4, dampingFraction: 0.7), value: vm.isSongNewBest)
+            }
+
+            if vm.isSongScoreInvalidated {
+                scoreInvalidatedBanner
+                    .frame(maxHeight: .infinity, alignment: .bottom)
+                    .padding(.bottom, 120)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .animation(.easeInOut(duration: 0.3), value: vm.isSongScoreInvalidated)
             }
         }
     }
@@ -479,8 +484,10 @@ private struct PianoRollSection: View {
             zones: DifficultyLevel.current.zones,
             phraseIndex: viewModel.scoringEngine?.currentPhraseIndex,
             totalPhrases: viewModel.totalPhrases,
-            currentLyricLine: viewModel.lyricsProvider.currentLine(at: displayTime)?.text,
-            nextLyricLine: viewModel.lyricsProvider.nextLine(at: displayTime)?.text,
+            currentLyricLine: viewModel.layoutMode == .video
+                ? viewModel.lyricsProvider.currentLine(at: displayTime)?.text : nil,
+            nextLyricLine: viewModel.layoutMode == .video
+                ? viewModel.lyricsProvider.nextLine(at: displayTime)?.text : nil,
             gestureState: gestureState,
             momentumEngine: momentumEngine,
             songDuration: viewModel.duration,
@@ -508,6 +515,46 @@ private struct PianoRollSection: View {
                 gestureState.exitBrowsing()
             }
         }
+    }
+}
+
+// MARK: - Lyrics Panel (isolated observation)
+
+/// Separate View for lyrics panel so currentTime observation is scoped here.
+private struct LyricsPanelSection: View {
+    let viewModel: PracticeViewModel
+
+    var body: some View {
+        let time = viewModel.currentTime
+        let provider = viewModel.lyricsProvider
+
+        if provider.hasLyrics {
+            LyricsPanelView(
+                previousLine: provider.previousLine(at: time)?.text,
+                currentLine: provider.currentLine(at: time)?.text,
+                nextLine: provider.nextLine(at: time)?.text
+            )
+        } else {
+            lyricsUnavailable
+        }
+    }
+
+    private var lyricsUnavailable: some View {
+        VStack(spacing: 6) {
+            Spacer()
+            Image(systemName: "text.quote")
+                .font(.title2)
+                .foregroundStyle(Color.intonavioIce.opacity(0.5))
+            Text("No lyrics available")
+                .font(.subheadline)
+                .foregroundStyle(Color.intonavioTextSecondary)
+            Text("Tap the video icon to switch to video mode")
+                .font(.caption)
+                .foregroundStyle(Color.intonavioTextSecondary.opacity(0.7))
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.intonavioBackground)
     }
 }
 

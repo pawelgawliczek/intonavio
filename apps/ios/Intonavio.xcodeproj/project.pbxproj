@@ -305,6 +305,8 @@
 		CC4444444444444444444444 /* LyricsOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA4444444444444444444444 /* LyricsOverlayView.swift */; };
 		BB5555555555555555555555 /* PracticeViewModel+Lyrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA5555555555555555555555 /* PracticeViewModel+Lyrics.swift */; };
 		CC5555555555555555555555 /* PracticeViewModel+Lyrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA5555555555555555555555 /* PracticeViewModel+Lyrics.swift */; };
+		BB6666666666666666666666 /* LyricsPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6666666666666666666666 /* LyricsPanelView.swift */; };
+		CC6666666666666666666666 /* LyricsPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6666666666666666666666 /* LyricsPanelView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -486,6 +488,7 @@
 		AA3333333333333333333333 /* LyricsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricsProvider.swift; sourceTree = "<group>"; };
 		AA4444444444444444444444 /* LyricsOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricsOverlayView.swift; sourceTree = "<group>"; };
 		AA5555555555555555555555 /* PracticeViewModel+Lyrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PracticeViewModel+Lyrics.swift"; sourceTree = "<group>"; };
+		AA6666666666666666666666 /* LyricsPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricsPanelView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -522,6 +525,7 @@
 			children = (
 				1D10B56668E742CB8F91899B /* CurrentNoteView.swift */,
 				AA4444444444444444444444 /* LyricsOverlayView.swift */,
+				AA6666666666666666666666 /* LyricsPanelView.swift */,
 				1963E3CB41E9D646E77D19FC /* DetectedPitchPoint.swift */,
 				2EC025290DC1018DE1D65290 /* PianoRollCanvas.swift */,
 				15B73F3AD21F72C9381C0A13 /* PianoRollGestureOverlay.swift */,
@@ -1195,6 +1199,7 @@
 				BB3333333333333333333333 /* LyricsProvider.swift in Sources */,
 				BB4444444444444444444444 /* LyricsOverlayView.swift in Sources */,
 				BB5555555555555555555555 /* PracticeViewModel+Lyrics.swift in Sources */,
+				BB6666666666666666666666 /* LyricsPanelView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1320,6 +1325,7 @@
 				CC3333333333333333333333 /* LyricsProvider.swift in Sources */,
 				CC4444444444444444444444 /* LyricsOverlayView.swift in Sources */,
 				CC5555555555555555555555 /* PracticeViewModel+Lyrics.swift in Sources */,
+				CC6666666666666666666666 /* LyricsPanelView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

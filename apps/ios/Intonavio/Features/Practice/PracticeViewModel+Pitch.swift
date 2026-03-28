@@ -50,7 +50,7 @@ extension PracticeViewModel {
         do {
             try referenceStore.load(from: url)
             isPitchReady = true
-            layoutMode = .pitchFocused
+            layoutMode = .lyrics
             AppLogger.pitch.info("Reference pitch loaded for practice")
         } catch {
             isPitchReady = false
