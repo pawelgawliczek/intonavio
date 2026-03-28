@@ -64,8 +64,12 @@ gantt
     Offline PracticeVM + View           :offline-vm, after offline-net, 3d
     HomeView offline indicators         :offline-ui, after offline-vm, 1d
 
+    section Lyrics Overlay
+    LRC parser + LyricsProvider         :lyrics-core, after offline-ui, 1d
+    LyricsOverlayView + PianoRoll wire  :lyrics-ui, after lyrics-core, 1d
+
     section macOS
-    macOS Target from iOS Codebase      :macos, after offline-ui, 10d
+    macOS Target from iOS Codebase      :macos, after lyrics-ui, 10d
 ```
 
 ## Phase Dependency Graph
@@ -87,7 +91,8 @@ graph LR
 
     iOSPitch --> InstrRec[Instrument Recording<br/>Record + Analyze + Practice]
     InstrRec --> Offline[Offline Practice<br/>Cached stems + pitch-only]
-    Offline --> macOS[macOS<br/>Shared codebase]
+    Offline --> Lyrics[Lyrics Overlay<br/>LRCLIB synced lyrics]
+    Lyrics --> macOS[macOS<br/>Shared codebase]
 ```
 
 ---
@@ -360,6 +365,33 @@ graph LR
 - Exercises and recordings continue to work offline as before
 - Songs with cached stems + pitch data are tappable offline
 - Songs without cached data are visually distinguished and not tappable
+
+---
+
+### Phase 6.7: Lyrics Overlay
+
+**Goal:** Display karaoke-style synced lyrics on the piano roll during song practice, sourced from LRCLIB (free, no auth).
+
+> **Status:** Complete.
+
+**Deliverables:**
+
+- `LyricLine` model: timestamped lyric line struct (`time: Double`, `text: String`).
+- `LRCParser`: parses LRC format (`[mm:ss.xx] text`) into sorted `[LyricLine]` array using `NSRegularExpression`. Handles centiseconds and milliseconds, skips metadata tags and blank lines.
+- `LyricsProvider` (`@Observable`): fetches synced lyrics from LRCLIB API (exact match via `/api/get`, fallback to `/api/search`), caches raw LRC text to `~/Library/Caches/lyrics/{songId}.lrc`, provides `currentLine(at:)` and `nextLine(at:)` via binary search (O(log n) at ~50fps).
+- `LyricsOverlayView`: compact two-line display (40pt height) — current line bold white, next line dimmed caption. Inserted between `CurrentNoteView` and `PianoRollCanvas` in `PianoRollView`.
+- `PracticeViewModel+Lyrics` extension: triggers lyrics fetch during practice setup (cache check first, then async LRCLIB call).
+- Graceful degradation: no lyrics found → no overlay shown. Works offline from cache.
+- No server-side changes — fully client-side feature.
+
+**Quality gates:**
+
+- Build succeeds (0 errors)
+- Lyrics display correctly in all layouts: lyrics-focused, pitch-focused, and offline
+- Lyrics advance in sync with playback time
+- Scrubbing/seeking updates lyrics position
+- Cached lyrics load without network
+- Songs without LRCLIB match show no overlay, no errors
 
 ---
 

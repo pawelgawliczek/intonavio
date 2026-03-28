@@ -1,14 +1,14 @@
 import Foundation
 
-/// Controls the video/pitch split ratio in practice view.
+/// Controls the top panel in practice view: lyrics panel or video.
 enum PracticeLayoutMode: String, CaseIterable, Sendable {
-    case lyricsFocused  // 65% video, 35% pitch
-    case pitchFocused   // 25% video, 75% pitch
+    case lyrics   // Lyrics panel + piano roll (default)
+    case video    // YouTube video + piano roll
 
-    var videoFraction: CGFloat {
+    var topFraction: CGFloat {
         switch self {
-        case .lyricsFocused: return 0.65
-        case .pitchFocused: return 0.25
+        case .lyrics: return 0.35
+        case .video: return 0.40
         }
     }
 }

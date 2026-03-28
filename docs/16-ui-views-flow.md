@@ -237,6 +237,30 @@ IDLE → [touch] → TOUCHING (pause, start 1s timer)
   MOMENTUM → [touch] → TOUCHING (stop engine, re-pause)
 ```
 
+### Lyrics Overlay
+
+When synced lyrics are available (fetched from LRCLIB on practice open, cached locally), a compact two-line overlay appears between `CurrentNoteView` and the piano roll canvas:
+
+```
+┌─────────────────────────────┐
+│  C4  +5¢    Phrase 3/12  85% │  ← CurrentNoteView
+├─────────────────────────────┤
+│  Hello darkness, my old friend │  ← current line (bold white)
+│  I've come to talk with you    │  ← next line (dimmed)
+├─────────────────────────────┤
+│   Piano Roll Canvas          │
+│   [ref bands + user line]    │
+└─────────────────────────────┘
+```
+
+- **Height**: 40pt fixed — minimal impact on piano roll space
+- **Current line**: `.subheadline.bold()`, white, `lineLimit(1)` with `minimumScaleFactor(0.7)`
+- **Next line**: `.caption`, `Color.intonavioTextSecondary`, same constraints
+- **Background**: `Color.intonavioBackground.opacity(0.85)`
+- **No lyrics**: overlay is not rendered (conditional on `currentLyricLine != nil || nextLyricLine != nil`)
+- **Lookup**: binary search on sorted `[LyricLine]` array, O(log n), runs at display refresh rate (~50fps) via `PianoRollSection`'s isolated observation scope
+- **Works in all layouts**: lyrics-focused, pitch-focused, offline
+
 ### Pitch Visualization Modes (toggle via segmented control on graph)
 
 | Mode         | Reference Display              | User Display                                 | Feel                |

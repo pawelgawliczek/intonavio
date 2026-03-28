@@ -88,18 +88,22 @@ private extension PracticeViewModel {
     func performStemDownload() async {
         guard !isDownloadingStems else { return }
         isDownloadingStems = true
+        stemsDownloadedCount = 0
 
         do {
             var stemFiles: [(type: StemType, url: URL)] = []
             for stem in stems {
+                stemDownloadDetail = stem.type.rawValue.lowercased()
                 let url = try await stemDownloader.localURL(
                     songId: songId,
                     stemId: stem.id,
                     stemType: stem.type
                 )
                 stemFiles.append((type: stem.type, url: url))
+                stemsDownloadedCount += 1
             }
 
+            stemDownloadDetail = nil
             try stemPlayer.setup(stems: stemFiles)
             isStemsReady = true
             let count = stemFiles.count
@@ -112,6 +116,7 @@ private extension PracticeViewModel {
                 stemPlayer.applyMode(audioMode)
             }
         } catch {
+            stemDownloadDetail = nil
             AppLogger.audio.error(
                 "Stem download failed: \(error.localizedDescription)"
             )

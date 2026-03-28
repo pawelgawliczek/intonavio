@@ -37,6 +37,7 @@ Existing karaoke apps use limited licensed catalogs. Intonavio leverages YouTube
 | **Exercises**                  | Pre-built vocal exercises (scales, arpeggios, intervals, vibrato, breathing) with community sharing                                                 |
 | **Instrument Recording**       | Record notes from any instrument (guitar, piano, etc.) or import from Voice Memos, auto-analyze pitch, and use as custom vocal exercises            |
 | **Toggleable Practice Layout** | Switch between lyrics-focused (video 65%, pitch 35%) and pitch-focused (video 25%, pitch 75%) modes                                                 |
+| **Lyrics Overlay**             | Automatic karaoke-style synced lyrics from LRCLIB displayed on the piano roll — current line bold, next line dimmed, cached for offline use         |
 | **Offline Practice**           | Practice previously-loaded songs without internet — cached stems + pitch data drive a fullscreen piano roll layout, auto-detected via NWPathMonitor |
 
 ## Platform Strategy

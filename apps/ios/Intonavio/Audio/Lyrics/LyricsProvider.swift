@@ -46,6 +46,16 @@ final class LyricsProvider {
         return lines[index + 1]
     }
 
+    /// The lyric line before the current one.
+    func previousLine(at time: Double) -> LyricLine? {
+        guard let current = currentLine(at: time),
+              let index = lines.firstIndex(where: { $0.time == current.time }),
+              index > 0 else {
+            return nil
+        }
+        return lines[index - 1]
+    }
+
     // MARK: - Fetch & Cache
 
     /// Load lyrics from cache or fetch from LRCLIB.

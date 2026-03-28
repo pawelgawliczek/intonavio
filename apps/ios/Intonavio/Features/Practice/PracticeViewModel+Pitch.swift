@@ -70,6 +70,7 @@ extension PracticeViewModel {
             return
         }
 
+        isPitchLoading = true
         Task {
             do {
                 _ = try await PitchDataDownloader.localURL(
@@ -77,9 +78,11 @@ extension PracticeViewModel {
                     apiClient: apiClient
                 )
                 await MainActor.run {
+                    isPitchLoading = false
                     loadPitchDataIfAvailable()
                 }
             } catch {
+                await MainActor.run { isPitchLoading = false }
                 AppLogger.pitch.error(
                     "Failed to download pitch data: \(error.localizedDescription)"
                 )

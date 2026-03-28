@@ -102,16 +102,14 @@ private extension ControlsBarView {
     }
 
     var layoutToggle: some View {
-        Button {
+        let isVideo = viewModel.layoutMode == .video
+        return Button {
             withAnimation(.easeInOut(duration: 0.25)) {
-                viewModel.layoutMode = viewModel.layoutMode == .lyricsFocused
-                    ? .pitchFocused
-                    : .lyricsFocused
+                viewModel.layoutMode = isVideo ? .lyrics : .video
             }
         } label: {
-            Image(systemName: viewModel.layoutMode == .pitchFocused
-                  ? "rectangle.topthird.inset.filled"
-                  : "rectangle.bottomthird.inset.filled")
+            Image(systemName: isVideo
+                  ? "text.quote" : "play.rectangle.fill")
                 .font(.body)
                 .frame(width: 34, height: 34)
                 .foregroundStyle(Color.intonavioTextSecondary)

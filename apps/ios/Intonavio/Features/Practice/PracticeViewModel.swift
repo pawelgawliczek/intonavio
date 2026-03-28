@@ -21,6 +21,8 @@ final class PracticeViewModel {
     var audioMode: AudioMode = .original
     var isDownloadingStems = false
     var isStemsReady = false
+    var stemDownloadDetail: String?
+    var stemsDownloadedCount: Int = 0
 
     // Offline mode
     let isOffline: Bool
@@ -29,7 +31,8 @@ final class PracticeViewModel {
 
     // Pitch
     var isPitchReady = false
-    var layoutMode: PracticeLayoutMode = .lyricsFocused
+    var isPitchLoading = false
+    var layoutMode: PracticeLayoutMode = .lyrics
     var visualizationMode: VisualizationMode = .zonesLine
     var detectedPoints: [DetectedPitchPoint] = []
     var transposeSemitones: Int = 0

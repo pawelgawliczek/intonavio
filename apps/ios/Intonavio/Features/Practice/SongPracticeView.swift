@@ -31,7 +31,12 @@ struct SongPracticeView: View {
             if let vm = viewModel {
                 practiceContent(vm)
             } else {
-                ProgressView("Loading...")
+                ZStack {
+                    Color.intonavioBackground
+                    ProgressView()
+                        .controlSize(.large)
+                }
+                .ignoresSafeArea()
             }
         }
         .navigationTitle("Practice")
@@ -157,14 +162,18 @@ private extension SongPracticeView {
         ZStack {
             if vm.isOffline {
                 offlineLayout(vm)
+            } else if vm.isPitchReady && vm.layoutMode == .lyrics {
+                lyricsLayout(vm)
             } else if vm.isPitchReady {
-                pitchLayout(vm)
+                videoLayout(vm)
             } else {
                 standardLayout(vm)
             }
 
             if !vm.isPlayerReady {
                 loadingOverlay
+                    .transition(.opacity)
+                    .animation(.easeOut(duration: 0.3), value: vm.isPlayerReady)
             }
         }
     }
@@ -334,15 +343,91 @@ private extension SongPracticeView {
     var loadingOverlay: some View {
         ZStack {
             Color.intonavioBackground.opacity(0.85)
-            VStack(spacing: 12) {
+            if let vm = viewModel {
+                loadingChecklist(vm)
+            } else {
                 ProgressView()
                     .controlSize(.large)
-                Text("Preparing player...")
-                    .font(.subheadline)
-                    .foregroundStyle(Color.intonavioTextSecondary)
             }
         }
         .ignoresSafeArea()
+    }
+
+    func loadingChecklist(_ vm: PracticeViewModel) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Setting up practice")
+                .font(.headline)
+                .padding(.bottom, 4)
+
+            if !vm.isOffline {
+                loadingRow(
+                    label: "Player",
+                    isLoading: !vm.isPlayerReady,
+                    isDone: vm.isPlayerReady
+                )
+            }
+
+            if !vm.stems.isEmpty {
+                loadingRow(
+                    label: stemLabel(vm),
+                    isLoading: vm.isDownloadingStems,
+                    isDone: vm.isStemsReady
+                )
+            }
+
+            if hasPitchData {
+                loadingRow(
+                    label: "Pitch data",
+                    isLoading: vm.isPitchLoading,
+                    isDone: vm.isPitchReady
+                )
+            }
+
+            loadingRow(
+                label: "Lyrics",
+                isLoading: vm.lyricsProvider.isLoading,
+                isDone: vm.lyricsProvider.hasLyrics
+            )
+        }
+        .padding(24)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.intonavioSurface)
+        )
+        .padding(.horizontal, 40)
+    }
+
+    func stemLabel(_ vm: PracticeViewModel) -> String {
+        if vm.isStemsReady { return "Audio" }
+        guard let detail = vm.stemDownloadDetail else { return "Audio" }
+        return "Audio (\(detail) \(vm.stemsDownloadedCount + 1)/\(vm.stems.count))"
+    }
+
+    func loadingRow(
+        label: String,
+        isLoading: Bool,
+        isDone: Bool
+    ) -> some View {
+        HStack(spacing: 10) {
+            if isDone {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(.green)
+                    .font(.body)
+            } else if isLoading {
+                ProgressView()
+                    .controlSize(.small)
+                    .frame(width: 17, height: 17)
+            } else {
+                Image(systemName: "circle")
+                    .foregroundStyle(Color.intonavioTextSecondary.opacity(0.4))
+                    .font(.body)
+            }
+            Text(label)
+                .font(.subheadline)
+                .foregroundStyle(isDone
+                    ? Color.intonavioTextSecondary
+                    : Color.primary)
+        }
     }
 }
 
