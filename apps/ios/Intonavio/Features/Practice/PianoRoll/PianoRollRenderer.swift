@@ -97,6 +97,24 @@ enum PianoRollRenderer {
         }
         guard filtered.count >= 2 else { return }
 
+        // Draw glow pass for excellent segments so they pop against the green zone
+        for i in 1..<filtered.count {
+            let prev = filtered[i - 1]
+            let curr = filtered[i]
+            guard curr.time - prev.time < 0.1 else { continue }
+            guard curr.accuracy == .excellent else { continue }
+
+            let x1 = CGFloat((prev.time - timeRange.lowerBound) / timeSpan) * rect.width
+            let y1 = rect.height - CGFloat((prev.midi - midiRange.lowerBound) / midiSpan) * rect.height
+            let x2 = CGFloat((curr.time - timeRange.lowerBound) / timeSpan) * rect.width
+            let y2 = rect.height - CGFloat((curr.midi - midiRange.lowerBound) / midiSpan) * rect.height
+
+            var glow = Path()
+            glow.move(to: CGPoint(x: x1, y: y1))
+            glow.addLine(to: CGPoint(x: x2, y: y2))
+            context.stroke(glow, with: .color(curr.accuracy.color.opacity(0.4)), lineWidth: 6)
+        }
+
         // Draw segments with per-point color
         for i in 1..<filtered.count {
             let prev = filtered[i - 1]

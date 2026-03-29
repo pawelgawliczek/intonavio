@@ -29,7 +29,7 @@ enum PitchAccuracy: Sendable {
 
     var color: Color {
         switch self {
-        case .excellent: return .green
+        case .excellent: return Color(red: 0.4, green: 1.0, blue: 0.8) // Bright cyan-green
         case .good: return .yellow
         case .fair: return .orange
         case .poor: return .gray.opacity(0.5)
