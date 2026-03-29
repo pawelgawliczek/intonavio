@@ -8,6 +8,7 @@ struct SettingsView: View {
     @State private var scoresCleared = false
     @Environment(\.modelContext) private var modelContext
     @AppStorage("difficultyLevel") private var difficultyRaw = DifficultyLevel.beginner.rawValue
+    @AppStorage("useFixedPitchRange") private var useFixedPitchRange = false
 
     var body: some View {
         List {
@@ -15,6 +16,7 @@ struct SettingsView: View {
             audioInputSection
             guideToneSection
             difficultySection
+            pianoRollSection
             dataSection
             aboutSection
             #if DEBUG
@@ -171,6 +173,26 @@ private extension SettingsView {
             Text("Difficulty")
         } footer: {
             Text("Controls how precisely you need to match the pitch. Beginner has wider tolerance zones.")
+        }
+    }
+
+    var pianoRollSection: some View {
+        Section {
+            Toggle("Fixed Pitch Range", isOn: $useFixedPitchRange)
+
+            if useFixedPitchRange {
+                HStack(spacing: 8) {
+                    Image(systemName: "pianokeys")
+                        .foregroundStyle(.secondary)
+                    Text("Shows a constant C2–C6 range so you can see where notes sit in your vocal range.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        } header: {
+            Text("Piano Roll")
+        } footer: {
+            Text("When off, the piano roll zooms to fit each song's pitch range.")
         }
     }
 

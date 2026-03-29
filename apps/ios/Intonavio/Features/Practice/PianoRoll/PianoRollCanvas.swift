@@ -15,6 +15,12 @@ struct PianoRollCanvas: View {
     var playbackTime: Double?
     var isBrowsing: Bool = false
 
+    @AppStorage("useFixedPitchRange") private var useFixedPitchRange = false
+
+    /// Fixed vocal range: C2 (36) to C6 (84).
+    private static let fixedMidiMin: Float = 36
+    private static let fixedMidiMax: Float = 84
+
     /// 8-second scrolling window: 4s past + 4s future.
     private let windowDuration: Double = 8.0
 
@@ -25,7 +31,10 @@ struct PianoRollCanvas: View {
     }
 
     private var midiRange: ClosedRange<Float> {
-        midiMin...midiMax
+        if useFixedPitchRange {
+            return Self.fixedMidiMin...Self.fixedMidiMax
+        }
+        return midiMin...midiMax
     }
 
     var body: some View {
@@ -36,7 +45,8 @@ struct PianoRollCanvas: View {
                 context: &context,
                 rect: rect,
                 midiRange: midiRange,
-                isBrowsing: isBrowsing
+                isBrowsing: isBrowsing,
+                showNoteLabels: useFixedPitchRange
             )
 
             if isBrowsing, let pbTime = playbackTime {

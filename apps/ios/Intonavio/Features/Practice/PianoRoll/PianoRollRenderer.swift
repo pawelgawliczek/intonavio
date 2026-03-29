@@ -184,7 +184,8 @@ enum PianoRollRenderer {
         context: inout GraphicsContext,
         rect: CGRect,
         midiRange: ClosedRange<Float>,
-        isBrowsing: Bool = false
+        isBrowsing: Bool = false,
+        showNoteLabels: Bool = false
     ) {
         let midiSpan = midiRange.upperBound - midiRange.lowerBound
         guard midiSpan > 0 else { return }
@@ -204,6 +205,17 @@ enum PianoRollRenderer {
                 with: .color(.gray.opacity(isC ? 0.3 : 0.1)),
                 lineWidth: isC ? 1.0 : 0.5
             )
+
+            if showNoteLabels, isC {
+                let noteInfo = NoteMapper.noteInfo(forMidi: midi)
+                let label = "\(noteInfo.name)\(noteInfo.octave)"
+                let text = context.resolve(
+                    Text(label)
+                        .font(.system(size: 9, weight: .medium, design: .monospaced))
+                        .foregroundColor(.gray.opacity(0.5))
+                )
+                context.draw(text, at: CGPoint(x: 16, y: y - 1), anchor: .bottomLeading)
+            }
         }
 
         // Draw playhead "Gate" (center vertical line) — Ice accent
