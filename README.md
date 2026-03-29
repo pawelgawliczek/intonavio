@@ -21,7 +21,8 @@ I built this because I started taking singing lessons and realized that practici
 - **Any YouTube song** - Paste a lyrics video URL. The app extracts audio and prepares it for practice.
 - **AI stem separation** - Vocals and instrumental get split automatically using the StemSplit API, so you can karaoke any song or isolate the singer to study their technique.
 - **Real-time pitch detection** - Sing into the mic and see your pitch on a piano roll, overlaid on the reference vocalist. Color-coded: green when you're close, red when you're off.
-- **Synced lyrics** - The lyrics video plays at the top of the practice screen, scrolling in time with the music.
+- **Synced lyrics** - Lyrics from LRCLIB displayed directly on the piano roll, synced to the music. Toggle between a full lyrics panel and the YouTube video.
+- **Offline practice** - Songs are cached automatically after first play. When you lose connectivity, the app switches to offline mode seamlessly — fullscreen piano roll with all controls, no video needed.
 - **A-B looping** - Set markers on any section, slow it down, repeat until it clicks. Speed goes from 0.25x to 4x.
 - **Phrase-by-phrase scoring** - Every phrase gets its own accuracy score so you know exactly which parts need work.
 - **Three difficulty levels** - Beginner gives you wide tolerance. Advanced expects you to be almost spot on.
