@@ -292,6 +292,17 @@ final class PracticeViewModel {
         }
     }
 
+    func restart() {
+        seek(to: 0)
+        isSongScoreInvalidated = false
+        isSongScoreSaved = false
+        isSongNewBest = false
+        detectedPoints.removeAll()
+        scoringEngine?.reset()
+        setupPhraseScoring()
+        play()
+    }
+
     func seek(to time: Double) {
         currentTime = time
         detectedPoints.removeAll { $0.time >= time }

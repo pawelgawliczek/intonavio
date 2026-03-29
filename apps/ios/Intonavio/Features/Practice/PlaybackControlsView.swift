@@ -5,7 +5,7 @@ struct PlaybackControlsView: View {
 
     var body: some View {
         HStack {
-            Button(action: restart) {
+            Button(action: viewModel.restart) {
                 Image(systemName: "arrow.counterclockwise")
             }
 
@@ -53,11 +53,6 @@ private extension PlaybackControlsView {
         default:
             return "pause.fill"
         }
-    }
-
-    func restart() {
-        viewModel.seek(to: 0)
-        viewModel.play()
     }
 
     func playPauseAction() {
