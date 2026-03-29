@@ -4,25 +4,39 @@ struct PlaybackControlsView: View {
     @Bindable var viewModel: PracticeViewModel
 
     var body: some View {
-        HStack(spacing: 20) {
-            Button {
-                viewModel.seek(to: max(0, viewModel.currentTime - 5))
-            } label: {
-                Image(systemName: "gobackward.5")
+        HStack {
+            Button(action: restart) {
+                Image(systemName: "arrow.counterclockwise")
             }
 
-            Button(action: playPauseAction) {
-                Image(systemName: playPauseIcon)
-                    .font(.title)
+            Spacer()
+
+            HStack(spacing: 20) {
+                Button {
+                    viewModel.seek(to: max(0, viewModel.currentTime - 5))
+                } label: {
+                    Image(systemName: "gobackward.5")
+                }
+
+                Button(action: playPauseAction) {
+                    Image(systemName: playPauseIcon)
+                        .font(.title)
+                }
+
+                Button {
+                    viewModel.seek(
+                        to: min(viewModel.duration, viewModel.currentTime + 5)
+                    )
+                } label: {
+                    Image(systemName: "goforward.5")
+                }
             }
 
-            Button {
-                viewModel.seek(
-                    to: min(viewModel.duration, viewModel.currentTime + 5)
-                )
-            } label: {
-                Image(systemName: "goforward.5")
-            }
+            Spacer()
+
+            // Invisible counterweight to keep center group centered
+            Image(systemName: "arrow.counterclockwise")
+                .hidden()
         }
         .font(.title2)
         .foregroundStyle(.white)
@@ -39,6 +53,11 @@ private extension PlaybackControlsView {
         default:
             return "pause.fill"
         }
+    }
+
+    func restart() {
+        viewModel.seek(to: 0)
+        viewModel.play()
     }
 
     func playPauseAction() {
