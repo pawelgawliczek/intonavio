@@ -64,12 +64,12 @@ private extension ControlsBarView {
     }
 
     var transposePicker: some View {
-        let isActive = viewModel.transposeSemitones != 0
-        let buttonLabel = isActive
-            ? (viewModel.transposeSemitones > 0
-                ? "+\(viewModel.transposeSemitones)"
-                : "\(viewModel.transposeSemitones)")
-            : "T"
+        let semitones = viewModel.transposeSemitones
+        let isActive = semitones != 0
+        let icon = semitones > 0
+            ? "arrow.up"
+            : semitones < 0 ? "arrow.down" : "arrow.up.arrow.down"
+        let badgeText = TransposeInterval(rawValue: semitones)?.shortLabel
 
         return Menu {
             ForEach(TransposeInterval.allCases) { interval in
@@ -78,26 +78,32 @@ private extension ControlsBarView {
                 } label: {
                     HStack {
                         Text(interval.label)
-                        if viewModel.transposeSemitones == interval.rawValue {
+                        if semitones == interval.rawValue {
                             Image(systemName: "checkmark")
                         }
                     }
                 }
             }
         } label: {
-            HStack(spacing: 2) {
-                Image(systemName: "arrow.up.arrow.down")
-                Text(buttonLabel)
-                    .font(.caption.monospacedDigit())
-            }
-            .font(.body)
-            .frame(height: 34)
-            .padding(.horizontal, 6)
-            .foregroundStyle(isActive ? Color.intonavioIce : Color.intonavioTextSecondary)
-            .background(
-                isActive ? Color.intonavioIce.opacity(0.15) : Color.intonavioSurface,
-                in: RoundedRectangle(cornerRadius: 6)
-            )
+            Image(systemName: icon)
+                .font(.body)
+                .frame(width: 34, height: 34)
+                .foregroundStyle(isActive ? Color.intonavioIce : Color.intonavioTextSecondary)
+                .background(
+                    isActive ? Color.intonavioIce.opacity(0.15) : Color.intonavioSurface,
+                    in: RoundedRectangle(cornerRadius: 6)
+                )
+                .overlay(alignment: .topTrailing) {
+                    if let badgeText, isActive {
+                        Text(badgeText)
+                            .font(.system(size: 9, weight: .bold).monospacedDigit())
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 3)
+                            .padding(.vertical, 1)
+                            .background(Color.intonavioIce, in: Capsule())
+                            .offset(x: 6, y: -6)
+                    }
+                }
         }
     }
 

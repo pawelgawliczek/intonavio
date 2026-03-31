@@ -162,6 +162,7 @@ final class PracticeViewModel {
         #endif
 
         scoringEngine = ScoringEngine(referenceStore: referenceStore)
+        loadSavedTranspose()
         loadPitchDataIfAvailable()
         setupPhraseScoring()
 

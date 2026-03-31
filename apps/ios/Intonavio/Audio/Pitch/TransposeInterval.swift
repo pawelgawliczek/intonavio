@@ -36,4 +36,10 @@ enum TransposeInterval: Int, CaseIterable, Identifiable {
         case .twoOctavesUp: return "+2 oct"
         }
     }
+
+    /// Compact label for the badge overlay on the transpose button.
+    var shortLabel: String {
+        let sign = rawValue > 0 ? "+" : ""
+        return "\(sign)\(rawValue)"
+    }
 }

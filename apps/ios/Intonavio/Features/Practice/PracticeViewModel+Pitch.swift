@@ -91,9 +91,20 @@ extension PracticeViewModel {
     }
 
     /// Set the transpose offset for reference pitch (visual + scoring).
+    /// Persists the value per song so it's restored on next practice.
     func setTranspose(_ semitones: Int) {
         transposeSemitones = semitones
         scoringEngine?.transposeSemitones = semitones
+        UserDefaults.standard.set(semitones, forKey: "songTranspose_\(songId)")
+    }
+
+    /// Load any previously saved transpose setting for this song.
+    func loadSavedTranspose() {
+        let key = "songTranspose_\(songId)"
+        let saved = UserDefaults.standard.integer(forKey: key)
+        guard saved != 0 else { return }
+        transposeSemitones = saved
+        scoringEngine?.transposeSemitones = saved
     }
 
     /// Handle each detected pitch result.
