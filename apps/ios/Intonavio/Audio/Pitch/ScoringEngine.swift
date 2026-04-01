@@ -43,9 +43,12 @@ final class ScoringEngine {
 
         let adjustedRefHz = refHz * pow(2.0, Double(transposeSemitones) / 12.0)
 
-        voicedReferenceFrames += 1
-
         trackPhraseTransition(at: playbackTime)
+
+        // Only score within phrase boundaries — ignore intro, interludes, outros
+        guard currentPhraseIndex != nil else { return }
+
+        voicedReferenceFrames += 1
 
         // Singer is silent during a voiced section
         guard let detected else {

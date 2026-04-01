@@ -17,6 +17,14 @@ final class ScoringEngineTests: XCTestCase {
                 rms: nil
             )
         }
+        let phrases = [ReferencePhraseInfo(
+            index: 0,
+            startFrame: 0,
+            endFrame: 99,
+            startTime: 0.0,
+            endTime: 0.99,
+            voicedFrameCount: 100
+        )]
         let data = ReferencePitchData(
             songId: nil,
             sampleRate: 44100,
@@ -24,7 +32,7 @@ final class ScoringEngineTests: XCTestCase {
             frameCount: frames.count,
             hopDuration: 0.01,
             frames: frames,
-            phrases: []
+            phrases: phrases
         )
         store.load(from: data)
         engine = ScoringEngine(referenceStore: store)
@@ -171,10 +179,14 @@ final class ScoringEngineTests: XCTestCase {
             midiNote: nil,
             rms: nil
         )]
+        let phrases = [ReferencePhraseInfo(
+            index: 0, startFrame: 0, endFrame: 0,
+            startTime: 0.0, endTime: 0.01, voicedFrameCount: 0
+        )]
         let data = ReferencePitchData(
             songId: nil, sampleRate: 44100, hopSize: 256,
             frameCount: 1, hopDuration: 0.01, frames: frames,
-            phrases: []
+            phrases: phrases
         )
         unvoicedStore.load(from: data)
         let unvoicedEngine = ScoringEngine(referenceStore: unvoicedStore)
@@ -183,6 +195,44 @@ final class ScoringEngineTests: XCTestCase {
         unvoicedEngine.evaluate(detected: detected, playbackTime: 0.0)
         XCTAssertEqual(unvoicedEngine.overallScore, 0)
         XCTAssertTrue(unvoicedEngine.pitchLog.isEmpty)
+    }
+
+    func testScoringOutsidePhrasesIsIgnored() {
+        // Create a store where frames exist but phrase starts later
+        let phraseStore = ReferencePitchStore()
+        let frames = (0..<100).map { i in
+            ReferencePitchFrame(
+                time: Double(i) * 0.01,
+                frequency: 440.0,
+                isVoiced: true,
+                midiNote: 69.0,
+                rms: nil
+            )
+        }
+        // Phrase only covers frames 50-99 (0.50s-0.99s)
+        let phrases = [ReferencePhraseInfo(
+            index: 0, startFrame: 50, endFrame: 99,
+            startTime: 0.50, endTime: 0.99, voicedFrameCount: 50
+        )]
+        let data = ReferencePitchData(
+            songId: nil, sampleRate: 44100, hopSize: 256,
+            frameCount: 100, hopDuration: 0.01, frames: frames,
+            phrases: phrases
+        )
+        phraseStore.load(from: data)
+        let phraseEngine = ScoringEngine(referenceStore: phraseStore)
+
+        // Sing perfectly before the phrase — should not affect score
+        let detected = makePitchResult(frequency: 440.0)
+        phraseEngine.evaluate(detected: detected, playbackTime: 0.0)
+        phraseEngine.evaluate(detected: detected, playbackTime: 0.01)
+        phraseEngine.evaluate(detected: detected, playbackTime: 0.02)
+        XCTAssertEqual(phraseEngine.overallScore, 0)
+        XCTAssertTrue(phraseEngine.pitchLog.isEmpty)
+
+        // Now sing within the phrase — should score
+        phraseEngine.evaluate(detected: detected, playbackTime: 0.50)
+        XCTAssertEqual(phraseEngine.overallScore, 100, accuracy: 0.1)
     }
 
     func testMixedAccuraciesCalculateCorrectScore() {
