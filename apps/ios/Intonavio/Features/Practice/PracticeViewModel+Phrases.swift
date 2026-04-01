@@ -31,15 +31,20 @@ extension PracticeViewModel {
             celebrationSound?.playPhraseBest()
         }
 
-        // Save song score after the last phrase completes
         let isLastPhrase = totalPhrases > 0 && result.phraseIndex == totalPhrases - 1
-        if isLastPhrase {
-            saveSongScore()
-        }
 
-        Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 2_500_000_000)
-            self.isShowingPhraseScore = false
+        if isLastPhrase {
+            // Show phrase toast briefly, then save score and show summary
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 1_500_000_000)
+                self.isShowingPhraseScore = false
+                self.saveSongScore()
+            }
+        } else {
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 2_500_000_000)
+                self.isShowingPhraseScore = false
+            }
         }
     }
 
