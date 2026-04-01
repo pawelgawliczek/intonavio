@@ -104,6 +104,10 @@ extension PracticeViewModel {
             loopScoreImprovement = nil
         }
 
+        if case .better = loopScoreImprovement {
+            celebrationSound?.playLoopImprovement()
+        }
+
         isShowingLoopScore = true
         engine.reset()
 

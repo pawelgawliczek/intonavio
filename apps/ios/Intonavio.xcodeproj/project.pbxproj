@@ -16,6 +16,7 @@
 		0B7FA2597EDF4E53F06175AD /* GuideToneInstrument.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9250B11854907223345553B /* GuideToneInstrument.swift */; };
 		0CCFE13190CA8BC994A57880 /* SessionModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69623959F702B91020E1C3F1 /* SessionModels.swift */; };
 		0E0286805F5CE41A90837336 /* PlatformColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB8A307C4CE851A699727E97 /* PlatformColors.swift */; };
+		0F846E5A984FC16326870B78 /* PerformanceSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1A40F4499EA0247C8CE72D /* PerformanceSummaryView.swift */; };
 		0E1758AA235B3F79AF2E1F35 /* Earth Day - by Richard Audd (fixed).ogg in Resources */ = {isa = PBXBuildFile; fileRef = 80D6FF012AF0C66BAC14AB1A /* Earth Day - by Richard Audd (fixed).ogg */; };
 		1121B2EEB4D48BBF9065A8CD /* StemDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = C38386796F7F9FCA92E8F887 /* StemDownloader.swift */; };
 		1391F8B41593BAA8E486EF65 /* ExerciseDefinitions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 922518DBC2492529E9DED83A /* ExerciseDefinitions.swift */; };
@@ -159,6 +160,7 @@
 		81CD80582FB3FE3B15B045C9 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF72D25F9B2CE003A8CC1589 /* HomeView.swift */; };
 		82078B5855AAAD845EF80DDD /* StreamingRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EAB2E927007468E4D554A8A /* StreamingRecorder.swift */; };
 		82089B4B292F846FBC1CDEC0 /* AppleSignInButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DC7F40C0A6E9091A11F6589 /* AppleSignInButton.swift */; };
+		8218078EC25043B2135E6D17 /* CelebrationSound.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D0DF3819A4873FCBCB37002 /* CelebrationSound.swift */; };
 		8409D4BE5966F5688B27676F /* RecordViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6594831BB17C6ECE43600BE9 /* RecordViewModel.swift */; };
 		84DFBCBBCA6D319EB407DC66 /* RecordingPracticeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8F1C1B9D637E8DC79D938CB /* RecordingPracticeView.swift */; };
 		84F1F65ACC4470EB296F8932 /* Breakout.mid in Resources */ = {isa = PBXBuildFile; fileRef = D9D5CB6457EBF697C9ACFB01 /* Breakout.mid */; };
@@ -197,6 +199,7 @@
 		A13878C8B8E6002F48CF8A48 /* BestTakeRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6465BB02BDCE8F83C1CF6A46 /* BestTakeRowView.swift */; };
 		A14575D48DF0B2A7D7887048 /* InputTapRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFBF01CE1890C0BBE37B3A68 /* InputTapRouter.swift */; };
 		A3C0A2768A8B0A15BFFB6E22 /* BestTakeExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DBA14BB91FD4BCCEC5E485C /* BestTakeExporter.swift */; };
+		A3E5989494C7E6047966335D /* CelebrationSound.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D0DF3819A4873FCBCB37002 /* CelebrationSound.swift */; };
 		A4E777F39F21C61050CE001B /* PracticeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD158E2B7A33E186A33FF9E4 /* PracticeViewModel.swift */; };
 		A578CBDDD457220FE9189F11 /* DetectedPitchPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1963E3CB41E9D646E77D19FC /* DetectedPitchPoint.swift */; };
 		A5B05F733C06988B5175C54F /* Recording.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B50098435A2693804728971 /* Recording.swift */; };
@@ -293,6 +296,7 @@
 		F8DED1902F578D15CC6A3DA2 /* ControlsBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 361E25A7825079651368DB58 /* ControlsBarView.swift */; };
 		F8EB06BCD453E596C265FD6D /* StemPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A5EED91336F487C29EA35D8 /* StemPlayer.swift */; };
 		F9BD18D67954FADBA5588763 /* SongModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4899195EC6381428FCC674C3 /* SongModels.swift */; };
+		FAF607827C5C0744DC90D568 /* PerformanceSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1A40F4499EA0247C8CE72D /* PerformanceSummaryView.swift */; };
 		FC1AEA8498EE1E659FDDF95A /* AudioMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81BED35799707A0550050A4B /* AudioMode.swift */; };
 		FC5F67503E628B7735CE11E7 /* PracticeViewModel+Pitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = C95189340F2BA2B17D3EA90D /* PracticeViewModel+Pitch.swift */; };
 		FE18011CC57489C327BE43DB /* ExerciseDefinitions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 922518DBC2492529E9DED83A /* ExerciseDefinitions.swift */; };
@@ -373,6 +377,7 @@
 		4899195EC6381428FCC674C3 /* SongModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SongModels.swift; sourceTree = "<group>"; };
 		49F0EB98AF09CE68843B9FC3 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
 		4B61153C08EBE37FC59EF91C /* LibraryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryViewModel.swift; sourceTree = "<group>"; };
+		4D0DF3819A4873FCBCB37002 /* CelebrationSound.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CelebrationSound.swift; sourceTree = "<group>"; };
 		4E53968AB4EA7CEFDE95BE5F /* PitchDataDownloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchDataDownloader.swift; sourceTree = "<group>"; };
 		4EAB2E927007468E4D554A8A /* StreamingRecorder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StreamingRecorder.swift; sourceTree = "<group>"; };
 		4F0CC23B92DE7D8EE5E7E945 /* SessionsViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionsViewModelTests.swift; sourceTree = "<group>"; };
@@ -434,6 +439,7 @@
 		A557DCB3FEB614983FAE453E /* ExercisePitchGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExercisePitchGenerator.swift; sourceTree = "<group>"; };
 		A60B2C125F8F2F63801D9E99 /* CodableModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodableModelTests.swift; sourceTree = "<group>"; };
 		A9250B11854907223345553B /* GuideToneInstrument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuideToneInstrument.swift; sourceTree = "<group>"; };
+		AB1A40F4499EA0247C8CE72D /* PerformanceSummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceSummaryView.swift; sourceTree = "<group>"; };
 		AB646F181AB9563A408E57B2 /* SignUpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpView.swift; sourceTree = "<group>"; };
 		B2FB6568C2828D80413A5B24 /* ExerciseBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseBrowserView.swift; sourceTree = "<group>"; };
 		B586B12D7F1821FAF4F9309D /* .git */ = {isa = PBXFileReference; path = .git; sourceTree = "<group>"; };
@@ -597,6 +603,7 @@
 				226EBB068E7A096222281A51 /* LoopScoreToastView.swift */,
 				5BDF7BCFBF727E3EDB26BFAA /* LoopState.swift */,
 				A19FEFF9645DC955D0890DB4 /* PhraseScoreToastView.swift */,
+				AB1A40F4499EA0247C8CE72D /* PerformanceSummaryView.swift */,
 				7CE79DBF676DB40ABC0BF92A /* PlaybackControlsView.swift */,
 				41DF42E8DDEB37A70C265320 /* PracticeLayoutMode.swift */,
 				DD158E2B7A33E186A33FF9E4 /* PracticeViewModel.swift */,
@@ -875,6 +882,7 @@
 				D2A2511B392D8C272EFBC9AF /* BestTakeStorage.swift */,
 				0CD0297368F700AB423F733F /* BestTakePlayer.swift */,
 				5DBA14BB91FD4BCCEC5E485C /* BestTakeExporter.swift */,
+				4D0DF3819A4873FCBCB37002 /* CelebrationSound.swift */,
 			);
 			path = Audio;
 			sourceTree = "<group>";
@@ -1204,6 +1212,8 @@
 				BB4444444444444444444444 /* LyricsOverlayView.swift in Sources */,
 				BB5555555555555555555555 /* PracticeViewModel+Lyrics.swift in Sources */,
 				BB6666666666666666666666 /* LyricsPanelView.swift in Sources */,
+				8218078EC25043B2135E6D17 /* CelebrationSound.swift in Sources */,
+				0F846E5A984FC16326870B78 /* PerformanceSummaryView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1330,6 +1340,8 @@
 				CC4444444444444444444444 /* LyricsOverlayView.swift in Sources */,
 				CC5555555555555555555555 /* PracticeViewModel+Lyrics.swift in Sources */,
 				CC6666666666666666666666 /* LyricsPanelView.swift in Sources */,
+				A3E5989494C7E6047966335D /* CelebrationSound.swift in Sources */,
+				FAF607827C5C0744DC90D568 /* PerformanceSummaryView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

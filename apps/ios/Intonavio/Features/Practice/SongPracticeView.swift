@@ -287,8 +287,8 @@ private extension SongPracticeView {
                 .animation(.spring(response: 0.4, dampingFraction: 0.7), value: vm.isShowingPhraseScore)
             }
 
-            if vm.isSongNewBest {
-                SongBestToastView(score: vm.songBestScore)
+            if vm.isSongNewBest, !vm.isShowingPerformanceSummary {
+                SongBestToastView(score: vm.songBestScore, isNewBest: true)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .animation(.spring(response: 0.4, dampingFraction: 0.7), value: vm.isSongNewBest)
             }
@@ -299,6 +299,39 @@ private extension SongPracticeView {
                     .padding(.bottom, 120)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                     .animation(.easeInOut(duration: 0.3), value: vm.isSongScoreInvalidated)
+            }
+
+            if vm.isShowingPerformanceSummary, let summary = vm.performanceSummary {
+                PerformanceSummaryView(
+                    summary: summary,
+                    onViewProgress: {
+                        vm.isShowingPerformanceSummary = false
+                        isShowingProgress = true
+                    },
+                    onPracticeWeakest: {
+                        vm.isShowingPerformanceSummary = false
+                        if let index = summary.weakestPhraseIndex {
+                            vm.setupPhraseLoop(phraseIndex: index)
+                        }
+                    },
+                    onRestart: {
+                        vm.isShowingPerformanceSummary = false
+                        vm.restart()
+                    },
+                    onDone: {
+                        vm.isShowingPerformanceSummary = false
+                        vm.saveSongScore()
+                        vm.stopPitchDetection()
+                        vm.stopOfflineTimer()
+                        if !isOffline {
+                            vm.saveSessionIfNeeded()
+                            vm.server.stop()
+                        }
+                        dismiss()
+                    }
+                )
+                .transition(.opacity)
+                .animation(.easeInOut(duration: 0.3), value: vm.isShowingPerformanceSummary)
             }
         }
     }

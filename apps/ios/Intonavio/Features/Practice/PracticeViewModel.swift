@@ -58,6 +58,8 @@ final class PracticeViewModel {
     var isSongScoreInvalidated = false
     var isSongScoreSaved = false
     var scoreRepository: ScoreRepository?
+    var isShowingPerformanceSummary = false
+    var performanceSummary: PerformanceSummary?
 
     var transposedMidiMin: Float {
         let base = (loopState == .looping ? loopMidiMin : nil) ?? referenceStore.midiMin
@@ -90,6 +92,9 @@ final class PracticeViewModel {
     var pitchDetector: PitchDetector?
     let referenceStore = ReferencePitchStore()
     var scoringEngine: ScoringEngine?
+
+    // Celebration sounds
+    private(set) var celebrationSound: CelebrationSound?
 
     // Lyrics
     let lyricsProvider = LyricsProvider()
@@ -162,6 +167,7 @@ final class PracticeViewModel {
         #endif
 
         scoringEngine = ScoringEngine(referenceStore: referenceStore)
+        celebrationSound = CelebrationSound(engine: audioEngine)
         loadSavedTranspose()
         loadPitchDataIfAvailable()
         setupPhraseScoring()
