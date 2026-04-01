@@ -25,11 +25,13 @@ struct PerformanceSummaryView: View {
                     .allowsHitTesting(false)
             }
 
-            VStack(spacing: 24) {
+            VStack(spacing: 20) {
                 Spacer()
                 heroSection
                 if showContent {
                     statsSection
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                    accuracySection
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                     actionButtons
                         .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -143,6 +145,78 @@ private extension PerformanceSummaryView {
     }
 }
 
+// MARK: - Accuracy Stats Section
+
+private extension PerformanceSummaryView {
+    var accuracySection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Accuracy")
+                .font(.caption.bold())
+                .foregroundStyle(Color.intonavioTextSecondary)
+
+            // Stacked bar
+            GeometryReader { geo in
+                HStack(spacing: 1) {
+                    accuracySegment(
+                        ratio: summary.excellentRatio,
+                        color: PitchAccuracy.excellent.color,
+                        width: geo.size.width
+                    )
+                    accuracySegment(
+                        ratio: summary.goodRatio,
+                        color: PitchAccuracy.good.color,
+                        width: geo.size.width
+                    )
+                    accuracySegment(
+                        ratio: summary.fairRatio,
+                        color: PitchAccuracy.fair.color,
+                        width: geo.size.width
+                    )
+                    accuracySegment(
+                        ratio: summary.poorRatio,
+                        color: PitchAccuracy.poor.color,
+                        width: geo.size.width
+                    )
+                    accuracySegment(
+                        ratio: summary.unvoicedRatio,
+                        color: Color.gray.opacity(0.3),
+                        width: geo.size.width
+                    )
+                }
+                .clipShape(Capsule())
+            }
+            .frame(height: 12)
+
+            // Legend
+            HStack(spacing: 12) {
+                accuracyLegend("Perfect", ratio: summary.excellentRatio, color: PitchAccuracy.excellent.color)
+                accuracyLegend("Good", ratio: summary.goodRatio, color: PitchAccuracy.good.color)
+                accuracyLegend("OK", ratio: summary.fairRatio, color: PitchAccuracy.fair.color)
+                accuracyLegend("Miss", ratio: summary.poorRatio + summary.unvoicedRatio, color: .gray)
+            }
+            .font(.caption2)
+        }
+        .padding(16)
+        .background(Color.intonavioSurface, in: RoundedRectangle(cornerRadius: 12))
+    }
+
+    func accuracySegment(ratio: Double, color: Color, width: CGFloat) -> some View {
+        Rectangle()
+            .fill(color)
+            .frame(width: max(ratio > 0 ? 2 : 0, width * ratio))
+    }
+
+    func accuracyLegend(_ label: String, ratio: Double, color: Color) -> some View {
+        HStack(spacing: 3) {
+            Circle()
+                .fill(color)
+                .frame(width: 6, height: 6)
+            Text("\(label) \(Int((ratio * 100).rounded()))%")
+                .foregroundStyle(Color.intonavioTextSecondary)
+        }
+    }
+}
+
 // MARK: - Action Buttons
 
 private extension PerformanceSummaryView {
@@ -206,6 +280,13 @@ struct PerformanceSummary {
     let improvingStreak: Int
     let weakestPhraseIndex: Int?
     let weakestPhraseScore: Double?
+
+    // Accuracy breakdown (fractions 0-1)
+    let excellentRatio: Double
+    let goodRatio: Double
+    let fairRatio: Double
+    let poorRatio: Double
+    let unvoicedRatio: Double
 }
 
 #Preview("New Best") {
@@ -219,7 +300,12 @@ struct PerformanceSummary {
             deltaFromLastAttempt: 8,
             improvingStreak: 3,
             weakestPhraseIndex: 2,
-            weakestPhraseScore: 34
+            weakestPhraseScore: 34,
+            excellentRatio: 0.55,
+            goodRatio: 0.22,
+            fairRatio: 0.10,
+            poorRatio: 0.08,
+            unvoicedRatio: 0.05
         )
     )
 }
@@ -235,7 +321,12 @@ struct PerformanceSummary {
             deltaFromLastAttempt: -3,
             improvingStreak: 0,
             weakestPhraseIndex: 7,
-            weakestPhraseScore: 28
+            weakestPhraseScore: 28,
+            excellentRatio: 0.30,
+            goodRatio: 0.20,
+            fairRatio: 0.15,
+            poorRatio: 0.20,
+            unvoicedRatio: 0.15
         )
     )
 }

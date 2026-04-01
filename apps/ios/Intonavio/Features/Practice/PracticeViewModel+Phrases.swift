@@ -124,6 +124,9 @@ private extension PracticeViewModel {
         // Improving streak: count consecutive improvements from most recent
         let improvingStreak = computeImprovingStreak(history: history)
 
+        // Accuracy breakdown from pitch log
+        let accuracyBreakdown = computeAccuracyBreakdown(pitchLog: engine.pitchLog)
+
         performanceSummary = PerformanceSummary(
             score: score,
             isNewBest: isNewBest,
@@ -133,7 +136,53 @@ private extension PracticeViewModel {
             deltaFromLastAttempt: deltaFromLast,
             improvingStreak: improvingStreak,
             weakestPhraseIndex: weakestIndex,
-            weakestPhraseScore: weakestScore.isFinite ? weakestScore : nil
+            weakestPhraseScore: weakestScore.isFinite ? weakestScore : nil,
+            excellentRatio: accuracyBreakdown.excellent,
+            goodRatio: accuracyBreakdown.good,
+            fairRatio: accuracyBreakdown.fair,
+            poorRatio: accuracyBreakdown.poor,
+            unvoicedRatio: accuracyBreakdown.unvoiced
+        )
+    }
+
+    typealias AccuracyBreakdown = (
+        excellent: Double, good: Double, fair: Double,
+        poor: Double, unvoiced: Double
+    )
+
+    func computeAccuracyBreakdown(pitchLog: [PitchLogEntry]) -> AccuracyBreakdown {
+        guard !pitchLog.isEmpty else {
+            return (0, 0, 0, 0, 0)
+        }
+
+        var excellent = 0
+        var good = 0
+        var fair = 0
+        var poor = 0
+        var unvoiced = 0
+
+        for entry in pitchLog {
+            guard let cents = entry.cents else {
+                unvoiced += 1
+                continue
+            }
+            let accuracy = PitchAccuracy.classify(cents: Float(cents))
+            switch accuracy {
+            case .excellent: excellent += 1
+            case .good: good += 1
+            case .fair: fair += 1
+            case .poor: poor += 1
+            case .unvoiced: unvoiced += 1
+            }
+        }
+
+        let total = Double(pitchLog.count)
+        return (
+            Double(excellent) / total,
+            Double(good) / total,
+            Double(fair) / total,
+            Double(poor) / total,
+            Double(unvoiced) / total
         )
     }
 
