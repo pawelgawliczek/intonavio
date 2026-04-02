@@ -54,6 +54,10 @@ extension APIClient {
         let _: EmptyResponse = try await execute(.deleteAccount)
     }
 
+    func searchSongs(query: String, limit: Int) async throws -> [YouTubeSearchResult] {
+        try await execute(.searchSongs(query: query, limit: limit))
+    }
+
     func createSong(_ request: CreateSongRequest) async throws -> SongResponse {
         try await execute(.createSong(request))
     }

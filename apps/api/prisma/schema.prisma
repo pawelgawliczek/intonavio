@@ -82,6 +82,7 @@ model Song {
   thumbnailUrl  String
   duration      Int
   status        SongStatus @default(QUEUED)
+  hasLyrics     Boolean    @default(false)
   externalJobId String?
   errorMessage  String?
   createdAt     DateTime   @default(now())

@@ -10,6 +10,7 @@ protocol APIClientProtocol: Sendable {
     func deleteAccount() async throws
 
     // Songs
+    func searchSongs(query: String, limit: Int) async throws -> [YouTubeSearchResult]
     func createSong(_ request: CreateSongRequest) async throws -> SongResponse
     func getSong(id: String) async throws -> SongResponse
     func listSongs(page: Int, limit: Int) async throws -> PaginatedResponse<SongResponse>

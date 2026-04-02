@@ -49,6 +49,11 @@ extension MockAPIClient {
 // MARK: - Songs
 
 extension MockAPIClient {
+    func searchSongs(query: String, limit: Int) async throws -> [YouTubeSearchResult] {
+        try maybeThrow()
+        return Fixtures.searchResults
+    }
+
     func createSong(_ request: CreateSongRequest) async throws -> SongResponse {
         try maybeThrow()
         return Fixtures.queuedSong
@@ -137,6 +142,7 @@ enum Fixtures {
         thumbnailUrl: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
         duration: 213,
         status: .ready,
+        hasLyrics: true,
         stems: stems,
         pitchData: PitchDataResponse(id: "pitch1", storageKey: "pitch/song1/reference.json"),
         createdAt: "2025-06-01T12:00:00Z"
@@ -150,6 +156,7 @@ enum Fixtures {
         thumbnailUrl: "https://img.youtube.com/vi/uBJdwRPO1QE/maxresdefault.jpg",
         duration: 0,
         status: .queued,
+        hasLyrics: false,
         stems: [],
         pitchData: nil,
         createdAt: "2025-06-01T13:00:00Z"
@@ -167,6 +174,27 @@ enum Fixtures {
         overallScore: 72.5,
         createdAt: "2025-06-01T12:30:00Z"
     )
+
+    static let searchResults: [YouTubeSearchResult] = [
+        YouTubeSearchResult(
+            videoId: "YQHsXMglC9A",
+            title: "Adele - Hello (Official Music Video)",
+            artist: "Adele",
+            duration: 367,
+            thumbnailUrl: "https://img.youtube.com/vi/YQHsXMglC9A/hqdefault.jpg",
+            url: "https://www.youtube.com/watch?v=YQHsXMglC9A",
+            hasLyrics: true
+        ),
+        YouTubeSearchResult(
+            videoId: "dQw4w9WgXcQ",
+            title: "Rick Astley - Never Gonna Give You Up",
+            artist: "Rick Astley",
+            duration: 213,
+            thumbnailUrl: "https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+            url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            hasLyrics: true
+        ),
+    ]
 
     static let sessions = [session]
 

@@ -16,6 +16,7 @@ import { PaginationQueryDto } from '../common/dto/pagination.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { ParseCuidPipe } from '../common/pipes/parse-cuid.pipe';
 import { CreateSongDto } from './dto/create-song.dto';
+import { SearchSongsDto } from './dto/search-songs.dto';
 import { SongsService } from './songs.service';
 
 @Controller('songs')
@@ -27,6 +28,11 @@ export class SongsController {
   @HttpCode(HttpStatus.ACCEPTED)
   create(@User('userId') userId: string, @Body() dto: CreateSongDto) {
     return this.songs.createSong(userId, dto.youtubeUrl);
+  }
+
+  @Get('search')
+  search(@Query() dto: SearchSongsDto) {
+    return this.songs.search(dto.q, dto.limit);
   }
 
   @Get()

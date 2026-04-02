@@ -18,6 +18,9 @@ RUN cd packages/shared && pnpm build
 RUN cd apps/api && npx prisma generate && pnpm build
 
 FROM base AS runner
+RUN apk add --no-cache python3 && \
+    wget -qO /usr/local/bin/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp && \
+    chmod +x /usr/local/bin/yt-dlp
 ENV NODE_ENV=production
 WORKDIR /app
 COPY --from=builder /app/node_modules ./node_modules

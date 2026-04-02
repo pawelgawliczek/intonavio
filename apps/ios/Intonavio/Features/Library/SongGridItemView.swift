@@ -55,12 +55,33 @@ private extension SongGridItemView {
                     .foregroundStyle(Color.intonavioTextSecondary)
                     .lineLimit(1)
             }
-            if song.duration > 0 {
-                Text(formatDuration(song.duration))
-                    .font(.caption2)
-                    .foregroundStyle(Color.intonavioTextSecondary)
+            HStack(spacing: 4) {
+                if song.duration > 0 {
+                    Text(formatDuration(song.duration))
+                        .font(.caption2)
+                        .foregroundStyle(Color.intonavioTextSecondary)
+                }
+                if song.hasLyrics == true {
+                    lyricsBadge
+                }
             }
         }
+    }
+
+    var lyricsBadge: some View {
+        HStack(spacing: 2) {
+            Image(systemName: "music.note")
+                .font(.system(size: 7))
+            Text("Lyrics")
+                .font(.system(size: 8, weight: .medium))
+        }
+        .foregroundStyle(Color.intonavioMagenta)
+        .padding(.horizontal, 4)
+        .padding(.vertical, 1)
+        .background(
+            Capsule()
+                .fill(Color.intonavioMagenta.opacity(0.15))
+        )
     }
 
     func formatDuration(_ seconds: Int) -> String {

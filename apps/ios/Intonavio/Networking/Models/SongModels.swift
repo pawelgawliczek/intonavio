@@ -45,6 +45,7 @@ struct SongResponse: Codable, Sendable, Identifiable {
     let thumbnailUrl: String
     let duration: Int
     let status: SongStatus
+    let hasLyrics: Bool?
     let stems: [StemResponse]
     let pitchData: PitchDataResponse?
     let createdAt: String

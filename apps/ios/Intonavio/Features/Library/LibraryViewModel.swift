@@ -1,5 +1,10 @@
 import Foundation
 
+enum AddSongMode: Int {
+    case search
+    case url
+}
+
 /// Manages the user's song library: fetching, adding, polling.
 @Observable
 final class LibraryViewModel {
@@ -11,8 +16,17 @@ final class LibraryViewModel {
     var addSongURL = ""
     var addSongError: String?
 
+    // Search state
+    var addSongMode: AddSongMode = .search
+    var searchQuery = ""
+    var searchResults: [YouTubeSearchResult] = []
+    var isSearching = false
+    var searchError: String?
+    var addingVideoId: String?
+
     private let apiClient: any APIClientProtocol
     private var pollingTask: Task<Void, Never>?
+    private var searchTask: Task<Void, Never>?
     private let network = NetworkMonitor.shared
 
     init(apiClient: any APIClientProtocol = APIClient()) {
@@ -56,6 +70,24 @@ final class LibraryViewModel {
         }
 
         isLoading = false
+    }
+
+    // MARK: - Search
+
+    func performSearch() {
+        let query = searchQuery.trimmingCharacters(in: .whitespaces)
+        guard query.count >= 2 else { return }
+
+        searchTask?.cancel()
+        searchTask = Task { @MainActor in
+            await executeSearch(query: query)
+        }
+    }
+
+    func addFromSearch(_ result: YouTubeSearchResult) {
+        Task { @MainActor in
+            await performAddFromSearch(result)
+        }
     }
 
     // MARK: - Add Song
@@ -127,6 +159,49 @@ final class LibraryViewModel {
 // MARK: - Private
 
 private extension LibraryViewModel {
+    @MainActor
+    func executeSearch(query: String) async {
+        isSearching = true
+        searchError = nil
+
+        do {
+            searchResults = try await apiClient.searchSongs(query: query, limit: 10)
+        } catch {
+            if !Task.isCancelled {
+                searchError = (error as? APIError)?.message ?? error.localizedDescription
+                AppLogger.library.error("Search failed: \(error.localizedDescription)")
+            }
+        }
+
+        isSearching = false
+    }
+
+    @MainActor
+    func performAddFromSearch(_ result: YouTubeSearchResult) async {
+        addingVideoId = result.videoId
+
+        do {
+            let response = try await apiClient.createSong(
+                CreateSongRequest(youtubeUrl: result.url)
+            )
+
+            if let index = songs.firstIndex(where: { $0.id == response.id }) {
+                songs[index] = response
+            } else {
+                songs.insert(response, at: 0)
+            }
+
+            showAddSheet = false
+            startPollingIfNeeded()
+            AppLogger.library.info("Song added from search: \(response.id)")
+        } catch {
+            searchError = (error as? APIError)?.message ?? error.localizedDescription
+            AppLogger.library.error("Failed to add song from search: \(error.localizedDescription)")
+        }
+
+        addingVideoId = nil
+    }
+
     @MainActor
     func performAddSong() async {
         isAddingSong = true

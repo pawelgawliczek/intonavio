@@ -20,6 +20,7 @@ export interface SongResponse {
   readonly thumbnailUrl: string;
   readonly duration: number;
   readonly status: SongStatus;
+  readonly hasLyrics: boolean;
   readonly stems: StemResponse[];
   readonly pitchData: PitchDataResponse | null;
   readonly createdAt: Date;

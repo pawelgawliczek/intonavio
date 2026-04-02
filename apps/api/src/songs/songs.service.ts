@@ -6,6 +6,11 @@ import { JobsService } from '../jobs/jobs.service';
 import { PrismaService } from '../prisma/prisma.service';
 import type { SongResponse } from './dto/song-response.dto';
 import { extractVideoId, fetchBestThumbnailUrl, fetchYouTubeMetadata } from './utils/youtube.util';
+import {
+  type YouTubeSearchResult,
+  searchYouTube,
+  checkLyricsAvailable,
+} from './utils/youtube-search.util';
 
 type SongWithRelations = Prisma.SongGetPayload<{
   include: { stems: true; pitchData: true };
@@ -19,6 +24,11 @@ export class SongsService {
     private readonly prisma: PrismaService,
     private readonly jobs: JobsService,
   ) {}
+
+  async search(query: string, limit: number): Promise<YouTubeSearchResult[]> {
+    this.logger.log(`YouTube search: "${query}" (limit=${limit})`);
+    return searchYouTube(query, limit);
+  }
 
   async createSong(userId: string, youtubeUrl: string): Promise<SongResponse> {
     const videoId = extractVideoId(youtubeUrl);
@@ -124,15 +134,19 @@ export class SongsService {
   ): Promise<SongResponse> {
     const metadata = await fetchYouTubeMetadata(videoId);
     const thumbnailUrl = metadata?.thumbnailUrl ?? (await fetchBestThumbnailUrl(videoId));
+    const title = metadata?.title ?? videoId;
+    const artist = metadata?.artist || null;
+    const hasLyrics = await checkLyricsAvailable(title, artist ?? '');
 
     const song = await this.prisma.song.create({
       data: {
         userId,
         videoId,
-        title: metadata?.title ?? videoId,
-        artist: metadata?.artist || null,
+        title,
+        artist,
         thumbnailUrl,
         duration: 0,
+        hasLyrics,
       },
       include: { stems: true, pitchData: true },
     });
@@ -170,6 +184,7 @@ export class SongsService {
       thumbnailUrl: song.thumbnailUrl,
       duration: song.duration,
       status: song.status,
+      hasLyrics: song.hasLyrics,
       stems: song.stems.map((s) => ({
         id: s.id,
         type: s.type,
