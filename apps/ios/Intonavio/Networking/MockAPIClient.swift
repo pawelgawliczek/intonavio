@@ -54,6 +54,11 @@ extension MockAPIClient {
         return Fixtures.searchResults
     }
 
+    func previewSong(youtubeUrl: String) async throws -> YouTubeSearchResult {
+        try maybeThrow()
+        return Fixtures.searchResults[0]
+    }
+
     func createSong(_ request: CreateSongRequest) async throws -> SongResponse {
         try maybeThrow()
         return Fixtures.queuedSong

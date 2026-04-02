@@ -35,6 +35,11 @@ export class SongsController {
     return this.songs.search(dto.q, dto.limit);
   }
 
+  @Get('preview')
+  preview(@Query() dto: CreateSongDto) {
+    return this.songs.preview(dto.youtubeUrl);
+  }
+
   @Get()
   findAll(@User('userId') userId: string, @Query() query: PaginationQueryDto) {
     return this.songs.findAllByUser(userId, query.page, query.limit);

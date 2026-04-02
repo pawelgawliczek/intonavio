@@ -11,6 +11,7 @@ enum APIEndpoint {
 
     // Songs
     case searchSongs(query: String, limit: Int)
+    case previewSong(youtubeUrl: String)
     case createSong(CreateSongRequest)
     case getSong(id: String)
     case listSongs(page: Int, limit: Int)
@@ -36,6 +37,7 @@ enum APIEndpoint {
         case .refreshToken: return "/auth/refresh"
         case .deleteAccount: return "/auth/account"
         case .searchSongs: return "/songs/search"
+        case .previewSong: return "/songs/preview"
         case .createSong: return "/songs"
         case .getSong(let id): return "/songs/\(id)"
         case .listSongs: return "/songs"
@@ -58,7 +60,7 @@ enum APIEndpoint {
             return "POST"
         case .deleteAccount, .deleteSong:
             return "DELETE"
-        case .getSong, .listSongs, .searchSongs, .listStems,
+        case .getSong, .listSongs, .searchSongs, .previewSong, .listStems,
              .stemDownloadURL, .pitchDownloadURL,
              .listSessions, .getSession:
             return "GET"
@@ -83,6 +85,10 @@ enum APIEndpoint {
             return [
                 URLQueryItem(name: "q", value: query),
                 URLQueryItem(name: "limit", value: "\(limit)")
+            ]
+        case .previewSong(let youtubeUrl):
+            return [
+                URLQueryItem(name: "youtubeUrl", value: youtubeUrl)
             ]
         case .listSongs(let page, let limit):
             return [

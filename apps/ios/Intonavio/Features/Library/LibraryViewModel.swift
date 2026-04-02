@@ -96,8 +96,13 @@ final class LibraryViewModel {
     func addSong() {
         guard validateURL() else { return }
         Task { @MainActor in
-            await performAddSong()
+            await previewURL()
         }
+    }
+
+    func confirmAddSong() {
+        guard let result = selectedSearchResult else { return }
+        addFromSearch(result)
     }
 
     // MARK: - Refresh Single Song
@@ -160,6 +165,22 @@ final class LibraryViewModel {
 // MARK: - Private
 
 private extension LibraryViewModel {
+    @MainActor
+    func previewURL() async {
+        isAddingSong = true
+        addSongError = nil
+
+        do {
+            let result = try await apiClient.previewSong(youtubeUrl: addSongURL)
+            selectedSearchResult = result
+        } catch {
+            addSongError = (error as? APIError)?.message ?? error.localizedDescription
+            AppLogger.library.error("Preview failed: \(error.localizedDescription)")
+        }
+
+        isAddingSong = false
+    }
+
     @MainActor
     func executeSearch(query: String) async {
         isSearching = true

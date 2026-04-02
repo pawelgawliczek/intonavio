@@ -171,7 +171,7 @@ private extension AddSongSheet {
             if viewModel.isAddingSong {
                 ProgressView()
             } else {
-                Text("Add Song")
+                Text("Check Song")
             }
         }
         .buttonStyle(PrimaryButtonStyle())

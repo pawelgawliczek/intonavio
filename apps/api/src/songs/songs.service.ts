@@ -30,6 +30,29 @@ export class SongsService {
     return searchYouTube(query, limit);
   }
 
+  async preview(youtubeUrl: string): Promise<YouTubeSearchResult> {
+    const videoId = extractVideoId(youtubeUrl);
+    if (!videoId) {
+      throw new BadRequestException('Could not extract video ID from URL');
+    }
+
+    const metadata = await fetchYouTubeMetadata(videoId);
+    const title = metadata?.title ?? videoId;
+    const artist = metadata?.artist ?? '';
+    const thumbnailUrl = metadata?.thumbnailUrl ?? (await fetchBestThumbnailUrl(videoId));
+    const hasLyrics = await checkLyricsAvailable(title, artist);
+
+    return {
+      videoId,
+      title,
+      artist,
+      duration: 0,
+      thumbnailUrl,
+      url: `https://www.youtube.com/watch?v=${videoId}`,
+      hasLyrics,
+    };
+  }
+
   async createSong(userId: string, youtubeUrl: string): Promise<SongResponse> {
     const videoId = extractVideoId(youtubeUrl);
     if (!videoId) {

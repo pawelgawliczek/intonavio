@@ -58,6 +58,10 @@ extension APIClient {
         try await execute(.searchSongs(query: query, limit: limit))
     }
 
+    func previewSong(youtubeUrl: String) async throws -> YouTubeSearchResult {
+        try await execute(.previewSong(youtubeUrl: youtubeUrl))
+    }
+
     func createSong(_ request: CreateSongRequest) async throws -> SongResponse {
         try await execute(.createSong(request))
     }
