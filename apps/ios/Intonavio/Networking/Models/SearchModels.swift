@@ -1,6 +1,6 @@
 import Foundation
 
-struct YouTubeSearchResult: Codable, Sendable, Identifiable {
+struct YouTubeSearchResult: Codable, Sendable, Identifiable, Hashable {
     let videoId: String
     let title: String
     let artist: String

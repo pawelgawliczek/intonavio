@@ -24,6 +24,15 @@ struct AddSongSheet: View {
                     Button("Cancel") { dismiss() }
                 }
             }
+            .navigationDestination(item: $viewModel.selectedSearchResult) { result in
+                SongConfirmationView(
+                    result: result,
+                    isAdding: viewModel.addingVideoId == result.videoId,
+                    error: viewModel.searchError
+                ) {
+                    viewModel.addFromSearch(result)
+                }
+            }
         }
     }
 }
@@ -57,7 +66,8 @@ private extension AddSongSheet {
                 ProgressView()
                     .tint(.intonavioIce)
                 Spacer()
-            } else if let error = viewModel.searchError {
+            } else if let error = viewModel.searchError,
+                      viewModel.selectedSearchResult == nil {
                 Spacer()
                 Text(error)
                     .font(.caption)
@@ -97,11 +107,8 @@ private extension AddSongSheet {
         ScrollView {
             LazyVStack(spacing: 0) {
                 ForEach(viewModel.searchResults) { result in
-                    SearchResultRow(
-                        result: result,
-                        isAdding: viewModel.addingVideoId == result.videoId
-                    ) {
-                        viewModel.addFromSearch(result)
+                    SearchResultRow(result: result) {
+                        viewModel.selectedSearchResult = result
                     }
                     Divider()
                         .overlay(Color.intonavioSurface)
@@ -176,23 +183,23 @@ private extension AddSongSheet {
 
 private struct SearchResultRow: View {
     let result: YouTubeSearchResult
-    let isAdding: Bool
-    let onAdd: () -> Void
+    let onTap: () -> Void
 
     var body: some View {
-        Button(action: onAdd) {
+        Button(action: onTap) {
             HStack(spacing: 12) {
                 thumbnail
                 details
                 Spacer()
-                addIndicator
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(Color.intonavioTextSecondary)
             }
             .padding(.horizontal, 24)
             .padding(.vertical, 10)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .disabled(isAdding)
     }
 
     private var thumbnail: some View {
@@ -248,18 +255,101 @@ private struct SearchResultRow: View {
                 .fill(Color.intonavioMagenta.opacity(0.15))
         )
     }
+}
 
-    @ViewBuilder
-    private var addIndicator: some View {
-        if isAdding {
-            ProgressView()
-                .controlSize(.small)
-                .tint(.intonavioIce)
-        } else {
-            Image(systemName: "plus.circle")
-                .font(.title3)
-                .foregroundStyle(LinearGradient.intonavio)
+// MARK: - Song Confirmation View
+
+struct SongConfirmationView: View {
+    let result: YouTubeSearchResult
+    let isAdding: Bool
+    let error: String?
+    let onConfirm: () -> Void
+
+    var body: some View {
+        VStack(spacing: 24) {
+            largeThumbnail
+            songDetails
+            lyricsStatus
+            if let error {
+                Text(error)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+            }
+            Spacer()
+            addButton
         }
+        .padding(.horizontal, 24)
+        .padding(.top, 20)
+        .background(Color.intonavioBackground.ignoresSafeArea())
+        .navigationTitle("Confirm Song")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var largeThumbnail: some View {
+        AsyncImage(url: URL(string: result.thumbnailUrl)) { image in
+            image.resizable().aspectRatio(contentMode: .fill)
+        } placeholder: {
+            Color.intonavioSurface
+        }
+        .frame(height: 180)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    private var songDetails: some View {
+        VStack(spacing: 6) {
+            Text(result.title)
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(.white)
+                .multilineTextAlignment(.center)
+
+            Text(result.artist)
+                .font(.subheadline)
+                .foregroundStyle(Color.intonavioTextSecondary)
+
+            Text(result.formattedDuration)
+                .font(.caption)
+                .foregroundStyle(Color.intonavioTextSecondary)
+        }
+    }
+
+    private var lyricsStatus: some View {
+        HStack(spacing: 10) {
+            Image(systemName: result.hasLyrics ? "checkmark.circle.fill" : "xmark.circle.fill")
+                .font(.title2)
+                .foregroundStyle(result.hasLyrics ? .green : Color.intonavioTextSecondary)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(result.hasLyrics ? "Synced Lyrics Available" : "No Synced Lyrics Found")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.white)
+
+                Text(result.hasLyrics
+                     ? "Lyrics will be shown during practice."
+                     : "You can still practice with pitch detection only.")
+                    .font(.caption)
+                    .foregroundStyle(Color.intonavioTextSecondary)
+            }
+
+            Spacer()
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.intonavioSurface)
+        )
+    }
+
+    private var addButton: some View {
+        Button(action: onConfirm) {
+            if isAdding {
+                ProgressView()
+            } else {
+                Text("Add Song")
+            }
+        }
+        .buttonStyle(PrimaryButtonStyle())
+        .disabled(isAdding)
+        .padding(.bottom, 16)
     }
 }
 

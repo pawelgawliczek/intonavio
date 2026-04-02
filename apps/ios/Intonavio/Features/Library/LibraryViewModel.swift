@@ -23,6 +23,7 @@ final class LibraryViewModel {
     var isSearching = false
     var searchError: String?
     var addingVideoId: String?
+    var selectedSearchResult: YouTubeSearchResult?
 
     private let apiClient: any APIClientProtocol
     private var pollingTask: Task<Void, Never>?
