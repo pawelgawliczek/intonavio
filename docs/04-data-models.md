@@ -70,6 +70,7 @@ erDiagram
         string artist "nullable, from YouTube oEmbed"
         string thumbnailUrl
         int duration "seconds"
+        boolean hasLyrics "LRCLIB check at creation"
         string status "SongStatus enum"
         string externalJobId "StemSplit job ID"
         string errorMessage "nullable"

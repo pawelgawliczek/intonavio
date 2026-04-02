@@ -395,6 +395,36 @@ graph LR
 
 ---
 
+### Phase 6.8: YouTube Search + Lyrics Detection
+
+**Goal:** Allow users to search YouTube directly from the app and see lyrics availability before adding a song, for both search and URL paste flows.
+
+> **Status:** Complete.
+
+**Deliverables:**
+
+- `GET /songs/search` endpoint: uses `yt-dlp` (no API key) to search YouTube, checks each result against LRCLIB for synced lyrics availability. Returns up to 20 results with `hasLyrics` flag.
+- `GET /songs/preview` endpoint: fetches metadata for a single YouTube URL via yt-dlp, checks LRCLIB for lyrics. Used by the "Paste URL" flow before adding.
+- `hasLyrics` field on Song model (Prisma migration): persisted at song creation time via LRCLIB check.
+- `youtube-search.util.ts`: server-side utility — `searchYouTube()`, `checkLyricsAvailable()`, YouTube title cleaning (strips noise like "Official Video", "Lyrics", etc.).
+- `yt-dlp` + `python3` added to API Docker image (Alpine apk + wget binary).
+- iOS `AddSongSheet` redesigned: two-tab picker (Search / Paste URL), search bar with results list, `SongConfirmationView` with lyrics status panel.
+- Two-step confirmation flow: tap search result or "Check Song" → confirmation screen with large thumbnail, lyrics status, "Add Song" button.
+- Lyrics badge (magenta capsule) on search results and library grid items when `hasLyrics` is true.
+- `YouTubeSearchResult` model (iOS): `Codable`, `Hashable`, `Identifiable`, used for both search and preview responses.
+- `LibraryViewModel` search state: `performSearch()`, `addFromSearch()`, `previewURL()` methods.
+
+**Quality gates:**
+
+- Build succeeds (API + iOS, 0 errors)
+- Search returns relevant YouTube results with correct lyrics flags
+- URL paste previews metadata and lyrics before adding
+- Confirmation screen clearly shows lyrics availability
+- Songs added from search appear in library with correct `hasLyrics` status
+- ESLint strict + sonarjs passes
+
+---
+
 ### Phase 7: macOS
 
 **Goal:** macOS app derived from the iOS codebase.

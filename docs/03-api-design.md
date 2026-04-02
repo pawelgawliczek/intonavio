@@ -244,12 +244,53 @@ sequenceDiagram
 
 ### Songs
 
-| Method   | Path         | Description                                                              |
-| -------- | ------------ | ------------------------------------------------------------------------ |
-| `POST`   | `/songs`     | Submit YouTube URL — deduplicates by videoId, adds to user's library     |
-| `GET`    | `/songs/:id` | Get song details (must be in user's library)                             |
-| `GET`    | `/songs`     | List user's library songs via UserSongLibrary (paginated)                |
-| `DELETE` | `/songs/:id` | Remove song from user's library (does not delete the shared song record) |
+| Method   | Path             | Description                                                              |
+| -------- | ---------------- | ------------------------------------------------------------------------ |
+| `GET`    | `/songs/search`  | Search YouTube for songs with lyrics availability check                  |
+| `GET`    | `/songs/preview` | Preview a YouTube URL — fetches metadata and checks lyrics availability  |
+| `POST`   | `/songs`         | Submit YouTube URL — deduplicates by videoId, adds to user's library     |
+| `GET`    | `/songs/:id`     | Get song details (must be in user's library)                             |
+| `GET`    | `/songs`         | List user's library songs via UserSongLibrary (paginated)                |
+| `DELETE` | `/songs/:id`     | Remove song from user's library (does not delete the shared song record) |
+
+#### `GET /songs/search`
+
+Search YouTube for songs matching a query. Returns up to `limit` results with lyrics availability pre-checked via LRCLIB. Uses `yt-dlp` server-side (no API key required).
+
+**Query parameters:**
+
+| Param   | Type   | Required | Default | Description                     |
+| ------- | ------ | -------- | ------- | ------------------------------- |
+| `q`     | string | yes      | —       | Search query (min 2 characters) |
+| `limit` | int    | no       | 10      | Max results to return (1–20)    |
+
+**Response (200):**
+
+```json
+[
+  {
+    "videoId": "YQHsXMglC9A",
+    "title": "Adele - Hello (Official Music Video)",
+    "artist": "Adele",
+    "duration": 367,
+    "thumbnailUrl": "https://img.youtube.com/vi/YQHsXMglC9A/hqdefault.jpg",
+    "url": "https://www.youtube.com/watch?v=YQHsXMglC9A",
+    "hasLyrics": true
+  }
+]
+```
+
+#### `GET /songs/preview`
+
+Preview a YouTube URL before adding it. Fetches video metadata via yt-dlp and checks lyrics availability via LRCLIB. Used by the iOS "Paste URL" flow to show a confirmation screen before adding.
+
+**Query parameters:**
+
+| Param        | Type   | Required | Description             |
+| ------------ | ------ | -------- | ----------------------- |
+| `youtubeUrl` | string | yes      | Valid YouTube video URL |
+
+**Response (200):** Same shape as a single search result (see above).
 
 #### `POST /songs`
 

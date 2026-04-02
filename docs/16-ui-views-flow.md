@@ -20,7 +20,10 @@ Defining all views, navigation, and layout decisions for the Intonavio singing p
    - **Exercises** — Horizontal scrollable categories (Scales, Arpeggios, Intervals, Vibrato, Breathing). Pre-built exercises ship with app; community-shared exercises available via browse/search.
    - **Recordings** — Horizontal scroll of user-recorded instrument notes/phrases. Each card shows name, note count, duration, date. `[+ Record]` card opens RecordView. See `docs/17-instrument-recording.md`.
 
-4. **Add Song Sheet** — YouTube URL input, validation, submit. Shows processing progress after submission.
+4. **Add Song Sheet** — Two-tab interface (segmented picker):
+   - **Search tab (default)**: Search bar + results list. Each result shows thumbnail, title, artist, duration, and a magenta "Lyrics" badge when synced lyrics are available. Tapping a result navigates to the **Song Confirmation** screen.
+   - **URL tab**: Paste a YouTube URL, tap "Check Song" to preview metadata and lyrics availability, then navigates to the **Song Confirmation** screen.
+   - **Song Confirmation** (navigation push): Large thumbnail, title, artist, duration, prominent lyrics status panel (green checkmark "Synced Lyrics Available" or gray X "No Synced Lyrics Found"), and "Add Song" button. User explicitly confirms before the song is added to their library.
 5. **Exercise Browser** — Browse/search community exercises, filter by category/difficulty.
 
 ### Recordings

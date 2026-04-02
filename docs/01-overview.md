@@ -26,7 +26,7 @@ Existing karaoke apps use limited licensed catalogs. Intonavio leverages YouTube
 
 | Feature                        | Description                                                                                                                                         |
 | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **YouTube Integration**        | Paste any YouTube lyrics video URL to start practicing                                                                                              |
+| **YouTube Integration**        | Search YouTube in-app or paste a URL to add songs. Lyrics availability (via LRCLIB) shown before adding.                                            |
 | **Stem Separation**            | Split audio into vocals + instrumental via StemSplit API (YouTube flow). File upload flow supports up to 6 stems.                                   |
 | **A-B Looping**                | Set loop markers on the video timeline, repeat sections at adjustable speed (0.25x–4x)                                                              |
 | **Real-Time Pitch Detection**  | Detect the singer's pitch via microphone and display on an interactive piano roll (touch to pause, swipe to scrub, long-press to loop a phrase)     |
