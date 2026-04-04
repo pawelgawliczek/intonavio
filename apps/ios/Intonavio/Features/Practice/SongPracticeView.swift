@@ -13,6 +13,7 @@ struct SongPracticeView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @Environment(AppState.self) private var appState
     @State private var viewModel: PracticeViewModel?
     @State private var isShowingProgress = false
 
@@ -599,6 +600,7 @@ private extension SongPracticeView {
         let vm = PracticeViewModel(
             songId: songId,
             videoId: videoId,
+            sessionsViewModel: appState.sessionsViewModel,
             isOffline: isOffline
         )
         vm.stems = stems

@@ -8,6 +8,7 @@ final class AppState {
     var isRestoringAuth = true
     var selectedTab: Tab = .library
     var currentUser: AuthUser?
+    let sessionsViewModel = SessionsViewModel()
 
     enum Tab: Int {
         case library = 0

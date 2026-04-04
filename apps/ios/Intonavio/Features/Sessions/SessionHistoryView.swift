@@ -1,7 +1,9 @@
 import SwiftUI
 
 struct SessionHistoryView: View {
-    @State private var viewModel = SessionsViewModel()
+    @Environment(AppState.self) private var appState
+
+    private var viewModel: SessionsViewModel { appState.sessionsViewModel }
 
     var body: some View {
         Group {
@@ -64,4 +66,5 @@ private extension SessionHistoryView {
     NavigationStack {
         SessionHistoryView()
     }
+    .environment(AppState())
 }
