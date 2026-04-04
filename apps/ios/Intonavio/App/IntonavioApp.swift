@@ -39,7 +39,7 @@ private extension IntonavioApp {
             try session.setCategory(
                 .playAndRecord,
                 mode: .measurement,
-                options: [.defaultToSpeaker, .allowBluetooth, .mixWithOthers]
+                options: [.defaultToSpeaker, .allowBluetooth, .allowBluetoothA2DP, .mixWithOthers]
             )
             try session.setActive(true)
             AppLogger.audio.info("AVAudioSession configured")

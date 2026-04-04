@@ -20,7 +20,7 @@ enum AudioSessionManager {
         try session.setCategory(
             .playAndRecord,
             mode: .measurement,
-            options: [.defaultToSpeaker, .allowBluetooth, .mixWithOthers]
+            options: [.defaultToSpeaker, .allowBluetooth, .allowBluetoothA2DP, .mixWithOthers]
         )
         try session.setPreferredIOBufferDuration(
             Double(PitchConstants.ioBufferSize) / Double(PitchConstants.sampleRate)
