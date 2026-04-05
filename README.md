@@ -172,6 +172,10 @@ The entire app was designed in documentation before writing any code. Docs are i
 - [Code quality standards](docs/12-code-quality.md)
 - [Testing strategy](docs/14-testing-strategy.md)
 
+## Disclaimer
+
+This software does not include, bundle, or distribute any copyrighted music, lyrics, or audio content. It provides tools that interact with third-party services (YouTube, LRCLIB, StemSplit) on behalf of the user. Users and operators are responsible for ensuring their use of these services complies with applicable terms of service and copyright law.
+
 ## License
 
 [MIT](LICENSE)
