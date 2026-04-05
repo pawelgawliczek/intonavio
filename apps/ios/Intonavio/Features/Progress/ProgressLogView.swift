@@ -68,7 +68,7 @@ private extension ProgressLogView {
 
             HStack {
                 Label("Best Score", systemImage: "star.fill")
-                    .foregroundStyle(.yellow)
+                    .foregroundStyle(Color.intonavioAmber)
                 Spacer()
                 Text("\(Int(songBestScore.rounded()))%")
                     .font(.title2.bold().monospacedDigit())
@@ -164,10 +164,10 @@ private extension ProgressLogView {
     }
 
     func colorForScore(_ score: Double) -> Color {
-        if score > 80 { return .green }
-        if score > 50 { return .yellow }
-        if score > 30 { return .orange }
-        return .gray
+        if score > 80 { return .intonavioAmber }
+        if score > 50 { return .intonavioMagenta }
+        if score > 30 { return .intonavioIce.opacity(0.7) }
+        return .intonavioTextSecondary
     }
 }
 

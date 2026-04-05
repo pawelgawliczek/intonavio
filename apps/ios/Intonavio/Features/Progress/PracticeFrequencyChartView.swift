@@ -54,13 +54,33 @@ extension PracticeFrequencyChartView {
 
 private extension PracticeFrequencyChartView {
     var chart: some View {
-        Chart(groupedByDay) { bucket in
-            BarMark(
-                x: .value("Date", bucket.date, unit: .day),
-                y: .value("Attempts", bucket.count)
-            )
-            .foregroundStyle(LinearGradient.intonavio)
-            .cornerRadius(3)
+        Chart {
+            ForEach(groupedByDay) { bucket in
+                BarMark(
+                    x: .value("Date", bucket.date, unit: .day),
+                    y: .value("Attempts", bucket.count)
+                )
+                .foregroundStyle(Color.intonavioAmber.opacity(0.8))
+                .cornerRadius(3)
+            }
+
+            if let trend = frequencyTrendLine {
+                LineMark(
+                    x: .value("Date", trend.startDate),
+                    y: .value("Attempts", trend.startValue),
+                    series: .value("Trend", "trend")
+                )
+                .foregroundStyle(Color.intonavioIce.opacity(0.4))
+                .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
+
+                LineMark(
+                    x: .value("Date", trend.endDate),
+                    y: .value("Attempts", trend.endValue),
+                    series: .value("Trend", "trend")
+                )
+                .foregroundStyle(Color.intonavioIce.opacity(0.4))
+                .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
+            }
         }
         .chartYAxis {
             AxisMarks { value in
@@ -131,6 +151,41 @@ private extension PracticeFrequencyChartView {
 
         return counts.map { DayBucket(date: $0.key, count: $0.value) }
             .sorted { $0.date < $1.date }
+    }
+
+    struct TrendEndpoints {
+        let startDate: Date
+        let startValue: Double
+        let endDate: Date
+        let endValue: Double
+    }
+
+    var frequencyTrendLine: TrendEndpoints? {
+        let buckets = groupedByDay
+        guard buckets.count >= 2 else { return nil }
+
+        let firstTime = buckets[0].date.timeIntervalSinceReferenceDate
+        let xs = buckets.map { $0.date.timeIntervalSinceReferenceDate - firstTime }
+        let ys = buckets.map { Double($0.count) }
+        let n = Double(xs.count)
+
+        let sumX = xs.reduce(0, +)
+        let sumY = ys.reduce(0, +)
+        let sumXY = zip(xs, ys).reduce(0) { $0 + $1.0 * $1.1 }
+        let sumX2 = xs.reduce(0) { $0 + $1 * $1 }
+
+        let denominator = n * sumX2 - sumX * sumX
+        guard abs(denominator) > 1e-10 else { return nil }
+
+        let slope = (n * sumXY - sumX * sumY) / denominator
+        let intercept = (sumY - slope * sumX) / n
+
+        return TrendEndpoints(
+            startDate: buckets.first!.date,
+            startValue: max(0, intercept),
+            endDate: buckets.last!.date,
+            endValue: max(0, slope * xs.last! + intercept)
+        )
     }
 
     var xStride: Calendar.Component {

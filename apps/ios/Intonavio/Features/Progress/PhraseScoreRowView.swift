@@ -40,10 +40,10 @@ private extension PhraseScoreRowView {
     }
 
     var barColor: Color {
-        if bestScore > 80 { return .green }
-        if bestScore > 50 { return .yellow }
-        if bestScore > 30 { return .orange }
-        return .gray
+        if bestScore > 80 { return .intonavioAmber }
+        if bestScore > 50 { return .intonavioMagenta }
+        if bestScore > 30 { return .intonavioIce.opacity(0.7) }
+        return .intonavioTextSecondary
     }
 }
 

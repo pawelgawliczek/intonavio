@@ -51,7 +51,7 @@ private extension BestTakeRowView {
                     "\(Int(meta.score.rounded()))%",
                     systemImage: "star.fill"
                 )
-                .foregroundStyle(.yellow)
+                .foregroundStyle(Color.intonavioAmber)
                 .font(.subheadline.bold().monospacedDigit())
 
                 Spacer()
