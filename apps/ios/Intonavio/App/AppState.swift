@@ -6,6 +6,7 @@ import SwiftUI
 final class AppState {
     var isAuthenticated = false
     var isRestoringAuth = true
+    var showOnboarding = false
     var selectedTab: Tab = .library
     var currentUser: AuthUser?
     let sessionsViewModel = SessionsViewModel()
@@ -30,6 +31,10 @@ final class AppState {
     /// Check Keychain for tokens on launch and verify validity.
     func restoreAuth() {
         defer { isRestoringAuth = false }
+
+        if !OnboardingViewModel.hasCompleted {
+            showOnboarding = true
+        }
 
         guard tokenManager.hasValidTokens else {
             isAuthenticated = false

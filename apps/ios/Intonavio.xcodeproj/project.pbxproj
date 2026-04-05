@@ -7,6 +7,20 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D401D7E0A4C805B300DB65F2 /* OnboardingContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B6F21F780CEC51E0A9E156F /* OnboardingContainerView.swift */; };
+		C177D7C86E1D638285035984 /* OnboardingContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B6F21F780CEC51E0A9E156F /* OnboardingContainerView.swift */; };
+		CE0CAB7F7084EA254CAE181F /* OnboardingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3881CB6B7AEF1C4CAB39BC9E /* OnboardingViewModel.swift */; };
+		902E0E5975E80A25938F231D /* OnboardingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3881CB6B7AEF1C4CAB39BC9E /* OnboardingViewModel.swift */; };
+		1562EC890C3A99E0BF2524EE /* WelcomeStepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C16E81C922F66717145E315 /* WelcomeStepView.swift */; };
+		27FC46495BA9A9FDECDC018D /* WelcomeStepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C16E81C922F66717145E315 /* WelcomeStepView.swift */; };
+		8CD561F8EA53450A165E802D /* HeadphonesStepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9436A945C5682113CF379BA7 /* HeadphonesStepView.swift */; };
+		D8B87C1596BCF426CC98C678 /* HeadphonesStepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9436A945C5682113CF379BA7 /* HeadphonesStepView.swift */; };
+		F6CBC19F4C67333CA8CC5FAF /* MicPermissionStepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54CB6D4D9242DF05D358FE92 /* MicPermissionStepView.swift */; };
+		2CB198EC9F3EEEE521B0EB44 /* MicPermissionStepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54CB6D4D9242DF05D358FE92 /* MicPermissionStepView.swift */; };
+		DD7F2B5FDB95F72131718EAD /* PitchTestStepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72FD5B77B39FDB40DDB49D97 /* PitchTestStepView.swift */; };
+		BB3288AA984E4589197F4BF5 /* PitchTestStepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72FD5B77B39FDB40DDB49D97 /* PitchTestStepView.swift */; };
+		078AFCED1486750E64676048 /* AddSongStepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 772F76880E1E354FEC3740C4 /* AddSongStepView.swift */; };
+		7CC9583D4804D78BD5E3F9AD /* AddSongStepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 772F76880E1E354FEC3740C4 /* AddSongStepView.swift */; };
 		00EEE68720960E08F7DF6855 /* PitchAccuracy.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6E3866A26CEA25A5361E33C /* PitchAccuracy.swift */; };
 		018FDB9EB144C35A12F2B395 /* SongStatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D838B316EBD35DBA8F5C732 /* SongStatusBadge.swift */; };
 		041194E9D875882E304AA4F8 /* PracticeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD158E2B7A33E186A33FF9E4 /* PracticeViewModel.swift */; };
@@ -339,6 +353,13 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		4B6F21F780CEC51E0A9E156F /* OnboardingContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingContainerView.swift; sourceTree = "<group>"; };
+		3881CB6B7AEF1C4CAB39BC9E /* OnboardingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModel.swift; sourceTree = "<group>"; };
+		0C16E81C922F66717145E315 /* WelcomeStepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeStepView.swift; sourceTree = "<group>"; };
+		9436A945C5682113CF379BA7 /* HeadphonesStepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeadphonesStepView.swift; sourceTree = "<group>"; };
+		54CB6D4D9242DF05D358FE92 /* MicPermissionStepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MicPermissionStepView.swift; sourceTree = "<group>"; };
+		72FD5B77B39FDB40DDB49D97 /* PitchTestStepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchTestStepView.swift; sourceTree = "<group>"; };
+		772F76880E1E354FEC3740C4 /* AddSongStepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddSongStepView.swift; sourceTree = "<group>"; };
 		02CC2F56981B7AC5426C8AE4 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		0403666350C3FEA4005E1D94 /* Breakout.ogg */ = {isa = PBXFileReference; path = Breakout.ogg; sourceTree = "<group>"; };
 		056A9E81C0D1C73B15344062 /* ShareSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheet.swift; sourceTree = "<group>"; };
@@ -645,6 +666,20 @@
 			path = Resources;
 			sourceTree = "<group>";
 		};
+		4911F37302089DC330B5BFD8 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				4B6F21F780CEC51E0A9E156F /* OnboardingContainerView.swift */,
+				3881CB6B7AEF1C4CAB39BC9E /* OnboardingViewModel.swift */,
+				0C16E81C922F66717145E315 /* WelcomeStepView.swift */,
+				9436A945C5682113CF379BA7 /* HeadphonesStepView.swift */,
+				54CB6D4D9242DF05D358FE92 /* MicPermissionStepView.swift */,
+				72FD5B77B39FDB40DDB49D97 /* PitchTestStepView.swift */,
+				772F76880E1E354FEC3740C4 /* AddSongStepView.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
 		47F8A3128E57FD6C255B7677 /* Recording */ = {
 			isa = PBXGroup;
 			children = (
@@ -742,6 +777,7 @@
 			children = (
 				EE24ED8B2734702BA5291F38 /* Auth */,
 				2BC2D4D862629DCCE5D3C18E /* Library */,
+				4911F37302089DC330B5BFD8 /* Onboarding */,
 				3450D609ABDAB9686926996F /* Practice */,
 				96CB91CB1269ABA7C06E9A5A /* Progress */,
 				47F8A3128E57FD6C255B7677 /* Recording */,
@@ -1130,6 +1166,13 @@
 				828D3199D64EA47BC9F38A4B /* CelebrationSound.swift in Sources */,
 				DD656D6D879D3BE1A6426624 /* ContentView.swift in Sources */,
 				8F144A6E0FDEBCA15F16FC4D /* ControlsBarView.swift in Sources */,
+				D401D7E0A4C805B300DB65F2 /* OnboardingContainerView.swift in Sources */,
+				CE0CAB7F7084EA254CAE181F /* OnboardingViewModel.swift in Sources */,
+				1562EC890C3A99E0BF2524EE /* WelcomeStepView.swift in Sources */,
+				8CD561F8EA53450A165E802D /* HeadphonesStepView.swift in Sources */,
+				F6CBC19F4C67333CA8CC5FAF /* MicPermissionStepView.swift in Sources */,
+				DD7F2B5FDB95F72131718EAD /* PitchTestStepView.swift in Sources */,
+				078AFCED1486750E64676048 /* AddSongStepView.swift in Sources */,
 				15B5BA5AE4BE0911AFF76C05 /* CurrentNoteView.swift in Sources */,
 				C7528E0D0744E02FB2D0CEB7 /* DesignSystem.swift in Sources */,
 				E4BE7F22B9A888E79732CDB0 /* DetectedPitchPoint.swift in Sources */,
@@ -1269,6 +1312,13 @@
 				417F5C997B1AD5831108C849 /* CelebrationSound.swift in Sources */,
 				37B64B9DEEA3007C64CB7CF6 /* ContentView.swift in Sources */,
 				F8DED1902F578D15CC6A3DA2 /* ControlsBarView.swift in Sources */,
+				C177D7C86E1D638285035984 /* OnboardingContainerView.swift in Sources */,
+				902E0E5975E80A25938F231D /* OnboardingViewModel.swift in Sources */,
+				27FC46495BA9A9FDECDC018D /* WelcomeStepView.swift in Sources */,
+				D8B87C1596BCF426CC98C678 /* HeadphonesStepView.swift in Sources */,
+				2CB198EC9F3EEEE521B0EB44 /* MicPermissionStepView.swift in Sources */,
+				BB3288AA984E4589197F4BF5 /* PitchTestStepView.swift in Sources */,
+				7CC9583D4804D78BD5E3F9AD /* AddSongStepView.swift in Sources */,
 				33C33105982A965A806FC824 /* CurrentNoteView.swift in Sources */,
 				3B1F3DB8A0F39D04CC248C7C /* DesignSystem.swift in Sources */,
 				A578CBDDD457220FE9189F11 /* DetectedPitchPoint.swift in Sources */,

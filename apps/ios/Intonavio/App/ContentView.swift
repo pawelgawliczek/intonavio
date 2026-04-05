@@ -37,6 +37,12 @@ struct ContentView: View {
                     }
                     .tag(AppState.Tab.settings)
                 }
+                .fullScreenCover(isPresented: $state.showOnboarding) {
+                    OnboardingContainerView {
+                        appState.showOnboarding = false
+                    }
+                    .environment(appState)
+                }
                 .fullScreenCover(isPresented: isNotAuthenticated) {
                     SignInView()
                         .environment(appState)

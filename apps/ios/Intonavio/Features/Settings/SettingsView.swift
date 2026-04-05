@@ -253,6 +253,11 @@ private extension SettingsView {
                 Text(appVersion)
                     .foregroundStyle(Color.intonavioTextSecondary)
             }
+
+            Button("Replay Onboarding") {
+                OnboardingViewModel.reset()
+                appState.showOnboarding = true
+            }
         }
     }
 

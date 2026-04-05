@@ -79,6 +79,7 @@ Before writing any code, read the docs relevant to the work:
 - **Any audio pipeline change** → read `docs/05-audio-pipeline.md`, `docs/06-realtime-pitch.md`
 - **Any instrument recording change** → read `docs/17-instrument-recording.md`, `docs/05-audio-pipeline.md` (Instrument Recording Pipeline section), `docs/16-ui-views-flow.md`
 - **Any subscription/paywall/credit change** → read `docs/19-monetization.md` (gitignored, local only)
+- **Any onboarding change** → read `docs/20-onboarding.md`, `docs/16-ui-views-flow.md` (App Launch Flow)
 
 Always read `docs/12-code-quality.md` — it applies to every change.
 
@@ -103,6 +104,7 @@ Always read `docs/12-code-quality.md` — it applies to every change.
 | Development workflow & CI/CD | `docs/15-development-workflow.md`  |
 | UI views & navigation flow   | `docs/16-ui-views-flow.md`         |
 | Instrument recording feature | `docs/17-instrument-recording.md`  |
+| Onboarding flow              | `docs/20-onboarding.md`            |
 
 Do not deviate from documented architecture without updating the relevant doc first.
 
