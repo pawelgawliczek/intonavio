@@ -62,3 +62,7 @@ pnpm-debug.log*
 # Misc
 *.tgz
 .cache/
+
+# Sensitive docs (pricing, business strategy)
+docs/18-competitive-analysis.md
+docs/19-monetization.md

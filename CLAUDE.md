@@ -78,6 +78,7 @@ Before writing any code, read the docs relevant to the work:
 - **Any data model change** → read `docs/04-data-models.md`, `docs/12-code-quality.md` (Prisma section)
 - **Any audio pipeline change** → read `docs/05-audio-pipeline.md`, `docs/06-realtime-pitch.md`
 - **Any instrument recording change** → read `docs/17-instrument-recording.md`, `docs/05-audio-pipeline.md` (Instrument Recording Pipeline section), `docs/16-ui-views-flow.md`
+- **Any subscription/paywall/credit change** → read `docs/19-monetization.md` (gitignored, local only)
 
 Always read `docs/12-code-quality.md` — it applies to every change.
 
