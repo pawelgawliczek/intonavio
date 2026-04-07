@@ -100,7 +100,9 @@ def _process_job(job_data: PitchAnalysisJobData, config: WorkerConfig) -> None:
             else:
                 new_frames.append(PitchFrame(t=f.t, hz=None, midi=None, voiced=False, rms=f.rms))
 
-        frames = new_frames
+        from src.despike import despike_frames
+
+        frames = despike_frames(new_frames)
         stats = compute_stats(frames)
 
         log_with_context(
