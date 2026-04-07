@@ -121,6 +121,20 @@ def _process_job(job_data: PitchAnalysisJobData, config: WorkerConfig) -> None:
                         ReconciledFrame(hz=None, voiced=False, source="rmvpe_only_far")
                     )
                     continue
+            elif r.source == "disagree_rmvpe" and r.voiced and r.hz is not None:
+                # pYIN ran on the isolated vocal stem and is the authority on
+                # what the singer is doing. RMVPE ran on the full mix and may
+                # be tracking an instrument. When they disagree, trust pYIN.
+                pyin_here = pyin_cands[i]
+                if pyin_here.hz is not None:
+                    guarded.append(
+                        ReconciledFrame(
+                            hz=pyin_here.hz,
+                            voiced=True,
+                            source="disagree_pyin_override",
+                        )
+                    )
+                    continue
             guarded.append(r)
         reconciled = guarded
 
