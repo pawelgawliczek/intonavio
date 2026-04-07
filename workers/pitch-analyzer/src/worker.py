@@ -88,22 +88,40 @@ def _process_job(job_data: PitchAnalysisJobData, config: WorkerConfig) -> None:
         # (intros, instrumental breaks). If a frame came in via the
         # rmvpe_only branch and has no pYIN-voiced anchor within ±500 ms,
         # it's almost certainly an instrument — demote it to unvoiced.
+        import math as _math
+
         from src.reconcile import ReconciledFrame
 
         anchor_window = max(1, int(0.5 / pyin_hop))
-        pyin_voiced_mask = [c.confidence >= config.pyin_voiced_prob_thresh and c.hz is not None for c in pyin_cands]
+        max_anchor_semitones = 7.0  # > perfect-fifth from nearest vocal anchor → instrument
+        pyin_anchor_hz: list[float | None] = [
+            c.hz if (c.hz is not None and c.confidence >= config.pyin_voiced_prob_thresh) else None
+            for c in pyin_cands
+        ]
 
-        def has_pyin_anchor(idx: int) -> bool:
-            lo = max(0, idx - anchor_window)
-            hi = min(len(pyin_voiced_mask), idx + anchor_window + 1)
-            return any(pyin_voiced_mask[lo:hi])
+        def nearest_anchor_hz(idx: int) -> float | None:
+            for d in range(0, anchor_window + 1):
+                for j in (idx - d, idx + d) if d > 0 else (idx,):
+                    if 0 <= j < len(pyin_anchor_hz) and pyin_anchor_hz[j] is not None:
+                        return pyin_anchor_hz[j]
+            return None
 
         guarded: list[ReconciledFrame] = []
         for i, r in enumerate(reconciled):
-            if r.source == "rmvpe_only" and r.voiced and not has_pyin_anchor(i):
-                guarded.append(ReconciledFrame(hz=None, voiced=False, source="rmvpe_only_orphan"))
-            else:
-                guarded.append(r)
+            if r.source == "rmvpe_only" and r.voiced and r.hz is not None:
+                anchor = nearest_anchor_hz(i)
+                if anchor is None:
+                    guarded.append(
+                        ReconciledFrame(hz=None, voiced=False, source="rmvpe_only_orphan")
+                    )
+                    continue
+                dist = abs(12.0 * _math.log2(r.hz / anchor))
+                if dist > max_anchor_semitones:
+                    guarded.append(
+                        ReconciledFrame(hz=None, voiced=False, source="rmvpe_only_far")
+                    )
+                    continue
+            guarded.append(r)
         reconciled = guarded
 
         new_frames: list[PitchFrame] = []
