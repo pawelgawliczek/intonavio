@@ -22,6 +22,19 @@ class WorkerConfig(BaseSettings):
     pyin_fmax: float = 1100.0
     pyin_hop_length: int = 512
     pyin_sample_rate: int = 44100
+    # Minimum voiced probability from pYIN to accept a frame as voiced.
+    # Step 2 of the pitch quality roadmap — filters out the low-confidence
+    # frames that were silently accepted by the default (0.5) and caused
+    # instrument-bleed garbage pitches in dense sections.
+    pyin_voiced_prob_thresh: float = 0.8
+
+    # RMVPE reconciliation (step 4 of the pitch quality roadmap).
+    # RMVPE runs on the FULL mix as a second opinion; its per-frame output
+    # is reconciled against pYIN by src/reconcile.py.
+    rmvpe_voiced_thresh: float = 0.5
+    # Pitch disagreement threshold in semitones. Above this, reconcile picks
+    # the higher-confidence tracker instead of blending. 50 cents = 0.5 semitones.
+    reconcile_agreement_semitones: float = 0.5
 
     # Validation thresholds
     max_unvoiced_ratio: float = 0.9

@@ -27,14 +27,25 @@ def build_frames(
     rms_values: NDArray[np.float64],
     sample_rate: int,
     hop_length: int,
+    voiced_prob: NDArray[np.float64] | None = None,
+    voiced_prob_thresh: float = 0.0,
 ) -> list[PitchFrame]:
-    """Convert numpy arrays from pYIN into a list of PitchFrame objects."""
+    """Convert numpy arrays from pYIN into a list of PitchFrame objects.
+
+    When `voiced_prob` is provided together with `voiced_prob_thresh > 0`,
+    frames whose voiced probability falls below the threshold are demoted
+    to unvoiced. Step 2 of the pitch quality roadmap.
+    """
     frames: list[PitchFrame] = []
     hop_duration = hop_length / sample_rate
 
     for i in range(len(f0)):
         t = round(i * hop_duration, 4)
         is_voiced = bool(voiced_flag[i]) and not np.isnan(f0[i])
+        if is_voiced and voiced_prob is not None and voiced_prob_thresh > 0.0:
+            prob = float(voiced_prob[i]) if i < len(voiced_prob) else 0.0
+            if prob < voiced_prob_thresh:
+                is_voiced = False
         rms_val = round(float(rms_values[i]), 6) if i < len(rms_values) else None
 
         if is_voiced:
@@ -169,7 +180,7 @@ def extract_pitch(
     )
     y = sosfiltfilt(sos, y).astype(np.float32)
 
-    f0, voiced_flag, _ = librosa.pyin(
+    f0, voiced_flag, voiced_prob = librosa.pyin(
         y,
         fmin=config.pyin_fmin,
         fmax=config.pyin_fmax,
@@ -185,6 +196,8 @@ def extract_pitch(
         rms,
         config.pyin_sample_rate,
         config.pyin_hop_length,
+        voiced_prob=voiced_prob,
+        voiced_prob_thresh=config.pyin_voiced_prob_thresh,
     )
     frames = fix_octave_errors(frames)
     stats = compute_stats(frames)
