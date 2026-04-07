@@ -4,10 +4,17 @@ from pydantic import BaseModel, Field
 
 
 class PitchAnalysisJobData(BaseModel):
-    """Parses camelCase BullMQ job data from the NestJS producer."""
+    """Parses camelCase BullMQ job data from the NestJS producer.
+
+    `variant_id` and `pitch_output_key` are optional for backwards
+    compatibility with any legacy jobs still draining the queue. New
+    jobs produced after the variant migration always set both.
+    """
 
     song_id: str = Field(alias="songId")
+    variant_id: str | None = Field(default=None, alias="variantId")
     vocal_stem_key: str = Field(alias="vocalStemKey")
+    pitch_output_key: str | None = Field(default=None, alias="pitchOutputKey")
     trace_id: str = Field(alias="traceId")
 
     model_config = {"populate_by_name": True}

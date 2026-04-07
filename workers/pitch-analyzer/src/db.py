@@ -79,6 +79,93 @@ def complete_pitch_analysis(
         cursor.close()
 
 
+def complete_variant_pitch_analysis(
+    conn: Any,
+    variant_id: str,
+    song_id: str,
+    storage_key: str,
+    frame_count: int,
+    hop_duration: float,
+    trace_id: str,
+) -> None:
+    """Persist pitch data on the SongVariant row and flip its status to READY.
+
+    Also transitions the parent Song to READY if it is still ANALYZING.
+    """
+    start = time.monotonic()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            UPDATE "SongVariant"
+            SET "pitchKey" = %s,
+                "frameCount" = %s,
+                "hopDuration" = %s,
+                status = 'READY',
+                "errorMessage" = NULL,
+                "updatedAt" = NOW()
+            WHERE id = %s
+            """,
+            (storage_key, frame_count, hop_duration, variant_id),
+        )
+        cursor.execute(
+            """
+            UPDATE "Song"
+            SET status = 'READY', "updatedAt" = NOW()
+            WHERE id = %s AND status = 'ANALYZING'
+            """,
+            (song_id,),
+        )
+        conn.commit()
+        log_with_context(
+            logger,
+            logging.INFO,
+            "Variant pitch analysis persisted",
+            traceId=trace_id,
+            songId=song_id,
+            variantId=variant_id,
+            durationMs=int((time.monotonic() - start) * 1000),
+        )
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        cursor.close()
+
+
+def mark_variant_failed(
+    conn: Any,
+    variant_id: str,
+    error_message: str,
+    trace_id: str,
+) -> None:
+    """Mark a SongVariant as FAILED."""
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            UPDATE "SongVariant"
+            SET status = 'FAILED', "errorMessage" = %s, "updatedAt" = NOW()
+            WHERE id = %s
+            """,
+            (error_message, variant_id),
+        )
+        conn.commit()
+        log_with_context(
+            logger,
+            logging.WARNING,
+            "Variant marked FAILED",
+            traceId=trace_id,
+            variantId=variant_id,
+            errorMessage=error_message,
+        )
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        cursor.close()
+
+
 def mark_song_failed(
     conn: Any,
     song_id: str,

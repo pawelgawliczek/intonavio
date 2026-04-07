@@ -15,7 +15,13 @@ if TYPE_CHECKING:
 from src.analyzer import extract_pitch, validate_analysis
 from src.config import WorkerConfig
 from src.consumer import create_worker, run_heartbeat
-from src.db import complete_pitch_analysis, create_connection, mark_song_failed
+from src.db import (
+    complete_pitch_analysis,
+    complete_variant_pitch_analysis,
+    create_connection,
+    mark_song_failed,
+    mark_variant_failed,
+)
 from src.logger import get_logger, log_with_context
 from src.models import PitchAnalysisJobData, PitchAnalysisOutput, PitchFrame
 from src.phrases import detect_phrases
@@ -225,21 +231,36 @@ def _process_job(job_data: PitchAnalysisJobData, config: WorkerConfig) -> None:
     )
     json_bytes = output.model_dump_json(by_alias=True).encode("utf-8")
 
-    # 5. Upload to R2
-    storage_key = f"pitch/{song_id}/reference.json"
+    # 5. Upload to R2 — use the pitch_output_key supplied by the producer
+    #    when present (new variant flow), else fall back to the legacy path.
+    storage_key = job_data.pitch_output_key or f"pitch/{song_id}/reference.json"
     upload_pitch_json(s3, config.r2_bucket_name, storage_key, json_bytes, trace_id)
 
-    # 6. Persist to DB and mark song READY
+    # 6. Persist to DB.
+    #    - New jobs with variantId: write to SongVariant, flip variant + song to READY.
+    #    - Legacy jobs without variantId: keep the old PitchData write path so any
+    #      in-flight jobs at migration time still drain cleanly.
     conn = create_connection(config)
     try:
-        complete_pitch_analysis(
-            conn,
-            song_id,
-            storage_key,
-            stats.frame_count,
-            hop_duration,
-            trace_id,
-        )
+        if job_data.variant_id:
+            complete_variant_pitch_analysis(
+                conn,
+                job_data.variant_id,
+                song_id,
+                storage_key,
+                stats.frame_count,
+                hop_duration,
+                trace_id,
+            )
+        else:
+            complete_pitch_analysis(
+                conn,
+                song_id,
+                storage_key,
+                stats.frame_count,
+                hop_duration,
+                trace_id,
+            )
     finally:
         conn.close()
 
@@ -279,6 +300,13 @@ async def handle_job(job: Job[Any], token: str | None = None) -> None:
             try:
                 conn = create_connection(config)
                 try:
+                    if job_data.variant_id:
+                        mark_variant_failed(
+                            conn,
+                            job_data.variant_id,
+                            str(exc),
+                            job_data.trace_id,
+                        )
                     mark_song_failed(
                         conn,
                         job_data.song_id,
