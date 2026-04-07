@@ -43,6 +43,19 @@ enum StemType {
   FULL
 }
 
+enum StemSource {
+  STUDIO
+  DRAFT
+}
+
+enum VariantStatus {
+  QUEUED
+  SPLITTING
+  ANALYZING
+  READY
+  FAILED
+}
+
 // ─── Models ──────────────────────────────────────────
 
 model User {
@@ -74,23 +87,26 @@ model AuthProvider {
 }
 
 model Song {
-  id            String     @id @default(cuid())
-  userId        String
-  videoId       String     @unique
-  title         String
-  artist        String?
-  thumbnailUrl  String
-  duration      Int
-  status        SongStatus @default(QUEUED)
-  hasLyrics     Boolean    @default(false)
-  externalJobId String?
-  errorMessage  String?
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  id              String     @id @default(cuid())
+  userId          String
+  videoId         String     @unique
+  title           String
+  artist          String?
+  thumbnailUrl    String
+  duration        Int
+  status          SongStatus @default(QUEUED)
+  hasLyrics       Boolean    @default(false)
+  externalJobId   String?
+  errorMessage    String?
+  activeVariantId String?    @unique
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
 
   user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   stems           Stem[]
   pitchData       PitchData?
+  variants        SongVariant[]
+  activeVariant   SongVariant?      @relation("ActiveVariant", fields: [activeVariantId], references: [id], onDelete: SetNull)
   sessions        Session[]
   userSongLibrary UserSongLibrary[]
 
@@ -98,10 +114,32 @@ model Song {
   @@index([status])
 }
 
+model SongVariant {
+  id            String        @id @default(cuid())
+  songId        String
+  source        StemSource
+  status        VariantStatus @default(QUEUED)
+  stemsPrefix   String // e.g. "stems/<songId>/STUDIO"
+  pitchKey      String? // e.g. "pitch/<songId>/STUDIO/reference.json"
+  frameCount    Int?
+  hopDuration   Float?
+  externalJobId String?
+  errorMessage  String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  song          Song  @relation(fields: [songId], references: [id], onDelete: Cascade)
+  activeForSong Song? @relation("ActiveVariant")
+
+  @@unique([songId, source])
+  @@index([songId])
+  @@index([status])
+}
+
 model UserSongLibrary {
-  id     String   @id @default(cuid())
-  userId String
-  songId String
+  id      String   @id @default(cuid())
+  userId  String
+  songId  String
   addedAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
