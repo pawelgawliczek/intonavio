@@ -5,20 +5,13 @@ RUN apt-get update && \
       libsndfile1 \
       ffmpeg \
       curl \
-      ca-certificates \
-      build-essential \
-      python3-dev && \
+      ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# numpy must be present before diffq's setup.py runs (it imports numpy at build time).
 COPY requirements.txt .
-RUN pip install --no-cache-dir "numpy<2" "cython<4" && \
-    pip install --no-cache-dir -r requirements.txt && \
-    apt-get purge -y build-essential python3-dev && \
-    apt-get autoremove -y && \
-    rm -rf /var/lib/apt/lists/*
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Vendored BS-Roformer Viperx 1297 weights + config — see models/README.md for
 # license and provenance. Download-at-build with SHA256 verification; build fails
