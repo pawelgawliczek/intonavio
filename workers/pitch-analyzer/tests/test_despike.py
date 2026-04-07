@@ -28,8 +28,19 @@ def test_single_octave_spike_is_pulled_down() -> None:
     frames[5] = _f(880.0, t=0.05)  # one-octave spike
     out = despike_frames(frames)
     assert out[5].hz is not None
-    # snapped back to ~440
+    # geometric mean of 440 and 440 → 440
     assert abs(out[5].hz - 440.0) < 1.0
+
+
+def test_spike_between_two_different_pitches_is_midpoint() -> None:
+    # Stable run at 440, then a spike, then stable run at 880.
+    # geometric mean(440, 880) = sqrt(387200) ≈ 622.25 (≈ D#5, halfway in semis).
+    frames = [_f(440.0, t=i * 0.01) for i in range(5)]
+    frames.append(_f(220.0, t=0.05))  # outlier
+    frames += [_f(880.0, t=(6 + i) * 0.01) for i in range(5)]
+    out = despike_frames(frames)
+    assert out[5].hz is not None
+    assert 620.0 < out[5].hz < 625.0
 
 
 def test_small_jitter_below_threshold_kept() -> None:

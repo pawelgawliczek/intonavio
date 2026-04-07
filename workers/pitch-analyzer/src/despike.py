@@ -8,9 +8,11 @@ function, no torch.
 
 Strategy: for each voiced frame, compare its MIDI value to the median of
 its `window` neighbors (excluding itself, voiced only). If the deviation
-exceeds `semitone_threshold`, replace hz with the median's hz (preserving
-voicing). Frames near unvoiced boundaries with too few voiced neighbors
-are left untouched — they're already on the edge and median is unreliable.
+exceeds `semitone_threshold`, replace hz with the geometric mean of the
+nearest voiced frame before and after the spike — i.e. the midpoint in
+log/semitone space, which is what a singer's ear hears as "halfway".
+Frames near unvoiced boundaries with too few voiced neighbors are left
+untouched — they're already on the edge and median is unreliable.
 """
 
 from __future__ import annotations
@@ -61,14 +63,37 @@ def despike_frames(
 
         neighbors.sort()
         median = neighbors[len(neighbors) // 2]
-        if abs(midis[i] - median) >= semitone_threshold:
-            new_hz = _hz_from_midi(median)
-            f = frames[i]
-            out[i] = PitchFrame(
-                t=f.t,
-                hz=round(new_hz, 2),
-                midi=round(median, 1),
-                voiced=True,
-                rms=f.rms,
-            )
+        if abs(midis[i] - median) < semitone_threshold:
+            continue
+
+        # Outlier — interpolate between the nearest voiced frame before and
+        # after this index. Geometric mean = midpoint in semitone space.
+        prev_hz: float | None = None
+        for j in range(i - 1, -1, -1):
+            if midis[j] is not None and frames[j].hz is not None:
+                prev_hz = frames[j].hz
+                break
+        next_hz: float | None = None
+        for j in range(i + 1, n):
+            if midis[j] is not None and frames[j].hz is not None:
+                next_hz = frames[j].hz
+                break
+
+        if prev_hz is not None and next_hz is not None:
+            new_hz = math.sqrt(prev_hz * next_hz)
+        elif prev_hz is not None:
+            new_hz = prev_hz
+        elif next_hz is not None:
+            new_hz = next_hz
+        else:
+            continue  # nothing usable on either side
+
+        f = frames[i]
+        out[i] = PitchFrame(
+            t=f.t,
+            hz=round(new_hz, 2),
+            midi=round(_midi_from_hz(new_hz), 1),
+            voiced=True,
+            rms=f.rms,
+        )
     return out
