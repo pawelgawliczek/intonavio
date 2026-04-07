@@ -282,7 +282,7 @@ def test_fix_octave_errors_leaves_correct_frames() -> None:
     frames = [PitchFrame(t=i * 0.01, hz=440.0 + i, midi=69.0, voiced=True) for i in range(40)]
     fixed = fix_octave_errors(frames)
 
-    for orig, result in zip(frames, fixed):
+    for orig, result in zip(frames, fixed, strict=False):
         assert orig.hz == result.hz
 
 

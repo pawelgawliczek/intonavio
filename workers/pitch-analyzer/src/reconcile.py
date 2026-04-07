@@ -104,9 +104,7 @@ def reconcile_frame(
 
     if distance < agreement_semitones:
         # Branch 2 — agree → confidence-weighted log-space mean
-        blended = _log_weighted_mean(
-            pyin.hz, pyin.confidence, rmvpe.hz, rmvpe.confidence
-        )
+        blended = _log_weighted_mean(pyin.hz, pyin.confidence, rmvpe.hz, rmvpe.confidence)
         return ReconciledFrame(hz=blended, voiced=True, source="agree")
 
     # Branch 3 — disagree → trust the higher-confidence tracker. Ties break

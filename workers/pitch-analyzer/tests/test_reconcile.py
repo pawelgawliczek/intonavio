@@ -38,6 +38,7 @@ def _reconcile(p: PitchCandidate, r: PitchCandidate):
 
 # ── Branch 1: both unvoiced ───────────────────────────────────────────────
 
+
 class TestBothUnvoiced:
     def test_both_none(self) -> None:
         out = _reconcile(_pyin(None, 0.0), _rmvpe(None, 0.0))
@@ -53,6 +54,7 @@ class TestBothUnvoiced:
 
 
 # ── Branch 2: both voiced, agree → log-weighted mean ──────────────────────
+
 
 class TestBothVoicedAgree:
     def test_identical_pitch_is_same(self) -> None:
@@ -74,6 +76,7 @@ class TestBothVoicedAgree:
 
 
 # ── Branch 3: both voiced, disagree ≥ threshold → higher-confidence wins ──
+
 
 class TestBothVoicedDisagree:
     def test_one_octave_up_pyin_higher_conf(self) -> None:
@@ -103,6 +106,7 @@ class TestBothVoicedDisagree:
 
 # ── Branch 4: exactly one voiced ──────────────────────────────────────────
 
+
 class TestSingleTrackerVoiced:
     def test_only_pyin_trusted(self) -> None:
         out = _reconcile(_pyin(330.0, 0.95), _rmvpe(None, 0.0))
@@ -130,6 +134,7 @@ class TestSingleTrackerVoiced:
 
 # ── reconcile_tracks wrapper ──────────────────────────────────────────────
 
+
 class TestReconcileTracks:
     def test_length_mismatch_raises(self) -> None:
         with pytest.raises(ValueError, match="Frame count mismatch"):
@@ -143,11 +148,11 @@ class TestReconcileTracks:
 
     def test_mixed_frame_sequence(self) -> None:
         pyin = [
-            _pyin(None, 0.0),        # both unvoiced
-            _pyin(440.0, 0.9),       # agree
-            _pyin(220.0, 0.95),      # disagree, pYIN wins
-            _pyin(None, 0.0),        # rmvpe_only
-            _pyin(440.0, 0.6),       # pYIN low-conf, rmvpe unvoiced → unvoiced
+            _pyin(None, 0.0),  # both unvoiced
+            _pyin(440.0, 0.9),  # agree
+            _pyin(220.0, 0.95),  # disagree, pYIN wins
+            _pyin(None, 0.0),  # rmvpe_only
+            _pyin(440.0, 0.6),  # pYIN low-conf, rmvpe unvoiced → unvoiced
         ]
         rmvpe = [
             _rmvpe(None, 0.0),
