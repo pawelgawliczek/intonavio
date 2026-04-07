@@ -83,6 +83,29 @@ def _process_job(job_data: PitchAnalysisJobData, config: WorkerConfig) -> None:
             agreement_semitones=config.reconcile_agreement_semitones,
         )
 
+        # Post-reconcile guard: RMVPE runs on the FULL mix and will happily
+        # track instrument pitches during sections where the singer is silent
+        # (intros, instrumental breaks). If a frame came in via the
+        # rmvpe_only branch and has no pYIN-voiced anchor within ±500 ms,
+        # it's almost certainly an instrument — demote it to unvoiced.
+        from src.reconcile import ReconciledFrame
+
+        anchor_window = max(1, int(0.5 / pyin_hop))
+        pyin_voiced_mask = [c.confidence >= config.pyin_voiced_prob_thresh and c.hz is not None for c in pyin_cands]
+
+        def has_pyin_anchor(idx: int) -> bool:
+            lo = max(0, idx - anchor_window)
+            hi = min(len(pyin_voiced_mask), idx + anchor_window + 1)
+            return any(pyin_voiced_mask[lo:hi])
+
+        guarded: list[ReconciledFrame] = []
+        for i, r in enumerate(reconciled):
+            if r.source == "rmvpe_only" and r.voiced and not has_pyin_anchor(i):
+                guarded.append(ReconciledFrame(hz=None, voiced=False, source="rmvpe_only_orphan"))
+            else:
+                guarded.append(r)
+        reconciled = guarded
+
         new_frames: list[PitchFrame] = []
         branch_counts: dict[str, int] = {}
         for f, r in zip(frames, reconciled, strict=True):
