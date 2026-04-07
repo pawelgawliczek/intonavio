@@ -35,6 +35,12 @@ class WorkerConfig(BaseSettings):
     # Pitch disagreement threshold in semitones. Above this, reconcile picks
     # the higher-confidence tracker instead of blending. 50 cents = 0.5 semitones.
     reconcile_agreement_semitones: float = 0.5
+    # Phase C dark-launch toggle: when True, the worker downloads the full mix,
+    # runs RMVPE as a second opinion, and feeds reconcile_tracks to produce the
+    # final frames. Default False — behavior must be byte-identical to pre-Phase-C
+    # when this flag is off.
+    enable_rmvpe_reconcile: bool = False
+    rmvpe_model_dir: str = "/app/models"
 
     # Validation thresholds
     max_unvoiced_ratio: float = 0.9

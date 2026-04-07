@@ -13,12 +13,12 @@ if TYPE_CHECKING:
     from bullmq import Job
 
 from src.analyzer import extract_pitch, validate_analysis
-from src.phrases import detect_phrases
 from src.config import WorkerConfig
 from src.consumer import create_worker, run_heartbeat
 from src.db import complete_pitch_analysis, create_connection, mark_song_failed
 from src.logger import get_logger, log_with_context
-from src.models import PitchAnalysisJobData, PitchAnalysisOutput
+from src.models import PitchAnalysisJobData, PitchAnalysisOutput, PitchFrame
+from src.phrases import detect_phrases
 from src.sentry_setup import capture_job_exception, init_sentry
 from src.storage import create_s3_client, download_stem, upload_pitch_json
 
@@ -47,6 +47,77 @@ def _process_job(job_data: PitchAnalysisJobData, config: WorkerConfig) -> None:
 
     # 2. Run pYIN extraction
     frames, stats = extract_pitch(audio_bytes, config, trace_id)
+
+    # 2b. Optional: RMVPE second-opinion reconciliation (Phase C, dark-launch).
+    if config.enable_rmvpe_reconcile:
+        from src.analyzer import compute_stats, hz_to_midi
+        from src.frame_align import align_candidates
+        from src.reconcile import PitchCandidate, reconcile_tracks
+        from src.rmvpe_analyzer import (
+            RMVPE_HOP_SECONDS,
+            extract_rmvpe_candidates,
+            load_rmvpe,
+        )
+
+        # Derive full-mix key from the vocal stem key:
+        #   stems/<song>/VOCALS.mp3 -> stems/<song>/FULL.mp3
+        full_key = job_data.vocal_stem_key.rsplit("/", 1)[0] + "/FULL.mp3"
+        full_bytes = download_stem(s3, config.r2_bucket_name, full_key, trace_id)
+
+        rmvpe = load_rmvpe(f"{config.rmvpe_model_dir}/rmvpe.pt")
+        rmvpe_cands = extract_rmvpe_candidates(rmvpe, full_bytes)
+
+        # Rebuild pYIN candidates from persisted frames. analyzer.build_frames
+        # already demoted sub-threshold frames to unvoiced; reconcile's threshold
+        # gate still fires via pyin_voiced_thresh.
+        pyin_cands = [PitchCandidate(hz=f.hz, confidence=1.0 if f.voiced else 0.0) for f in frames]
+
+        pyin_hop = config.pyin_hop_length / config.pyin_sample_rate
+        aligned_rmvpe = align_candidates(rmvpe_cands, RMVPE_HOP_SECONDS, len(pyin_cands), pyin_hop)
+
+        reconciled = reconcile_tracks(
+            pyin_cands,
+            aligned_rmvpe,
+            pyin_voiced_thresh=config.pyin_voiced_prob_thresh,
+            rmvpe_voiced_thresh=config.rmvpe_voiced_thresh,
+            agreement_semitones=config.reconcile_agreement_semitones,
+        )
+
+        new_frames: list[PitchFrame] = []
+        branch_counts: dict[str, int] = {}
+        for f, r in zip(frames, reconciled, strict=True):
+            branch_counts[r.source] = branch_counts.get(r.source, 0) + 1
+            if r.voiced and r.hz is not None:
+                new_frames.append(
+                    PitchFrame(
+                        t=f.t,
+                        hz=r.hz,
+                        midi=round(hz_to_midi(r.hz), 1),
+                        voiced=True,
+                        rms=f.rms,
+                    )
+                )
+            else:
+                new_frames.append(PitchFrame(t=f.t, hz=None, midi=None, voiced=False, rms=f.rms))
+
+        frames = new_frames
+        stats = compute_stats(frames)
+
+        log_with_context(
+            logger,
+            logging.INFO,
+            "RMVPE reconciliation complete",
+            traceId=trace_id,
+            songId=song_id,
+            branchCounts=branch_counts,
+            voicedFramePercent=stats.voiced_frame_percent,
+        )
+
+        # Free RMVPE model after each job — idle cost is high (~500MB).
+        del rmvpe
+        import gc
+
+        gc.collect()
 
     # 3. Validate — raise if invalid so BullMQ retries
     if not validate_analysis(stats, config.max_unvoiced_ratio):
