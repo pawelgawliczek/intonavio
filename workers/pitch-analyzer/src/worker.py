@@ -155,6 +155,34 @@ def _process_job(job_data: PitchAnalysisJobData, config: WorkerConfig) -> None:
             else:
                 new_frames.append(PitchFrame(t=f.t, hz=None, midi=None, voiced=False, rms=f.rms))
 
+        # Bass-bleed gate: pYIN on the isolated vocal stem can lock onto
+        # bass/guitar bleed during vocal rests. When both pYIN and RMVPE
+        # agree on a sub-vocal pitch but no vocal-range frame exists nearby,
+        # it's almost certainly an instrument — demote.
+        bass_hz_max = 130.0  # ~C3, below typical vocal melody
+        bass_window = max(1, int(0.5 / pyin_hop))
+        hz_list = [f.hz for f in new_frames]
+
+        def has_vocal_anchor(idx: int) -> bool:
+            lo_i = max(0, idx - bass_window)
+            hi_i = min(len(hz_list), idx + bass_window + 1)
+            for j in range(lo_i, hi_i):
+                h = hz_list[j]
+                if h is not None and h >= bass_hz_max:
+                    return True
+            return False
+
+        gated: list[PitchFrame] = []
+        bass_gated_count = 0
+        for i, f in enumerate(new_frames):
+            if f.voiced and f.hz is not None and f.hz < bass_hz_max and not has_vocal_anchor(i):
+                gated.append(PitchFrame(t=f.t, hz=None, midi=None, voiced=False, rms=f.rms))
+                bass_gated_count += 1
+            else:
+                gated.append(f)
+        new_frames = gated
+        branch_counts["bass_gated"] = bass_gated_count
+
         from src.despike import despike_frames
 
         frames = despike_frames(new_frames)
