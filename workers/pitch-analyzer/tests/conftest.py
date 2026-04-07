@@ -69,6 +69,12 @@ def sine_261_bytes() -> bytes:
 
 
 @pytest.fixture()
+def sine_1500_bytes() -> bytes:
+    """2 seconds of 1500Hz sine wave as WAV (above vocal range)."""
+    return make_wav_bytes(1500.0, 2.0)
+
+
+@pytest.fixture()
 def silence_bytes() -> bytes:
     """2 seconds of silence as WAV."""
     return make_wav_bytes(0.0, 2.0)

@@ -8,6 +8,7 @@ from src.analyzer import (
     build_frames,
     compute_stats,
     extract_pitch,
+    fix_octave_errors,
     hz_to_midi,
     validate_analysis,
 )
@@ -70,6 +71,26 @@ def test_extract_pitch_261hz_sine(
         assert abs(f.hz - 261.63) < 5.0
 
 
+def test_extract_pitch_1500hz_rejected_by_bandpass(
+    sine_1500_bytes: bytes,
+    sample_config: WorkerConfig,
+) -> None:
+    """1500Hz sine is above the 1100Hz bandpass cutoff — the fundamental is
+    attenuated and capped by fmax, so the 1500 Hz tone itself is never
+    reported. This is the guarantee that makes the Sound of Silence 3:04
+    1500–2000 Hz instrument-bleed error class mathematically impossible.
+    """
+    frames, _ = extract_pitch(sine_1500_bytes, sample_config, "test-trace")
+
+    voiced = [f for f in frames if f.voiced and f.hz is not None]
+    # fmax=1100 guarantees nothing above 1100 Hz is ever reported
+    for f in voiced:
+        assert f.hz is not None
+        assert f.hz <= 1100.0
+        # The actual 1500 Hz fundamental must not be tracked
+        assert abs(f.hz - 1500.0) > 100.0
+
+
 def test_extract_pitch_silence(
     silence_bytes: bytes,
     sample_config: WorkerConfig,
@@ -100,8 +121,9 @@ def test_build_frames_with_nan() -> None:
     """NaN f0 values produce unvoiced frames."""
     f0 = np.array([440.0, np.nan, 261.63])
     voiced = np.array([True, False, True])
+    rms = np.array([0.1, 0.0, 0.1])
 
-    frames = build_frames(f0, voiced, 44100, 512)
+    frames = build_frames(f0, voiced, rms, 44100, 512)
 
     assert frames[0].voiced is True
     assert frames[0].hz == 440.0
@@ -114,8 +136,9 @@ def test_build_frames_time_monotonic() -> None:
     """Frame t values are monotonically increasing."""
     f0 = np.array([440.0, 440.0, 440.0, 440.0, 440.0])
     voiced = np.array([True, True, True, True, True])
+    rms = np.array([0.1, 0.1, 0.1, 0.1, 0.1])
 
-    frames = build_frames(f0, voiced, 44100, 512)
+    frames = build_frames(f0, voiced, rms, 44100, 512)
 
     for i in range(1, len(frames)):
         assert frames[i].t > frames[i - 1].t
@@ -125,8 +148,9 @@ def test_build_frames_voiced_flag_false_overrides_f0() -> None:
     """If voiced_flag is False, frame is unvoiced even if f0 has a value."""
     f0 = np.array([440.0])
     voiced = np.array([False])
+    rms = np.array([0.1])
 
-    frames = build_frames(f0, voiced, 44100, 512)
+    frames = build_frames(f0, voiced, rms, 44100, 512)
     assert frames[0].voiced is False
     assert frames[0].hz is None
 
@@ -219,6 +243,57 @@ def test_validate_analysis_empty() -> None:
         is_valid=False,
     )
     assert validate_analysis(stats, 0.9) is False
+
+
+# --- fix_octave_errors ---
+
+
+def test_fix_octave_errors_corrects_octave_up() -> None:
+    """Frames jumping an octave above neighbors are halved."""
+    normal = [PitchFrame(t=i * 0.01, hz=440.0, midi=69.0, voiced=True) for i in range(40)]
+    # Insert 10 octave-up frames in the middle
+    for i in range(15, 25):
+        normal[i] = PitchFrame(t=i * 0.01, hz=880.0, midi=81.0, voiced=True)
+
+    fixed = fix_octave_errors(normal, window_size=21, semitone_threshold=10.0)
+
+    for i in range(15, 25):
+        assert fixed[i].hz is not None
+        assert abs(fixed[i].hz - 440.0) < 1.0
+        assert fixed[i].midi is not None
+        assert abs(fixed[i].midi - 69.0) < 0.1
+
+
+def test_fix_octave_errors_corrects_octave_down() -> None:
+    """Frames jumping an octave below neighbors are doubled."""
+    normal = [PitchFrame(t=i * 0.01, hz=440.0, midi=69.0, voiced=True) for i in range(40)]
+    for i in range(15, 25):
+        normal[i] = PitchFrame(t=i * 0.01, hz=220.0, midi=57.0, voiced=True)
+
+    fixed = fix_octave_errors(normal, window_size=21, semitone_threshold=10.0)
+
+    for i in range(15, 25):
+        assert fixed[i].hz is not None
+        assert abs(fixed[i].hz - 440.0) < 1.0
+
+
+def test_fix_octave_errors_leaves_correct_frames() -> None:
+    """Frames with normal pitch variation are not modified."""
+    frames = [PitchFrame(t=i * 0.01, hz=440.0 + i, midi=69.0, voiced=True) for i in range(40)]
+    fixed = fix_octave_errors(frames)
+
+    for orig, result in zip(frames, fixed):
+        assert orig.hz == result.hz
+
+
+def test_fix_octave_errors_skips_unvoiced() -> None:
+    """Unvoiced frames are not modified."""
+    frames = [PitchFrame(t=i * 0.01, hz=None, midi=None, voiced=False) for i in range(10)]
+    fixed = fix_octave_errors(frames)
+
+    for f in fixed:
+        assert f.voiced is False
+        assert f.hz is None
 
 
 def test_extract_pitch_idempotent(

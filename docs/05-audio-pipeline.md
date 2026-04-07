@@ -232,24 +232,66 @@ The Python worker extracts reference pitch data from the vocal stem using libros
 1. **Download** vocal stem from R2 (`stems/{songId}/VOCALS.mp3`)
 2. **Load** audio with librosa at 44.1kHz mono
 3. **Extract pitch** using `librosa.pyin()`:
+   - **Bandpass pre-filter** (scipy `butter` order 4, `sosfiltfilt`) restricts the signal to 65–1100 Hz before pYIN sees it — everything above C6 in a vocal stem is instrument bleed or harmonics
    - `fmin=65` (C2) — lowest expected singing pitch
-   - `fmax=2093` (C7) — highest expected singing pitch
+   - `fmax=1100` (just above C6 = 1047 Hz) — highest expected singing pitch; caps any residual above-range detection
    - `hop_length=512` — ~11.6ms resolution
 4. **Compute RMS** energy per frame using `librosa.feature.rms()` (same hop length)
-5. **Convert** frequencies to MIDI note numbers
-6. **Build** JSON frame array with `t`, `hz`, `midi`, `voiced`, `rms` fields
-7. **Upload** JSON to R2 at `pitch/{songId}/reference.json`
-8. **Update** database: create PitchData record, set song status to READY
+5. **Octave-error correction** — `fix_octave_errors()` post-processes the frame list with a sliding-window median filter (see below)
+6. **Convert** frequencies to MIDI note numbers
+7. **Build** JSON frame array with `t`, `hz`, `midi`, `voiced`, `rms` fields
+8. **Upload** JSON to R2 at `pitch/{songId}/reference.json`
+9. **Update** database: create PitchData record, set song status to READY
 
 ### Key Parameters
 
-| Parameter   | Value         | Rationale                                                    |
-| ----------- | ------------- | ------------------------------------------------------------ |
-| Sample rate | 44,100 Hz     | Standard audio quality                                       |
-| Hop length  | 512 samples   | ~11.6ms — matches real-time detection resolution             |
-| fmin        | 65 Hz (C2)    | Covers bass vocal range                                      |
-| fmax        | 2,093 Hz (C7) | Covers soprano vocal range                                   |
-| Algorithm   | pYIN          | More robust than YIN for pre-recorded audio; handles vibrato |
+| Parameter   | Value                                                                    | Rationale                                                                                                              |
+| ----------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| Sample rate | 44,100 Hz                                                                | Standard audio quality                                                                                                 |
+| Hop length  | 512 samples                                                              | ~11.6ms — matches real-time detection resolution                                                                       |
+| fmin        | 65 Hz (C2)                                                               | Covers bass vocal range                                                                                                |
+| fmax        | 1,100 Hz (C6)                                                            | Highest soprano C6 ≈ 1047 Hz — anything above in a vocal stem is instrument bleed/harmonics, never a real note         |
+| Pre-filter  | Butterworth bandpass 65–1100 Hz (scipy `butter` order 4 + `sosfiltfilt`) | Mathematically prevents the Sound of Silence 3:04 class of errors where pYIN tracked 1500–2000 Hz instrument harmonics |
+| Algorithm   | pYIN                                                                     | More robust than YIN for pre-recorded audio; handles vibrato                                                           |
+
+### Octave-Error Correction
+
+pYIN's internal HMM penalizes large frame-to-frame jumps symmetrically — it does **not** specifically penalize octave jumps. As a result it sometimes locks onto the 2nd harmonic (octave up) or sub-harmonic (octave down) for sustained stretches when local autocorrelation is stronger there. Real-world examples encountered:
+
+- **Adele "Hello"** at 1:08–1:13 — 164 frames reported ~932 Hz (Bb5) instead of the actual ~466 Hz (Bb4). One full octave high.
+- **Disturbed "Sound of Silence"** at 2:45 — 56 frames reported ~147 Hz (D3) instead of ~294 Hz (D4). One octave low.
+
+`analyzer.fix_octave_errors(frames, window_size=51, semitone_threshold=10.0)` runs after `build_frames` and before `compute_stats`:
+
+1. For each voiced frame, build a sliding window of ±25 surrounding frames (~0.6s).
+2. Compute the **median MIDI** of voiced frames in that window.
+3. If the current frame deviates by more than `semitone_threshold` (10 semitones) above the median → halve `hz` (subtract 12 semitones).
+4. If it deviates by more than `semitone_threshold` below → double `hz`.
+5. Frames with fewer than 5 voiced neighbors in the window are skipped (insufficient context).
+
+Limitations: the median-based approach **cannot fix errors in sections where surrounding pitch is highly variable** (e.g. dense climaxes with rapid melodic movement and instrument bleed) — the median itself becomes unreliable. Bogus high-frequency detections from instrument bleed (1500–2000 Hz at 3:04 in Sound of Silence) also evade this fix because they're not strict octave multiples of the surrounding melody. See `docs/yin-comparison-results.md` and the **Future Improvements** section below.
+
+### Retroactive Fix Script
+
+`workers/pitch-analyzer/scripts/fix_octave_errors_r2.py` re-runs the same correction over all existing `pitch/*/reference.json` files in R2, in-place. Used to retroactively clean up songs analyzed before `fix_octave_errors` was added to the pipeline. Idempotent — running it twice produces the same output.
+
+```bash
+docker exec -w /app intonavio-worker-1 python scripts/fix_octave_errors_r2.py
+```
+
+### Future Improvements (Pitch Quality Roadmap)
+
+The current pYIN + octave-correction stack has known failure modes in dense orchestral sections. The following stack of complementary improvements has been researched (April 2026, see `docs/yin-comparison-results.md`) and is the planned upgrade path:
+
+| #   | Change                                                                                                                                                                                                  | Effort               | What it fixes                                                                                                                                                                                   |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | ✅ **DONE (2026-04-07)** — Lower `fmax` from 2093 → **1100 Hz** + bandpass pre-filter to vocal range                                                                                                    | 1 hr                 | Spurious 1500–2000 Hz instrument-harmonic detections (highest soprano C6 = 1047 Hz, so anything above is always artifact)                                                                       |
+| 2   | Raise pYIN `voiced_prob` threshold to **0.8**                                                                                                                                                           | 15 min               | Reduces low-confidence false positives                                                                                                                                                          |
+| 3   | Replace pYIN with **PESTO** (`pesto-pitch` 2.0.1, ISMIR 2023, LGPLv3 — run as subprocess) as primary F0 estimator                                                                                       | 0.5 day              | Near-zero octave errors on monophonic vocals; per-frame confidence score                                                                                                                        |
+| 4   | Add **RMVPE** (designed for polyphonic input) on the **original mix** as a second opinion; reconcile via confidence-weighted median; mark frames as unvoiced when PESTO and RMVPE disagree by ≥1 octave | 1 day                | Catches residual errors via uncorrelated failure modes; refuses to guess in ambiguous sections                                                                                                  |
+| 5   | Upgrade stem separation upstream from current StemSplit to **BS-Roformer Viperx 1297** (~12.97 SDR vs htdemucs_ft ~9.5) via the `audio-separator` Python package (MIT)                                  | 2–3 days + GPU infra | Cleaner vocal stems → fewer bleed errors at the source. Highest ceiling for the "Sound of Silence climax" class of problems but requires a new worker, GPU hosting, and re-processing all songs |
+
+Steps 1–5 are **complementary, not alternatives** — each attacks a different failure mode. Recommended rollout: cheapest first, measure marginal benefit on a regression set after each, only commit to step 5 if 1–4 leave dense orchestral sections still unusable. Use **R-FFE** (Prompt-Singer, arxiv:2403.11780) as the eval metric so octave errors are visible separately from pitch-class errors.
 
 ### RMS Energy (Artifact Filtering)
 

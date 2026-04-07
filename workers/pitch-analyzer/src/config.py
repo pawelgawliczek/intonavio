@@ -19,7 +19,7 @@ class WorkerConfig(BaseSettings):
 
     # pYIN extraction parameters
     pyin_fmin: float = 65.0
-    pyin_fmax: float = 2093.0
+    pyin_fmax: float = 1100.0
     pyin_hop_length: int = 512
     pyin_sample_rate: int = 44100
 

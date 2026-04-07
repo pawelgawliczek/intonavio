@@ -7,6 +7,7 @@ from io import BytesIO
 import librosa
 import numpy as np
 from numpy.typing import NDArray
+from scipy.signal import butter, sosfiltfilt
 
 from src.config import WorkerConfig
 from src.logger import get_logger, log_with_context
@@ -44,6 +45,53 @@ def build_frames(
             frames.append(PitchFrame(t=t, hz=None, midi=None, voiced=False, rms=rms_val))
 
     return frames
+
+
+def fix_octave_errors(
+    frames: list[PitchFrame],
+    window_size: int = 51,
+    semitone_threshold: float = 10.0,
+) -> list[PitchFrame]:
+    """Correct octave errors by comparing each frame to a local median pitch.
+
+    pYIN sometimes locks onto the 2nd harmonic (octave up) or sub-harmonic
+    (octave down) for short spans.  A sliding-window median of surrounding
+    voiced MIDI values provides a robust local reference.  Any frame that
+    deviates by roughly one octave (±semitone_threshold) is shifted back.
+    """
+    midi_values = [f.midi if f.voiced and f.midi is not None else np.nan for f in frames]
+    midi_arr = np.array(midi_values, dtype=np.float64)
+
+    n = len(midi_arr)
+    half_w = window_size // 2
+    corrected = list(frames)
+
+    for i in range(n):
+        if np.isnan(midi_arr[i]):
+            continue
+
+        lo = max(0, i - half_w)
+        hi = min(n, i + half_w + 1)
+        window = midi_arr[lo:hi]
+        voiced_in_window = window[~np.isnan(window)]
+
+        if len(voiced_in_window) < 5:
+            continue
+
+        median = float(np.median(voiced_in_window))
+        diff = midi_arr[i] - median
+
+        f = frames[i]
+        if diff > semitone_threshold and f.hz is not None:
+            new_hz = round(f.hz / 2, 1)
+            new_midi = round(hz_to_midi(new_hz), 1)
+            corrected[i] = PitchFrame(t=f.t, hz=new_hz, midi=new_midi, voiced=True, rms=f.rms)
+        elif diff < -semitone_threshold and f.hz is not None:
+            new_hz = round(f.hz * 2, 1)
+            new_midi = round(hz_to_midi(new_hz), 1)
+            corrected[i] = PitchFrame(t=f.t, hz=new_hz, midi=new_midi, voiced=True, rms=f.rms)
+
+    return corrected
 
 
 def compute_stats(frames: list[PitchFrame]) -> AnalysisStats:
@@ -108,6 +156,19 @@ def extract_pitch(
         mono=True,
     )
 
+    # Bandpass 65–1100 Hz to the human vocal range before pitch extraction.
+    # Anything above ~1100 Hz in a vocal stem is instrument bleed or harmonics
+    # (highest soprano C6 ≈ 1047 Hz), so filtering it out mathematically
+    # prevents pYIN from tracking those artifacts.
+    nyquist = config.pyin_sample_rate / 2
+    sos = butter(
+        4,
+        [config.pyin_fmin / nyquist, config.pyin_fmax / nyquist],
+        btype="bandpass",
+        output="sos",
+    )
+    y = sosfiltfilt(sos, y).astype(np.float32)
+
     f0, voiced_flag, _ = librosa.pyin(
         y,
         fmin=config.pyin_fmin,
@@ -125,6 +186,7 @@ def extract_pitch(
         config.pyin_sample_rate,
         config.pyin_hop_length,
     )
+    frames = fix_octave_errors(frames)
     stats = compute_stats(frames)
 
     if stats.voiced_frame_percent < 10.0:
