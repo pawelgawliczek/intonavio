@@ -34,6 +34,8 @@ workers/pitch-analyzer/models/*.onnx
 workers/pitch-analyzer/models/*.ckpt
 workers/stem-splitter/models/*.pt
 workers/stem-splitter/models/*.ckpt
+workers/stem-splitter/models/*.yaml
+workers/stem-splitter/models/*.onnx
 
 # Python
 __pycache__/

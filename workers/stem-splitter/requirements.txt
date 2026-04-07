@@ -1,0 +1,12 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.3.1+cpu
+torchaudio==2.3.1+cpu
+audio-separator==0.44.1
+yt-dlp==2024.12.13
+boto3==1.35.74
+psycopg2-binary==2.9.10
+redis==5.2.1
+pydantic==2.10.3
+pydantic-settings==2.7.0
+bullmq==2.7.5
+sentry-sdk[pure_eval]==2.19.2
