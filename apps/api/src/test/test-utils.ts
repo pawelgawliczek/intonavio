@@ -10,25 +10,30 @@ import { AuthController } from '../auth/auth.controller';
 import { SongsController } from '../songs/songs.controller';
 import { StemsController } from '../stems/stems.controller';
 import { SessionsController } from '../sessions/sessions.controller';
+import { WebhooksController } from '../webhooks/webhooks.controller';
 import { HealthController } from '../health/health.controller';
 
 import { AuthService } from '../auth/auth.service';
 import { SongsService } from '../songs/songs.service';
 import { StemsService } from '../stems/stems.service';
 import { SessionsService } from '../sessions/sessions.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
 
 import { JwtStrategy } from '../auth/strategies/jwt.strategy';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { HttpExceptionFilter } from '../common/filters/http-exception.filter';
+import { WebhookSecretGuard } from '../webhooks/guards/webhook-secret.guard';
 import { PrismaHealthIndicator } from '../health/indicators/prisma.health';
 import { RedisHealthIndicator } from '../health/indicators/redis.health';
 import { QueueStatsService } from '../health/queue-stats.service';
 
 export const TEST_JWT_SECRET = 'test-jwt-secret-must-be-at-least-32-chars';
+export const TEST_WEBHOOK_SECRET = 'test-webhook-secret';
 
 const testConfig = () => ({
   JWT_SECRET: TEST_JWT_SECRET,
   JWT_EXPIRATION: '1h',
+  STEMSPLIT_WEBHOOK_SECRET: TEST_WEBHOOK_SECRET,
 });
 
 export interface MockServices {
@@ -36,6 +41,7 @@ export interface MockServices {
   readonly songsService: Record<string, jest.Mock>;
   readonly stemsService: Record<string, jest.Mock>;
   readonly sessionsService: Record<string, jest.Mock>;
+  readonly webhooksService: Record<string, jest.Mock>;
   readonly healthCheck: Record<string, jest.Mock>;
   readonly prismaHealth: Record<string, jest.Mock>;
   readonly redisHealth: Record<string, jest.Mock>;
@@ -67,6 +73,9 @@ export function createMockServices(): MockServices {
       findAllByUser: jest.fn(),
       findOne: jest.fn(),
     },
+    webhooksService: {
+      handleStemSplitWebhook: jest.fn(),
+    },
     healthCheck: {
       check: jest.fn().mockImplementation(async (indicators: (() => Promise<unknown>)[]) => {
         const results = await Promise.all(indicators.map((fn) => fn()));
@@ -91,14 +100,17 @@ export async function createTestApp(mocks: MockServices): Promise<INestApplicati
       SongsController,
       StemsController,
       SessionsController,
+      WebhooksController,
       HealthController,
     ],
     providers: [
       JwtStrategy,
+      WebhookSecretGuard,
       { provide: AuthService, useValue: mocks.authService },
       { provide: SongsService, useValue: mocks.songsService },
       { provide: StemsService, useValue: mocks.stemsService },
       { provide: SessionsService, useValue: mocks.sessionsService },
+      { provide: WebhooksService, useValue: mocks.webhooksService },
       { provide: HealthCheckService, useValue: mocks.healthCheck },
       { provide: PrismaHealthIndicator, useValue: mocks.prismaHealth },
       { provide: RedisHealthIndicator, useValue: mocks.redisHealth },

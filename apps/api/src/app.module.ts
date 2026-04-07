@@ -11,6 +11,7 @@ import { SongsModule } from './songs/songs.module';
 import { StemsModule } from './stems/stems.module';
 import { SessionsModule } from './sessions/sessions.module';
 import { JobsModule } from './jobs/jobs.module';
+import { WebhooksModule } from './webhooks/webhooks.module';
 import { StorageModule } from './storage/storage.module';
 import { HealthModule } from './health/health.module';
 import { PitchModule } from './pitch/pitch.module';
@@ -33,6 +34,7 @@ import { PitchModule } from './pitch/pitch.module';
     PitchModule,
     SessionsModule,
     JobsModule,
+    WebhooksModule,
     StorageModule,
     HealthModule,
   ],
