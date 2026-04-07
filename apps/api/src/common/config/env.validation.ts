@@ -1,9 +1,5 @@
 import { z } from 'zod';
 
-const emptyToUndefined = z.string().transform((val) => (val === '' ? undefined : val));
-
-const optionalUrl = emptyToUndefined.pipe(z.string().url().optional());
-
 const envSchema = z.object({
   DATABASE_URL: z.string().url(),
   REDIS_URL: z.string().url(),
@@ -26,11 +22,6 @@ const envSchema = z.object({
   R2_SECRET_ACCESS_KEY: z.string().optional().default(''),
   R2_BUCKET_NAME: z.string().default('intonavio-stems'),
   R2_PUBLIC_URL: z.string().optional(),
-
-  STEMSPLIT_API_URL: optionalUrl,
-  STEMSPLIT_API_KEY: z.string().optional().default(''),
-  STEMSPLIT_WEBHOOK_URL: optionalUrl,
-  STEMSPLIT_WEBHOOK_SECRET: z.string().optional().default(''),
 
   SENTRY_DSN: z.string().optional(),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
