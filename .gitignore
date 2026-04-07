@@ -28,6 +28,13 @@ Thumbs.db
 postgres_data/
 redis_data/
 
+# Vendored ML model weights — fetched at build time, see workers/*/models/README.md
+workers/pitch-analyzer/models/*.pt
+workers/pitch-analyzer/models/*.onnx
+workers/pitch-analyzer/models/*.ckpt
+workers/stem-splitter/models/*.pt
+workers/stem-splitter/models/*.ckpt
+
 # Python
 __pycache__/
 *.pyc
