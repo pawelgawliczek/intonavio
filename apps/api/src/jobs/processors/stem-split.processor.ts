@@ -20,52 +20,69 @@ export class StemSplitProcessor extends WorkerHost {
   }
 
   async process(job: Job<StemSplitJobData>): Promise<string> {
-    const { songId, youtubeUrl, traceId } = job.data;
-    this.logger.log('Stem split job started', { jobId: job.id, songId, traceId });
+    const { songId, variantId, youtubeUrl, traceId } = job.data;
+    this.logger.log('Stem split job started', { jobId: job.id, songId, variantId, traceId });
 
-    const song = await this.prisma.song.findUnique({ where: { id: songId } });
-    if (!song) {
-      throw new Error(`Song ${songId} not found`);
+    if (!variantId) {
+      this.logger.warn('Stem split job missing variantId', { songId, jobId: job.id });
     }
 
-    if (song.externalJobId) {
-      this.logger.log('Song already has externalJobId, skipping', {
-        songId,
-        externalJobId: song.externalJobId,
+    const variant = variantId
+      ? await this.prisma.songVariant.findUnique({ where: { id: variantId } })
+      : null;
+
+    if (variant?.externalJobId) {
+      this.logger.log('Variant already has externalJobId, skipping', {
+        variantId,
+        externalJobId: variant.externalJobId,
         traceId,
       });
-      return song.externalJobId;
+      return variant.externalJobId;
     }
 
     const externalJobId = await this.stemSplit.createJob(youtubeUrl);
+
+    if (variantId) {
+      await this.prisma.songVariant.update({
+        where: { id: variantId },
+        data: { status: 'SPLITTING', externalJobId },
+      });
+    }
 
     await this.prisma.song.update({
       where: { id: songId },
       data: { status: 'SPLITTING', externalJobId },
     });
 
-    this.logger.log('Stem split job submitted', { songId, externalJobId, traceId });
+    this.logger.log('Stem split job submitted', { songId, variantId, externalJobId, traceId });
     return externalJobId;
   }
 
   @OnWorkerEvent('failed')
   async onFailed(job: Job<StemSplitJobData>, error: Error): Promise<void> {
-    const { songId, traceId } = job.data;
+    const { songId, variantId, traceId } = job.data;
     this.logger.error('Stem split job failed', {
       jobId: job.id,
       songId,
+      variantId,
       traceId,
       attempts: job.attemptsMade,
       error: error.message,
     });
 
     const isLastAttempt = job.attemptsMade >= (job.opts.attempts ?? 3);
-    if (isLastAttempt) {
-      await this.prisma.song.update({
-        where: { id: songId },
+    if (!isLastAttempt) return;
+
+    if (variantId) {
+      await this.prisma.songVariant.update({
+        where: { id: variantId },
         data: { status: 'FAILED', errorMessage: error.message },
       });
     }
+    await this.prisma.song.update({
+      where: { id: songId },
+      data: { status: 'FAILED', errorMessage: error.message },
+    });
   }
 
   @OnWorkerEvent('completed')
@@ -73,6 +90,7 @@ export class StemSplitProcessor extends WorkerHost {
     this.logger.log('Stem split job completed', {
       jobId: job.id,
       songId: job.data.songId,
+      variantId: job.data.variantId,
       traceId: job.data.traceId,
     });
   }

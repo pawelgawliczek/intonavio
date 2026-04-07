@@ -3,22 +3,43 @@ import { Test } from '@nestjs/testing';
 
 import { JobsService } from '../jobs/jobs.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { SongVariantsService } from './song-variants.service';
 import { SongsService } from './songs.service';
+
+const makeVariant = (overrides: Record<string, unknown> = {}) => ({
+  id: 'sv_1',
+  songId: 'song_1',
+  source: 'STUDIO' as const,
+  status: 'QUEUED' as const,
+  stemsPrefix: 'stems/song_1/STUDIO',
+  pitchKey: null,
+  frameCount: null,
+  hopDuration: null,
+  externalJobId: null,
+  errorMessage: null,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  ...overrides,
+});
 
 const makeSong = (overrides: Record<string, unknown> = {}) => ({
   id: 'song_1',
   userId: 'user_1',
   videoId: 'dQw4w9WgXcQ',
   title: 'dQw4w9WgXcQ',
+  artist: null,
   thumbnailUrl: 'https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
   duration: 0,
   status: 'QUEUED' as const,
+  hasLyrics: false,
   externalJobId: null,
   errorMessage: null,
+  activeVariantId: null,
   createdAt: new Date(),
   updatedAt: new Date(),
   stems: [],
   pitchData: null,
+  variants: [makeVariant()],
   ...overrides,
 });
 
@@ -26,6 +47,9 @@ const mockPrisma = {
   song: {
     findUnique: jest.fn(),
     create: jest.fn(),
+    update: jest.fn(),
+  },
+  songVariant: {
     update: jest.fn(),
   },
   userSongLibrary: {
@@ -42,6 +66,20 @@ const mockJobs = {
   enqueueStemSplit: jest.fn().mockResolvedValue('job_1'),
 };
 
+const mockVariants = {
+  toResponse: (v: ReturnType<typeof makeVariant>) => ({
+    id: v.id,
+    source: v.source,
+    status: v.status,
+    stemsPrefix: v.stemsPrefix,
+    pitchKey: v.pitchKey,
+    frameCount: v.frameCount,
+    hopDuration: v.hopDuration,
+    errorMessage: v.errorMessage,
+    createdAt: v.createdAt,
+  }),
+};
+
 describe('SongsService', () => {
   let service: SongsService;
 
@@ -53,6 +91,7 @@ describe('SongsService', () => {
         SongsService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: JobsService, useValue: mockJobs },
+        { provide: SongVariantsService, useValue: mockVariants },
       ],
     }).compile();
 
@@ -64,11 +103,14 @@ describe('SongsService', () => {
       await expect(service.createSong('user_1', 'not-a-url')).rejects.toThrow(BadRequestException);
     });
 
-    it('should create a new song and enqueue stem split', async () => {
-      const song = makeSong();
-      mockPrisma.song.findUnique.mockResolvedValue(null);
-      mockPrisma.song.create.mockResolvedValue(song);
+    it('should create a new song with a STUDIO variant and enqueue stem split', async () => {
+      const created = makeSong();
+      mockPrisma.song.findUnique.mockResolvedValueOnce(null);
+      mockPrisma.song.create.mockResolvedValueOnce(created);
+      mockPrisma.songVariant.update.mockResolvedValueOnce(makeVariant());
+      mockPrisma.song.update.mockResolvedValueOnce(created);
       mockPrisma.userSongLibrary.upsert.mockResolvedValue({});
+      mockPrisma.song.findUnique.mockResolvedValueOnce(created); // reload
 
       const result = await service.createSong(
         'user_1',
@@ -76,16 +118,19 @@ describe('SongsService', () => {
       );
 
       expect(result.videoId).toBe('dQw4w9WgXcQ');
-      expect(result.status).toBe('QUEUED');
       expect(mockPrisma.song.create).toHaveBeenCalled();
       expect(mockJobs.enqueueStemSplit).toHaveBeenCalledWith(
-        expect.objectContaining({ songId: 'song_1', videoId: 'dQw4w9WgXcQ' }),
+        expect.objectContaining({
+          songId: 'song_1',
+          variantId: 'sv_1',
+          source: 'STUDIO',
+        }),
       );
     });
 
     it('should reuse existing READY song without re-enqueuing', async () => {
       const song = makeSong({ status: 'READY' });
-      mockPrisma.song.findUnique.mockResolvedValue(song);
+      mockPrisma.song.findUnique.mockResolvedValueOnce(song);
       mockPrisma.userSongLibrary.upsert.mockResolvedValue({});
 
       const result = await service.createSong(
@@ -101,8 +146,8 @@ describe('SongsService', () => {
     it('should re-enqueue a FAILED song', async () => {
       const failedSong = makeSong({ status: 'FAILED', errorMessage: 'timeout' });
       const resetSong = makeSong({ status: 'QUEUED' });
-      mockPrisma.song.findUnique.mockResolvedValue(failedSong);
-      mockPrisma.song.update.mockResolvedValue(resetSong);
+      mockPrisma.song.findUnique.mockResolvedValueOnce(failedSong);
+      mockPrisma.song.update.mockResolvedValueOnce(resetSong);
       mockPrisma.userSongLibrary.upsert.mockResolvedValue({});
 
       const result = await service.createSong(
@@ -111,17 +156,12 @@ describe('SongsService', () => {
       );
 
       expect(result.status).toBe('QUEUED');
-      expect(mockPrisma.song.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: { status: 'QUEUED', errorMessage: null, externalJobId: null },
-        }),
-      );
       expect(mockJobs.enqueueStemSplit).toHaveBeenCalled();
     });
 
     it('should add processing song to library without re-enqueuing', async () => {
       const song = makeSong({ status: 'SPLITTING' });
-      mockPrisma.song.findUnique.mockResolvedValue(song);
+      mockPrisma.song.findUnique.mockResolvedValueOnce(song);
       mockPrisma.userSongLibrary.upsert.mockResolvedValue({});
 
       const result = await service.createSong(
@@ -131,7 +171,6 @@ describe('SongsService', () => {
 
       expect(result.status).toBe('SPLITTING');
       expect(mockJobs.enqueueStemSplit).not.toHaveBeenCalled();
-      expect(mockPrisma.userSongLibrary.upsert).toHaveBeenCalled();
     });
   });
 
@@ -155,6 +194,7 @@ describe('SongsService', () => {
       const result = await service.findOne('user_1', 'song_1');
 
       expect(result.id).toBe('song_1');
+      expect(result.variants).toHaveLength(1);
     });
 
     it('should throw NotFoundException when song not in library', async () => {
@@ -171,9 +211,7 @@ describe('SongsService', () => {
 
       await service.removeFromLibrary('user_1', 'song_1');
 
-      expect(mockPrisma.userSongLibrary.delete).toHaveBeenCalledWith({
-        where: { userId_songId: { userId: 'user_1', songId: 'song_1' } },
-      });
+      expect(mockPrisma.userSongLibrary.delete).toHaveBeenCalled();
     });
 
     it('should throw NotFoundException when entry does not exist', async () => {

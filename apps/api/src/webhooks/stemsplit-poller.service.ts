@@ -94,7 +94,16 @@ export class StemSplitPollerService implements OnModuleInit, OnModuleDestroy {
       download_url: output.url,
     }));
 
-    await this.webhooks.processCompletedJob(songId, rawStems, durationSeconds);
+    const variant = await this.prisma.songVariant.findFirst({ where: { externalJobId } });
+    await this.webhooks.processCompletedJob(
+      {
+        songId,
+        variantId: variant?.id,
+        stemsPrefix: variant?.stemsPrefix ?? `stems/${songId}`,
+      },
+      rawStems,
+      durationSeconds,
+    );
     this.logger.log('Polled job processed successfully', { songId, externalJobId });
   }
 }

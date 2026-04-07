@@ -1,5 +1,7 @@
 import type { SongStatus, StemType } from '@prisma/client';
 
+import type { SongVariantResponse } from './song-variant.dto';
+
 interface StemResponse {
   readonly id: string;
   readonly type: StemType;
@@ -23,5 +25,7 @@ export interface SongResponse {
   readonly hasLyrics: boolean;
   readonly stems: StemResponse[];
   readonly pitchData: PitchDataResponse | null;
+  readonly variants: SongVariantResponse[];
+  readonly activeVariantId: string | null;
   readonly createdAt: Date;
 }

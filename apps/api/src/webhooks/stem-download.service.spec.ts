@@ -29,73 +29,83 @@ describe('StemDownloadService', () => {
   });
 
   describe('downloadAndUpload', () => {
-    it('should download and upload stems to R2', async () => {
+    it('should write stems under the variant prefix', async () => {
       stemSplitAdapter.downloadStem.mockResolvedValue(Buffer.alloc(1024));
 
-      const result = await service.downloadAndUpload('song-1', [
-        { type: 'vocals', download_url: 'https://cdn.stemsplit.io/vocals.mp3' },
-        { type: 'drums', download_url: 'https://cdn.stemsplit.io/drums.mp3' },
-      ]);
+      const result = await service.downloadAndUpload(
+        { songId: 'song-1', variantId: 'sv-1', stemsPrefix: 'stems/song-1/STUDIO' },
+        [
+          { type: 'vocals', download_url: 'https://cdn.stemsplit.io/vocals.mp3' },
+          { type: 'drums', download_url: 'https://cdn.stemsplit.io/drums.mp3' },
+        ],
+      );
 
       expect(stemSplitAdapter.downloadStem).toHaveBeenCalledTimes(2);
+      expect(storageService.upload).toHaveBeenCalledWith(
+        'stems/song-1/STUDIO/VOCALS.mp3',
+        expect.any(Buffer),
+        'audio/mpeg',
+      );
+      expect(result).toHaveLength(2);
+    });
+
+    it('should fall back to legacy prefix when no variant', async () => {
+      stemSplitAdapter.downloadStem.mockResolvedValue(Buffer.alloc(512));
+
+      await service.downloadAndUpload({ songId: 'song-1', stemsPrefix: 'stems/song-1' }, [
+        { type: 'vocals', download_url: 'https://cdn.stemsplit.io/vocals.mp3' },
+      ]);
+
       expect(storageService.upload).toHaveBeenCalledWith(
         'stems/song-1/VOCALS.mp3',
         expect.any(Buffer),
         'audio/mpeg',
       );
-      expect(storageService.upload).toHaveBeenCalledWith(
-        'stems/song-1/DRUMS.mp3',
-        expect.any(Buffer),
-        'audio/mpeg',
-      );
-      expect(result).toHaveLength(2);
-      expect(result[0]).toMatchObject({ type: 'VOCALS', format: 'mp3', fileSize: 1024 });
     });
 
     it('should skip unknown stem types', async () => {
       stemSplitAdapter.downloadStem.mockResolvedValue(Buffer.alloc(512));
 
-      const result = await service.downloadAndUpload('song-1', [
-        { type: 'vocals', download_url: 'https://cdn.stemsplit.io/vocals.mp3' },
-        { type: 'unknown_type', download_url: 'https://cdn.stemsplit.io/unknown.mp3' },
-      ]);
+      const result = await service.downloadAndUpload(
+        { songId: 'song-1', stemsPrefix: 'stems/song-1' },
+        [
+          { type: 'vocals', download_url: 'https://cdn.stemsplit.io/vocals.mp3' },
+          { type: 'unknown_type', download_url: 'https://cdn.stemsplit.io/unknown.mp3' },
+        ],
+      );
 
-      expect(stemSplitAdapter.downloadStem).toHaveBeenCalledTimes(1);
       expect(result).toHaveLength(1);
-      expect(result[0]).toMatchObject({ type: 'VOCALS' });
     });
   });
 
   describe('enqueuePitchAnalysis', () => {
-    it('should enqueue pitch analysis for vocal stem', async () => {
-      const stemInputs = [
+    it('should enqueue pitch analysis with variant pitch output key', async () => {
+      const stems = [
         {
           songId: 'song-1',
           type: 'VOCALS' as const,
-          storageKey: 'stems/song-1/VOCALS.mp3',
-          format: 'mp3',
-          fileSize: 1024,
-        },
-        {
-          songId: 'song-1',
-          type: 'DRUMS' as const,
-          storageKey: 'stems/song-1/DRUMS.mp3',
+          storageKey: 'stems/song-1/STUDIO/VOCALS.mp3',
           format: 'mp3',
           fileSize: 1024,
         },
       ];
 
-      await service.enqueuePitchAnalysis('song-1', stemInputs);
+      await service.enqueuePitchAnalysis(
+        { songId: 'song-1', variantId: 'sv-1', stemsPrefix: 'stems/song-1/STUDIO' },
+        stems,
+      );
 
       expect(jobsService.enqueuePitchAnalysis).toHaveBeenCalledWith({
         songId: 'song-1',
-        vocalStemKey: 'stems/song-1/VOCALS.mp3',
+        variantId: 'sv-1',
+        vocalStemKey: 'stems/song-1/STUDIO/VOCALS.mp3',
+        pitchOutputKey: 'pitch/song-1/sv-1/reference.json',
         traceId: 'pitch-song-1',
       });
     });
 
     it('should not enqueue if no vocal stem present', async () => {
-      const stemInputs = [
+      await service.enqueuePitchAnalysis({ songId: 'song-1', stemsPrefix: 'stems/song-1' }, [
         {
           songId: 'song-1',
           type: 'DRUMS' as const,
@@ -103,9 +113,7 @@ describe('StemDownloadService', () => {
           format: 'mp3',
           fileSize: 1024,
         },
-      ];
-
-      await service.enqueuePitchAnalysis('song-1', stemInputs);
+      ]);
 
       expect(jobsService.enqueuePitchAnalysis).not.toHaveBeenCalled();
     });

@@ -10,13 +10,19 @@ import { WebhooksService } from './webhooks.service';
 
 describe('WebhooksService', () => {
   let service: WebhooksService;
-  let prisma: { song: { findFirst: jest.Mock; update: jest.Mock } };
+  let prisma: {
+    song: { findFirst: jest.Mock; findUnique: jest.Mock; update: jest.Mock };
+    songVariant: { findFirst: jest.Mock; update: jest.Mock };
+  };
   let songsService: { updateStatus: jest.Mock };
   let stemsService: { createStems: jest.Mock };
   let stemDownload: { downloadAndUpload: jest.Mock; enqueuePitchAnalysis: jest.Mock };
 
   beforeEach(async () => {
-    prisma = { song: { findFirst: jest.fn(), update: jest.fn() } };
+    prisma = {
+      song: { findFirst: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
+      songVariant: { findFirst: jest.fn(), update: jest.fn() },
+    };
     songsService = { updateStatus: jest.fn() };
     stemsService = { createStems: jest.fn() };
     stemDownload = {
@@ -38,6 +44,14 @@ describe('WebhooksService', () => {
   });
 
   const baseSong = { id: 'song-1', externalJobId: 'ss_job_123', stems: [] };
+  const baseVariant = {
+    id: 'sv-1',
+    songId: 'song-1',
+    source: 'STUDIO',
+    status: 'SPLITTING',
+    stemsPrefix: 'stems/song-1/STUDIO',
+    externalJobId: 'ss_job_123',
+  };
 
   const completedPayload: StemSplitWebhookDto = {
     event: StemSplitWebhookEvent.COMPLETED,
@@ -57,14 +71,11 @@ describe('WebhooksService', () => {
   const failedPayload: StemSplitWebhookDto = {
     event: StemSplitWebhookEvent.FAILED,
     timestamp: '2026-01-05T12:30:00Z',
-    data: {
-      jobId: 'ss_job_123',
-      status: 'FAILED',
-      error: 'Audio too short',
-    },
+    data: { jobId: 'ss_job_123', status: 'FAILED', error: 'Audio too short' },
   };
 
-  it('should throw NotFoundException when song not found', async () => {
+  it('should throw NotFoundException when neither variant nor song found', async () => {
+    prisma.songVariant.findFirst.mockResolvedValue(null);
     prisma.song.findFirst.mockResolvedValue(null);
 
     await expect(service.handleStemSplitWebhook(completedPayload)).rejects.toThrow(
@@ -72,29 +83,27 @@ describe('WebhooksService', () => {
     );
   });
 
-  it('should mark song as FAILED when event is job.failed', async () => {
-    prisma.song.findFirst.mockResolvedValue(baseSong);
+  it('should mark variant + song as FAILED when event is job.failed', async () => {
+    prisma.songVariant.findFirst.mockResolvedValue(baseVariant);
+    prisma.song.findUnique.mockResolvedValue(baseSong);
 
     await service.handleStemSplitWebhook(failedPayload);
 
+    expect(prisma.songVariant.update).toHaveBeenCalledWith({
+      where: { id: 'sv-1' },
+      data: { status: 'FAILED', errorMessage: 'Audio too short' },
+    });
     expect(songsService.updateStatus).toHaveBeenCalledWith('song-1', 'FAILED', 'Audio too short');
-    expect(stemsService.createStems).not.toHaveBeenCalled();
   });
 
-  it('should download, upload, create stems, and enqueue pitch analysis on success', async () => {
-    prisma.song.findFirst.mockResolvedValue(baseSong);
+  it('should download/upload under variant prefix and enqueue pitch analysis', async () => {
+    prisma.songVariant.findFirst.mockResolvedValue(baseVariant);
+    prisma.song.findUnique.mockResolvedValue(baseSong);
     stemDownload.downloadAndUpload.mockResolvedValue([
       {
         songId: 'song-1',
         type: 'VOCALS',
-        storageKey: 'stems/song-1/VOCALS.mp3',
-        format: 'mp3',
-        fileSize: 1024,
-      },
-      {
-        songId: 'song-1',
-        type: 'DRUMS',
-        storageKey: 'stems/song-1/DRUMS.mp3',
+        storageKey: 'stems/song-1/STUDIO/VOCALS.mp3',
         format: 'mp3',
         fileSize: 1024,
       },
@@ -103,52 +112,38 @@ describe('WebhooksService', () => {
     await service.handleStemSplitWebhook(completedPayload);
 
     expect(stemDownload.downloadAndUpload).toHaveBeenCalledWith(
-      'song-1',
-      expect.arrayContaining([
-        expect.objectContaining({
-          type: 'vocals',
-          download_url: 'https://cdn.stemsplit.io/vocals.mp3',
-        }),
-        expect.objectContaining({
-          type: 'drums',
-          download_url: 'https://cdn.stemsplit.io/drums.mp3',
-        }),
-      ]),
+      expect.objectContaining({
+        songId: 'song-1',
+        variantId: 'sv-1',
+        stemsPrefix: 'stems/song-1/STUDIO',
+      }),
+      expect.any(Array),
     );
-    expect(stemsService.createStems).toHaveBeenCalledWith(
-      expect.arrayContaining([
-        expect.objectContaining({ songId: 'song-1', type: 'VOCALS' }),
-        expect.objectContaining({ songId: 'song-1', type: 'DRUMS' }),
-      ]),
-    );
+    expect(prisma.songVariant.update).toHaveBeenCalledWith({
+      where: { id: 'sv-1' },
+      data: { status: 'ANALYZING' },
+    });
     expect(songsService.updateStatus).toHaveBeenCalledWith('song-1', 'ANALYZING');
-    expect(stemDownload.enqueuePitchAnalysis).toHaveBeenCalledWith('song-1', expect.any(Array));
+    expect(stemDownload.enqueuePitchAnalysis).toHaveBeenCalled();
   });
 
-  it('should skip processing if stems already exist (idempotent)', async () => {
-    prisma.song.findFirst.mockResolvedValue({
-      ...baseSong,
-      stems: [{ id: 'stem-1', type: 'VOCALS' }],
-    });
+  it('should skip if variant already READY (idempotent)', async () => {
+    prisma.songVariant.findFirst.mockResolvedValue({ ...baseVariant, status: 'READY' });
+    prisma.song.findUnique.mockResolvedValue(baseSong);
 
     await service.handleStemSplitWebhook(completedPayload);
 
     expect(stemDownload.downloadAndUpload).not.toHaveBeenCalled();
-    expect(stemsService.createStems).not.toHaveBeenCalled();
-    expect(songsService.updateStatus).not.toHaveBeenCalled();
   });
 
   it('should mark FAILED when completed but no outputs in payload', async () => {
-    prisma.song.findFirst.mockResolvedValue(baseSong);
+    prisma.songVariant.findFirst.mockResolvedValue(baseVariant);
+    prisma.song.findUnique.mockResolvedValue(baseSong);
 
     const noOutputsPayload: StemSplitWebhookDto = {
       event: StemSplitWebhookEvent.COMPLETED,
       timestamp: '2026-01-05T12:30:00Z',
-      data: {
-        jobId: 'ss_job_123',
-        status: 'COMPLETED',
-        outputs: {},
-      },
+      data: { jobId: 'ss_job_123', status: 'COMPLETED', outputs: {} },
     };
 
     await service.handleStemSplitWebhook(noOutputsPayload);

@@ -25,6 +25,12 @@ export interface StemInput {
   readonly fileSize: number;
 }
 
+export interface DownloadContext {
+  readonly songId: string;
+  readonly variantId?: string;
+  readonly stemsPrefix: string;
+}
+
 @Injectable()
 export class StemDownloadService {
   private readonly logger = new Logger(StemDownloadService.name);
@@ -36,7 +42,7 @@ export class StemDownloadService {
   ) {}
 
   async downloadAndUpload(
-    songId: string,
+    ctx: DownloadContext,
     stems: readonly { type: string; download_url: string }[],
   ): Promise<StemInput[]> {
     const results: StemInput[] = [];
@@ -44,30 +50,45 @@ export class StemDownloadService {
     for (const stem of stems) {
       const stemType = STEM_TYPE_MAP[stem.type];
       if (!stemType) {
-        this.logger.warn('Unknown stem type, skipping', { type: stem.type, songId });
+        this.logger.warn('Unknown stem type, skipping', { type: stem.type, songId: ctx.songId });
         continue;
       }
 
-      const storageKey = `stems/${songId}/${stemType}.mp3`;
+      const storageKey = `${ctx.stemsPrefix}/${stemType}.mp3`;
       const buffer = await this.stemSplit.downloadStem(stem.download_url);
 
       await this.storage.upload(storageKey, buffer, 'audio/mpeg');
 
-      results.push({ songId, type: stemType, storageKey, format: 'mp3', fileSize: buffer.length });
-      this.logger.log('Stem uploaded to R2', { songId, type: stemType, storageKey });
+      results.push({
+        songId: ctx.songId,
+        type: stemType,
+        storageKey,
+        format: 'mp3',
+        fileSize: buffer.length,
+      });
+      this.logger.log('Stem uploaded to R2', { songId: ctx.songId, type: stemType, storageKey });
     }
 
     return results;
   }
 
-  async enqueuePitchAnalysis(songId: string, stemInputs: readonly StemInput[]): Promise<void> {
+  async enqueuePitchAnalysis(
+    ctx: DownloadContext,
+    stemInputs: readonly StemInput[],
+  ): Promise<void> {
     const vocalStem = stemInputs.find((s) => s.type === 'VOCALS');
     if (!vocalStem) return;
 
+    const pitchOutputKey = ctx.variantId
+      ? `pitch/${ctx.songId}/${ctx.variantId}/reference.json`
+      : `pitch/${ctx.songId}/reference.json`;
+
     await this.jobs.enqueuePitchAnalysis({
-      songId,
+      songId: ctx.songId,
+      variantId: ctx.variantId ?? '',
       vocalStemKey: vocalStem.storageKey,
-      traceId: `pitch-${songId}`,
+      pitchOutputKey,
+      traceId: `pitch-${ctx.songId}`,
     });
   }
 }

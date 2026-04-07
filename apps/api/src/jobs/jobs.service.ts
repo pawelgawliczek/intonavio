@@ -4,7 +4,7 @@ import type { JobsOptions } from 'bullmq';
 import { Queue } from 'bullmq';
 
 import type { PitchAnalysisJobData, StemSplitJobData } from './interfaces/job-data.interface';
-import { PITCH_ANALYSIS_QUEUE, STEM_SPLIT_QUEUE } from './jobs.constants';
+import { PITCH_ANALYSIS_QUEUE, STEM_SPLIT_LOCAL_QUEUE, STEM_SPLIT_QUEUE } from './jobs.constants';
 
 const RETRY_OPTIONS: JobsOptions = {
   attempts: 3,
@@ -19,15 +19,20 @@ export class JobsService {
 
   constructor(
     @InjectQueue(STEM_SPLIT_QUEUE) private readonly stemSplitQueue: Queue<StemSplitJobData>,
+    @InjectQueue(STEM_SPLIT_LOCAL_QUEUE)
+    private readonly stemSplitLocalQueue: Queue<StemSplitJobData>,
     @InjectQueue(PITCH_ANALYSIS_QUEUE)
     private readonly pitchAnalysisQueue: Queue<PitchAnalysisJobData>,
   ) {}
 
   async enqueueStemSplit(data: StemSplitJobData): Promise<string> {
-    const job = await this.stemSplitQueue.add('split', data, RETRY_OPTIONS);
+    const queue = data.source === 'DRAFT' ? this.stemSplitLocalQueue : this.stemSplitQueue;
+    const job = await queue.add('split', data, RETRY_OPTIONS);
     this.logger.log('Stem split job enqueued', {
       jobId: job.id,
       songId: data.songId,
+      variantId: data.variantId,
+      source: data.source,
       traceId: data.traceId,
     });
     return job.id ?? '';
@@ -38,6 +43,7 @@ export class JobsService {
     this.logger.log('Pitch analysis job enqueued', {
       jobId: job.id,
       songId: data.songId,
+      variantId: data.variantId,
       traceId: data.traceId,
     });
     return job.id ?? '';

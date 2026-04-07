@@ -1,10 +1,11 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import type { Prisma, SongStatus } from '@prisma/client';
+import type { Prisma, SongStatus, SongVariant, StemSource } from '@prisma/client';
 
 import type { PaginatedResponse } from '../common/dto/pagination.dto';
 import { JobsService } from '../jobs/jobs.service';
 import { PrismaService } from '../prisma/prisma.service';
 import type { SongResponse } from './dto/song-response.dto';
+import { SongVariantsService } from './song-variants.service';
 import { extractVideoId, fetchBestThumbnailUrl, fetchYouTubeMetadata } from './utils/youtube.util';
 import {
   type YouTubeSearchResult,
@@ -13,8 +14,10 @@ import {
 } from './utils/youtube-search.util';
 
 type SongWithRelations = Prisma.SongGetPayload<{
-  include: { stems: true; pitchData: true };
+  include: { stems: true; pitchData: true; variants: true };
 }>;
+
+const SONG_INCLUDE = { stems: true, pitchData: true, variants: true } as const;
 
 @Injectable()
 export class SongsService {
@@ -23,6 +26,7 @@ export class SongsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jobs: JobsService,
+    private readonly variants: SongVariantsService,
   ) {}
 
   async search(query: string, limit: number): Promise<YouTubeSearchResult[]> {
@@ -53,7 +57,11 @@ export class SongsService {
     };
   }
 
-  async createSong(userId: string, youtubeUrl: string): Promise<SongResponse> {
+  async createSong(
+    userId: string,
+    youtubeUrl: string,
+    source: StemSource = 'STUDIO',
+  ): Promise<SongResponse> {
     const videoId = extractVideoId(youtubeUrl);
     if (!videoId) {
       throw new BadRequestException('Could not extract video ID from URL');
@@ -61,14 +69,14 @@ export class SongsService {
 
     const existing = await this.prisma.song.findUnique({
       where: { videoId },
-      include: { stems: true, pitchData: true },
+      include: SONG_INCLUDE,
     });
 
     if (existing) {
-      return this.handleExistingSong(userId, existing, youtubeUrl);
+      return this.handleExistingSong(userId, existing, youtubeUrl, source);
     }
 
-    return this.createNewSong(userId, videoId, youtubeUrl);
+    return this.createNewSong(userId, videoId, youtubeUrl, source);
   }
 
   async findAllByUser(
@@ -84,7 +92,7 @@ export class SongsService {
         skip,
         take: limit,
         orderBy: { addedAt: 'desc' },
-        include: { song: { include: { stems: true, pitchData: true } } },
+        include: { song: { include: SONG_INCLUDE } },
       }),
       this.prisma.userSongLibrary.count({ where: { userId } }),
     ]);
@@ -98,7 +106,7 @@ export class SongsService {
   async findOne(userId: string, songId: string): Promise<SongResponse> {
     const entry = await this.prisma.userSongLibrary.findUnique({
       where: { userId_songId: { userId, songId } },
-      include: { song: { include: { stems: true, pitchData: true } } },
+      include: { song: { include: SONG_INCLUDE } },
     });
 
     if (!entry) {
@@ -129,10 +137,20 @@ export class SongsService {
     });
   }
 
+  async reload(songId: string): Promise<SongResponse> {
+    const song = await this.prisma.song.findUnique({
+      where: { id: songId },
+      include: SONG_INCLUDE,
+    });
+    if (!song) throw new NotFoundException('Song not found');
+    return this.toResponse(song);
+  }
+
   private async handleExistingSong(
     userId: string,
     song: SongWithRelations,
     youtubeUrl: string,
+    source: StemSource,
   ): Promise<SongResponse> {
     await this.addToLibrary(userId, song.id);
 
@@ -140,10 +158,12 @@ export class SongsService {
       const updated = await this.prisma.song.update({
         where: { id: song.id },
         data: { status: 'QUEUED', errorMessage: null, externalJobId: null },
-        include: { stems: true, pitchData: true },
+        include: SONG_INCLUDE,
       });
-
-      await this.enqueueStemSplit(updated.id, song.videoId, youtubeUrl);
+      const variant = updated.variants.find((v) => v.source === source) ?? updated.variants[0];
+      if (variant) {
+        await this.enqueueVariant(updated, variant, youtubeUrl);
+      }
       return this.toResponse(updated);
     }
 
@@ -154,6 +174,7 @@ export class SongsService {
     userId: string,
     videoId: string,
     youtubeUrl: string,
+    source: StemSource,
   ): Promise<SongResponse> {
     const metadata = await fetchYouTubeMetadata(videoId);
     const thumbnailUrl = metadata?.thumbnailUrl ?? (await fetchBestThumbnailUrl(videoId));
@@ -170,14 +191,29 @@ export class SongsService {
         thumbnailUrl,
         duration: 0,
         hasLyrics,
+        variants: {
+          create: { source, status: 'QUEUED', stemsPrefix: `stems/__pending__/${source}` },
+        },
       },
-      include: { stems: true, pitchData: true },
+      include: SONG_INCLUDE,
+    });
+
+    const variant = song.variants[0];
+    if (!variant) throw new Error('Variant creation failed');
+    const finalPrefix = `stems/${song.id}/${source}`;
+    const updatedVariant = await this.prisma.songVariant.update({
+      where: { id: variant.id },
+      data: { stemsPrefix: finalPrefix },
+    });
+    await this.prisma.song.update({
+      where: { id: song.id },
+      data: { activeVariantId: updatedVariant.id },
     });
 
     await this.addToLibrary(userId, song.id);
-    await this.enqueueStemSplit(song.id, videoId, youtubeUrl);
+    await this.enqueueVariant(song, updatedVariant, youtubeUrl);
 
-    return this.toResponse(song);
+    return this.reload(song.id);
   }
 
   private async addToLibrary(userId: string, songId: string): Promise<void> {
@@ -188,14 +224,21 @@ export class SongsService {
     });
   }
 
-  private async enqueueStemSplit(
-    songId: string,
-    videoId: string,
+  private async enqueueVariant(
+    song: { id: string; videoId: string },
+    variant: SongVariant,
     youtubeUrl: string,
   ): Promise<void> {
-    const traceId = `stem-${songId}`;
-    await this.jobs.enqueueStemSplit({ songId, videoId, youtubeUrl, traceId });
-    this.logger.log('Stem split enqueued for song', { songId, videoId });
+    await this.jobs.enqueueStemSplit({
+      songId: song.id,
+      variantId: variant.id,
+      source: variant.source,
+      stemsPrefix: variant.stemsPrefix,
+      videoId: song.videoId,
+      youtubeUrl,
+      traceId: `stem-${variant.id}`,
+    });
+    this.logger.log('Stem split enqueued', { songId: song.id, variantId: variant.id });
   }
 
   private toResponse(song: SongWithRelations): SongResponse {
@@ -217,6 +260,8 @@ export class SongsService {
       pitchData: song.pitchData
         ? { id: song.pitchData.id, storageKey: song.pitchData.storageKey }
         : null,
+      variants: song.variants.map((v) => this.variants.toResponse(v)),
+      activeVariantId: song.activeVariantId,
       createdAt: song.createdAt,
     };
   }

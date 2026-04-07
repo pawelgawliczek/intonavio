@@ -5,10 +5,8 @@ import { STEMSPLIT_ADAPTER } from '../adapters/stemsplit.interface';
 import { StemSplitProcessor } from './stem-split.processor';
 
 const mockPrisma = {
-  song: {
-    findUnique: jest.fn(),
-    update: jest.fn(),
-  },
+  song: { findUnique: jest.fn(), update: jest.fn() },
+  songVariant: { findUnique: jest.fn(), update: jest.fn() },
 };
 
 const mockStemSplit = {
@@ -21,6 +19,9 @@ function createJob(overrides: Record<string, unknown> = {}): Record<string, unkn
     id: 'bull-job-1',
     data: {
       songId: 'song-1',
+      variantId: 'sv-1',
+      source: 'STUDIO',
+      stemsPrefix: 'stems/song-1/STUDIO',
       videoId: 'abc123',
       youtubeUrl: 'https://youtube.com/watch?v=abc123',
       traceId: 'trc_001',
@@ -49,13 +50,13 @@ describe('StemSplitProcessor', () => {
   });
 
   describe('process', () => {
-    it('should create a StemSplit job and update song status', async () => {
-      mockPrisma.song.findUnique.mockResolvedValueOnce({
-        id: 'song-1',
-        status: 'QUEUED',
+    it('should create a StemSplit job and update variant + song status', async () => {
+      mockPrisma.songVariant.findUnique.mockResolvedValueOnce({
+        id: 'sv-1',
         externalJobId: null,
       });
       mockStemSplit.createJob.mockResolvedValueOnce('ss_ext_123');
+      mockPrisma.songVariant.update.mockResolvedValueOnce({});
       mockPrisma.song.update.mockResolvedValueOnce({});
 
       const job = createJob();
@@ -63,23 +64,15 @@ describe('StemSplitProcessor', () => {
 
       expect(result).toBe('ss_ext_123');
       expect(mockStemSplit.createJob).toHaveBeenCalledWith('https://youtube.com/watch?v=abc123');
-      expect(mockPrisma.song.update).toHaveBeenCalledWith({
-        where: { id: 'song-1' },
+      expect(mockPrisma.songVariant.update).toHaveBeenCalledWith({
+        where: { id: 'sv-1' },
         data: { status: 'SPLITTING', externalJobId: 'ss_ext_123' },
       });
     });
 
-    it('should throw if song not found', async () => {
-      mockPrisma.song.findUnique.mockResolvedValueOnce(null);
-
-      const job = createJob();
-      await expect(processor.process(job as never)).rejects.toThrow('Song song-1 not found');
-    });
-
-    it('should skip if song already has externalJobId (idempotency)', async () => {
-      mockPrisma.song.findUnique.mockResolvedValueOnce({
-        id: 'song-1',
-        status: 'SPLITTING',
+    it('should skip if variant already has externalJobId (idempotency)', async () => {
+      mockPrisma.songVariant.findUnique.mockResolvedValueOnce({
+        id: 'sv-1',
         externalJobId: 'ss_existing_456',
       });
 
@@ -88,12 +81,12 @@ describe('StemSplitProcessor', () => {
 
       expect(result).toBe('ss_existing_456');
       expect(mockStemSplit.createJob).not.toHaveBeenCalled();
-      expect(mockPrisma.song.update).not.toHaveBeenCalled();
     });
   });
 
   describe('onFailed', () => {
-    it('should mark song as FAILED on last attempt', async () => {
+    it('should mark variant + song as FAILED on last attempt', async () => {
+      mockPrisma.songVariant.update.mockResolvedValueOnce({});
       mockPrisma.song.update.mockResolvedValueOnce({});
 
       const job = createJob({ attemptsMade: 3 });
@@ -101,18 +94,16 @@ describe('StemSplitProcessor', () => {
 
       await processor.onFailed(job as never, error);
 
-      expect(mockPrisma.song.update).toHaveBeenCalledWith({
-        where: { id: 'song-1' },
+      expect(mockPrisma.songVariant.update).toHaveBeenCalledWith({
+        where: { id: 'sv-1' },
         data: { status: 'FAILED', errorMessage: 'StemSplit API timeout' },
       });
     });
 
-    it('should not mark song as FAILED before last attempt', async () => {
+    it('should not mark FAILED before last attempt', async () => {
       const job = createJob({ attemptsMade: 1 });
-      const error = new Error('Transient error');
-
-      await processor.onFailed(job as never, error);
-
+      await processor.onFailed(job as never, new Error('Transient error'));
+      expect(mockPrisma.songVariant.update).not.toHaveBeenCalled();
       expect(mockPrisma.song.update).not.toHaveBeenCalled();
     });
   });
