@@ -70,6 +70,10 @@ jobs:
   python-lint-and-test:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        worker: [pitch-analyzer, stem-splitter]
+
     steps:
       - uses: actions/checkout@v4
 
@@ -78,21 +82,22 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        working-directory: workers/pitch-analyzer
+        working-directory: workers/${{ matrix.worker }}
         run: |
           pip install -r requirements.txt
-          pip install -r requirements-dev.txt
+          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+          pip install ruff mypy pytest pytest-cov
 
       - name: Lint with ruff
-        working-directory: workers/pitch-analyzer
+        working-directory: workers/${{ matrix.worker }}
         run: ruff check src/
 
       - name: Type check with mypy
-        working-directory: workers/pitch-analyzer
+        working-directory: workers/${{ matrix.worker }}
         run: mypy src/
 
       - name: Test
-        working-directory: workers/pitch-analyzer
+        working-directory: workers/${{ matrix.worker }}
         run: pytest
 
   docker-build:
@@ -108,6 +113,11 @@ jobs:
               name: worker,
               context: './workers/pitch-analyzer',
               dockerfile: workers/pitch-analyzer/Dockerfile,
+            }
+          - {
+              name: stem-splitter,
+              context: './workers/stem-splitter',
+              dockerfile: workers/stem-splitter/Dockerfile,
             }
 
     steps:

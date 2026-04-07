@@ -36,6 +36,11 @@ jobs:
               context: './workers/pitch-analyzer',
               dockerfile: workers/pitch-analyzer/Dockerfile,
             }
+          - {
+              name: stem-splitter,
+              context: './workers/stem-splitter',
+              dockerfile: workers/stem-splitter/Dockerfile,
+            }
           # - { name: web, context: '.', dockerfile: apps/web/Dockerfile }  # Not yet implemented
 
     steps:
@@ -70,7 +75,7 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY || secrets.HOSTINGER_SSH_KEY }}
           script: |
             cd ${{ secrets.DEPLOY_PATH }}
-            docker compose pull api worker
+            docker compose pull api worker stem-splitter
             docker compose up -d
             sleep 10
             docker exec intonavio-api-1 npx prisma migrate deploy
