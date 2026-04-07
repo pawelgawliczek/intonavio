@@ -18,6 +18,7 @@ final class LibraryViewModel {
 
     // Search state
     var addSongMode: AddSongMode = .search
+    var addSongSource: StemSource = .studio
     var searchQuery = ""
     var searchResults: [YouTubeSearchResult] = []
     var isSearching = false
@@ -119,19 +120,22 @@ final class LibraryViewModel {
             let justBecameReady = previous?.status.isProcessing == true
                 && updated.status == .ready
             if justBecameReady, updated.pitchData != nil {
-                downloadPitchData(songId: id)
+                downloadPitchData(song: updated)
             }
         } catch {
             AppLogger.library.error("Failed to refresh song \(id): \(error.localizedDescription)")
         }
     }
 
-    private func downloadPitchData(songId: String) {
-        guard !PitchDataDownloader.isCached(songId: songId) else { return }
+    private func downloadPitchData(song: SongResponse) {
+        let variantId = song.activeVariant?.id
+        guard !PitchDataDownloader.isCached(songId: song.id, variantId: variantId) else { return }
+        let songId = song.id
         Task {
             do {
                 _ = try await PitchDataDownloader.localURL(
                     songId: songId,
+                    variantId: variantId,
                     apiClient: apiClient
                 )
             } catch {
@@ -148,11 +152,14 @@ final class LibraryViewModel {
         let needsDownload = songs.filter { song in
             song.status == .ready
                 && song.pitchData != nil
-                && !PitchDataDownloader.isCached(songId: song.id)
+                && !PitchDataDownloader.isCached(
+                    songId: song.id,
+                    variantId: song.activeVariant?.id
+                )
         }
 
         for song in needsDownload {
-            downloadPitchData(songId: song.id)
+            downloadPitchData(song: song)
         }
 
         if !needsDownload.isEmpty {
@@ -204,7 +211,7 @@ private extension LibraryViewModel {
 
         do {
             let response = try await apiClient.createSong(
-                CreateSongRequest(youtubeUrl: result.url)
+                CreateSongRequest(youtubeUrl: result.url, source: addSongSource)
             )
 
             if let index = songs.firstIndex(where: { $0.id == response.id }) {
@@ -231,7 +238,7 @@ private extension LibraryViewModel {
 
         do {
             let response = try await apiClient.createSong(
-                CreateSongRequest(youtubeUrl: addSongURL)
+                CreateSongRequest(youtubeUrl: addSongURL, source: addSongSource)
             )
 
             if let index = songs.firstIndex(where: { $0.id == response.id }) {

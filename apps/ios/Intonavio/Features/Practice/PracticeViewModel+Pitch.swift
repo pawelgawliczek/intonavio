@@ -33,19 +33,12 @@ extension PracticeViewModel {
 
     /// Load reference pitch data if available and cached.
     func loadPitchDataIfAvailable() {
-        guard PitchDataDownloader.isCached(songId: songId) else {
+        guard PitchDataDownloader.isCached(songId: songId, variantId: activeVariantId) else {
             isPitchReady = false
             return
         }
 
-        let caches = FileManager.default.urls(
-            for: .cachesDirectory,
-            in: .userDomainMask
-        )[0]
-        let url = caches
-            .appendingPathComponent("pitch", isDirectory: true)
-            .appendingPathComponent(songId, isDirectory: true)
-            .appendingPathComponent("reference.json")
+        let url = PitchDataDownloader.cacheURL(for: songId, variantId: activeVariantId)
 
         do {
             try referenceStore.load(from: url)
@@ -66,15 +59,17 @@ extension PracticeViewModel {
         apiClient: any APIClientProtocol
     ) {
         guard hasPitchData,
-              !PitchDataDownloader.isCached(songId: songId) else {
+              !PitchDataDownloader.isCached(songId: songId, variantId: activeVariantId) else {
             return
         }
 
         isPitchLoading = true
+        let variantId = activeVariantId
         Task {
             do {
                 _ = try await PitchDataDownloader.localURL(
                     songId: songId,
+                    variantId: variantId,
                     apiClient: apiClient
                 )
                 await MainActor.run {
@@ -152,3 +147,58 @@ extension PracticeViewModel {
         }
     }
 }
+
+// MARK: - Variant Switching
+
+extension PracticeViewModel {
+    /// Switch the practice session to a different ready variant of the same song.
+    /// Reloads pitch reference data and stem audio for the new variant.
+    @MainActor
+    func switchToVariant(
+        _ variant: SongVariant,
+        apiClient: any APIClientProtocol
+    ) {
+        guard variant.id != activeVariantId else { return }
+        guard variant.status == .ready else { return }
+
+        isSwitchingVariant = true
+        pause()
+
+        Task { @MainActor in
+            do {
+                let updated = try await apiClient.setActiveVariant(
+                    songId: songId,
+                    variantId: variant.id
+                )
+                applyUpdatedSong(updated)
+            } catch {
+                AppLogger.library.error(
+                    "Failed to switch variant: \(error.localizedDescription)"
+                )
+            }
+            isSwitchingVariant = false
+        }
+    }
+
+    @MainActor
+    func applyUpdatedSong(_ song: SongResponse) {
+        variants = song.variants
+        activeVariantId = song.activeVariantId
+        stems = song.stems
+
+        isPitchReady = false
+        isStemsReady = false
+        stemPlayer.teardown()
+        detectedPoints.removeAll()
+
+        loadPitchDataIfAvailable()
+        if !isPitchReady, song.pitchData != nil {
+            downloadPitchDataIfNeeded(
+                hasPitchData: true,
+                apiClient: APIClient()
+            )
+        }
+        preloadStems()
+    }
+}
+

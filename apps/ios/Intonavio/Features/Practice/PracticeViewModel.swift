@@ -76,6 +76,9 @@ final class PracticeViewModel {
     let songId: String
     let videoId: String
     var stems: [StemResponse] = []
+    var variants: [SongVariant] = []
+    var activeVariantId: String?
+    var isSwitchingVariant = false
 
     // MARK: - Dependencies
 
@@ -469,13 +472,7 @@ extension PracticeViewModel {
     func setDurationFromStems() {
         // Use the FULL stem if available, otherwise any stem
         let preferred: [StemType] = [.full, .vocals, .instrumental]
-        let caches = FileManager.default.urls(
-            for: .cachesDirectory,
-            in: .userDomainMask
-        )[0]
-        let stemDir = caches
-            .appendingPathComponent("stems", isDirectory: true)
-            .appendingPathComponent(songId, isDirectory: true)
+        let stemDir = StemDownloader.directory(songId: songId, variantId: activeVariantId)
 
         for type in preferred {
             guard stems.contains(where: { $0.type == type }) else { continue }

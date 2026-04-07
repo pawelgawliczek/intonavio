@@ -17,6 +17,10 @@ protocol APIClientProtocol: Sendable {
     func listSongs(page: Int, limit: Int) async throws -> PaginatedResponse<SongResponse>
     func deleteSong(id: String) async throws
 
+    // Variants
+    func createVariant(songId: String, source: StemSource) async throws -> SongVariant
+    func setActiveVariant(songId: String, variantId: String) async throws -> SongResponse
+
     // Stems
     func listStems(songId: String) async throws -> [StemResponse]
     func stemDownloadURL(songId: String, stemId: String) async throws -> PresignedURLResponse

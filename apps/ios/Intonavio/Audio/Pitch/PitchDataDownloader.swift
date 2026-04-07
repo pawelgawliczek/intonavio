@@ -1,16 +1,18 @@
 import Foundation
 
 /// Downloads pitch JSON from R2 via presigned URL and caches locally.
-/// Cache location: ~/Library/Caches/pitch/{songId}/reference.json
+/// Cache location: ~/Library/Caches/pitch/{songId}/{variantId}/reference.json
+/// (legacy: ~/Library/Caches/pitch/{songId}/reference.json when variantId is nil)
 enum PitchDataDownloader {
     private static let fileManager = FileManager.default
 
     /// Returns the local URL for cached pitch data. Downloads if not cached.
     static func localURL(
         songId: String,
+        variantId: String? = nil,
         apiClient: any APIClientProtocol
     ) async throws -> URL {
-        let cached = cacheURL(for: songId)
+        let cached = cacheURL(for: songId, variantId: variantId)
         if fileManager.fileExists(atPath: cached.path()) {
             AppLogger.pitch.debug("Pitch data cache hit for \(songId)")
             return cached
@@ -34,14 +36,14 @@ enum PitchDataDownloader {
         return cached
     }
 
-    /// Check if pitch data is already cached for a song.
-    static func isCached(songId: String) -> Bool {
-        fileManager.fileExists(atPath: cacheURL(for: songId).path())
+    /// Check if pitch data is already cached for a song variant.
+    static func isCached(songId: String, variantId: String? = nil) -> Bool {
+        fileManager.fileExists(atPath: cacheURL(for: songId, variantId: variantId).path())
     }
 
-    /// Remove cached pitch data for a song.
+    /// Remove cached pitch data for every variant of a song.
     static func removeCache(songId: String) {
-        let url = cacheURL(for: songId).deletingLastPathComponent()
+        let url = songDirectory(for: songId)
         try? fileManager.removeItem(at: url)
     }
 
@@ -56,7 +58,15 @@ enum PitchDataDownloader {
         AppLogger.pitch.info("All pitch data cache cleared")
     }
 
-    static func cacheURL(for songId: String) -> URL {
+    static func cacheURL(for songId: String, variantId: String? = nil) -> URL {
+        var dir = songDirectory(for: songId)
+        if let variantId, !variantId.isEmpty {
+            dir = dir.appendingPathComponent(variantId, isDirectory: true)
+        }
+        return dir.appendingPathComponent("reference.json")
+    }
+
+    private static func songDirectory(for songId: String) -> URL {
         let caches = fileManager.urls(
             for: .cachesDirectory,
             in: .userDomainMask
@@ -64,7 +74,6 @@ enum PitchDataDownloader {
         return caches
             .appendingPathComponent("pitch", isDirectory: true)
             .appendingPathComponent(songId, isDirectory: true)
-            .appendingPathComponent("reference.json")
     }
 }
 

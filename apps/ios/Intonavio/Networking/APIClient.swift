@@ -78,6 +78,20 @@ extension APIClient {
         let _: EmptyResponse = try await execute(.deleteSong(id: id))
     }
 
+    func createVariant(songId: String, source: StemSource) async throws -> SongVariant {
+        try await execute(.createVariant(
+            songId: songId,
+            body: CreateVariantRequest(source: source)
+        ))
+    }
+
+    func setActiveVariant(songId: String, variantId: String) async throws -> SongResponse {
+        try await execute(.setActiveVariant(
+            songId: songId,
+            body: SetActiveVariantRequest(variantId: variantId)
+        ))
+    }
+
     func listStems(songId: String) async throws -> [StemResponse] {
         try await execute(.listStems(songId: songId))
     }

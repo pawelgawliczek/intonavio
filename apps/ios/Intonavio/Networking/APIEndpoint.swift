@@ -17,6 +17,10 @@ enum APIEndpoint {
     case listSongs(page: Int, limit: Int)
     case deleteSong(id: String)
 
+    // Variants
+    case createVariant(songId: String, body: CreateVariantRequest)
+    case setActiveVariant(songId: String, body: SetActiveVariantRequest)
+
     // Stems
     case listStems(songId: String)
     case stemDownloadURL(songId: String, stemId: String)
@@ -42,6 +46,8 @@ enum APIEndpoint {
         case .getSong(let id): return "/songs/\(id)"
         case .listSongs: return "/songs"
         case .deleteSong(let id): return "/songs/\(id)"
+        case .createVariant(let songId, _): return "/songs/\(songId)/variants"
+        case .setActiveVariant(let songId, _): return "/songs/\(songId)/active-variant"
         case .listStems(let songId): return "/songs/\(songId)/stems"
         case .stemDownloadURL(let songId, let stemId):
             return "/songs/\(songId)/stems/\(stemId)/url"
@@ -56,8 +62,10 @@ enum APIEndpoint {
     var method: String {
         switch self {
         case .appleSignIn, .register, .login,
-             .refreshToken, .createSong, .createSession:
+             .refreshToken, .createSong, .createSession, .createVariant:
             return "POST"
+        case .setActiveVariant:
+            return "PATCH"
         case .deleteAccount, .deleteSong:
             return "DELETE"
         case .getSong, .listSongs, .searchSongs, .previewSong, .listStems,
@@ -75,6 +83,8 @@ enum APIEndpoint {
         case .refreshToken(let req): return req
         case .createSong(let req): return req
         case .createSession(let req): return req
+        case .createVariant(_, let req): return req
+        case .setActiveVariant(_, let req): return req
         default: return nil
         }
     }

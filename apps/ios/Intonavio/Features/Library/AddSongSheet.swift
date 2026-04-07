@@ -9,6 +9,8 @@ struct AddSongSheet: View {
             VStack(spacing: 0) {
                 modePicker
                     .padding(.top, 12)
+                sourcePicker
+                    .padding(.top, 12)
 
                 if viewModel.addSongMode == .search {
                     searchContent
@@ -48,6 +50,22 @@ private extension AddSongSheet {
                 .tag(AddSongMode.url)
         }
         .pickerStyle(.segmented)
+        .padding(.horizontal, 24)
+    }
+
+    var sourcePicker: some View {
+        VStack(spacing: 6) {
+            Picker("Source", selection: $viewModel.addSongSource) {
+                ForEach(StemSource.allCases, id: \.self) { source in
+                    Text(source.displayName).tag(source)
+                }
+            }
+            .pickerStyle(.segmented)
+
+            Text(viewModel.addSongSource.shortDescription)
+                .font(.caption)
+                .foregroundStyle(Color.intonavioTextSecondary)
+        }
         .padding(.horizontal, 24)
     }
 }

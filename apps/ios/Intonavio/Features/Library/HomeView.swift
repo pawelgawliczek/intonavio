@@ -117,16 +117,19 @@ private extension HomeView {
                     isOffline: isOffline,
                     songTitle: song.title,
                     songArtist: song.artist,
-                    songDuration: song.duration
+                    songDuration: song.duration,
+                    variants: song.variants,
+                    activeVariantId: song.activeVariantId
                 )
             }
         }
     }
 
     func isSongAvailableOffline(_ song: SongResponse) -> Bool {
-        song.status == .ready
-            && StemDownloader.isCached(songId: song.id, stems: song.stems)
-            && PitchDataDownloader.isCached(songId: song.id)
+        let variantId = song.activeVariant?.id
+        return song.status == .ready
+            && StemDownloader.isCached(songId: song.id, stems: song.stems, variantId: variantId)
+            && PitchDataDownloader.isCached(songId: song.id, variantId: variantId)
     }
 
     var emptyState: some View {

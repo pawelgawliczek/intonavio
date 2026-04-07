@@ -97,7 +97,8 @@ private extension PracticeViewModel {
                 let url = try await stemDownloader.localURL(
                     songId: songId,
                     stemId: stem.id,
-                    stemType: stem.type
+                    stemType: stem.type,
+                    variantId: activeVariantId
                 )
                 stemFiles.append((type: stem.type, url: url))
                 stemsDownloadedCount += 1

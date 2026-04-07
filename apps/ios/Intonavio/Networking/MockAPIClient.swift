@@ -80,6 +80,16 @@ extension MockAPIClient {
     func deleteSong(id: String) async throws {
         try maybeThrow()
     }
+
+    func createVariant(songId: String, source: StemSource) async throws -> SongVariant {
+        try maybeThrow()
+        return Fixtures.studioVariant
+    }
+
+    func setActiveVariant(songId: String, variantId: String) async throws -> SongResponse {
+        try maybeThrow()
+        return Fixtures.readySong
+    }
 }
 
 // MARK: - Stems
@@ -130,6 +140,18 @@ enum Fixtures {
         accessToken: "mock_access_token",
         refreshToken: "mock_refresh_token",
         user: AuthUser(id: "user1", email: "test@example.com", displayName: "Test User")
+    )
+
+    static let studioVariant = SongVariant(
+        id: "var_studio_1",
+        source: .studio,
+        status: .ready,
+        stemsPrefix: "stems/song1/studio/",
+        pitchKey: "pitch/song1/studio/reference.json",
+        frameCount: 12000,
+        hopDuration: 0.0058,
+        errorMessage: nil,
+        createdAt: "2025-06-01T12:00:00Z"
     )
 
     static let stems: [StemResponse] = [
