@@ -77,6 +77,7 @@ Before writing any code, read the docs relevant to the work:
 - **Any infra or CI change** → read `docs/15-development-workflow.md`, `docs/08-infrastructure.md`
 - **Any data model change** → read `docs/04-data-models.md`, `docs/12-code-quality.md` (Prisma section)
 - **Any audio pipeline change** → read `docs/05-audio-pipeline.md`, `docs/06-realtime-pitch.md`
+- **Any pitch-detection / pYIN / octave-error work** → read `docs/yin-comparison-results.md` (failure modes, current `fix_octave_errors` mitigation, researched PESTO/RMVPE/BS-Roformer roadmap)
 - **Any instrument recording change** → read `docs/17-instrument-recording.md`, `docs/05-audio-pipeline.md` (Instrument Recording Pipeline section), `docs/16-ui-views-flow.md`
 - **Any subscription/paywall/credit change** → read `docs/19-monetization.md` (gitignored, local only)
 - **Any onboarding change** → read `docs/20-onboarding.md`, `docs/16-ui-views-flow.md` (App Launch Flow)
@@ -85,26 +86,27 @@ Always read `docs/12-code-quality.md` — it applies to every change.
 
 ## Documentation Reference
 
-| Topic                        | Document                           |
-| ---------------------------- | ---------------------------------- |
-| Product overview             | `docs/01-overview.md`              |
-| System architecture & rules  | `docs/02-architecture.md`          |
-| API contracts                | `docs/03-api-design.md`            |
-| Data models (Prisma)         | `docs/04-data-models.md`           |
-| Audio processing pipeline    | `docs/05-audio-pipeline.md`        |
-| Real-time pitch detection    | `docs/06-realtime-pitch.md`        |
-| YouTube looping              | `docs/07-youtube-looping.md`       |
-| Infrastructure & deployment  | `docs/08-infrastructure.md`        |
-| Project structure            | `docs/09-project-structure.md`     |
-| Implementation phases        | `docs/10-implementation-phases.md` |
-| Spikes                       | `docs/11-spikes.md`                |
-| Code quality standards       | `docs/12-code-quality.md`          |
-| Observability & debugging    | `docs/13-observability.md`         |
-| Testing strategy             | `docs/14-testing-strategy.md`      |
-| Development workflow & CI/CD | `docs/15-development-workflow.md`  |
-| UI views & navigation flow   | `docs/16-ui-views-flow.md`         |
-| Instrument recording feature | `docs/17-instrument-recording.md`  |
-| Onboarding flow              | `docs/20-onboarding.md`            |
+| Topic                                   | Document                           |
+| --------------------------------------- | ---------------------------------- |
+| Product overview                        | `docs/01-overview.md`              |
+| System architecture & rules             | `docs/02-architecture.md`          |
+| API contracts                           | `docs/03-api-design.md`            |
+| Data models (Prisma)                    | `docs/04-data-models.md`           |
+| Audio processing pipeline               | `docs/05-audio-pipeline.md`        |
+| Real-time pitch detection               | `docs/06-realtime-pitch.md`        |
+| YouTube looping                         | `docs/07-youtube-looping.md`       |
+| Infrastructure & deployment             | `docs/08-infrastructure.md`        |
+| Project structure                       | `docs/09-project-structure.md`     |
+| Implementation phases                   | `docs/10-implementation-phases.md` |
+| Spikes                                  | `docs/11-spikes.md`                |
+| Code quality standards                  | `docs/12-code-quality.md`          |
+| Observability & debugging               | `docs/13-observability.md`         |
+| Testing strategy                        | `docs/14-testing-strategy.md`      |
+| Development workflow & CI/CD            | `docs/15-development-workflow.md`  |
+| UI views & navigation flow              | `docs/16-ui-views-flow.md`         |
+| Instrument recording feature            | `docs/17-instrument-recording.md`  |
+| Pitch detection failure modes & roadmap | `docs/yin-comparison-results.md`   |
+| Onboarding flow                         | `docs/20-onboarding.md`            |
 
 Do not deviate from documented architecture without updating the relevant doc first.
 
