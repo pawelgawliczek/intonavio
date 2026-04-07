@@ -17,7 +17,8 @@ graph TD
         API[NestJS API<br/>REST + WebSocket]
         Auth[Auth Module<br/>Apple + Google + Email]
         Queue[BullMQ<br/>Redis-backed]
-        Worker[Python Worker<br/>Pitch Analysis]
+        PitchWorker[Python Worker<br/>Pitch Analysis]
+        StemWorker[Python Worker<br/>Stem Splitter<br/>BS-Roformer]
         PG[(PostgreSQL)]
         Redis[(Redis)]
     end
@@ -47,11 +48,13 @@ graph TD
     Auth --> Google
     Auth --> Apple
 
-    Queue --> Worker
+    Queue --> PitchWorker
+    Queue --> StemWorker
     Queue --> SS
 
     SS -->|Webhook| Caddy
-    Worker --> R2
+    PitchWorker --> R2
+    StemWorker --> R2
 ```
 
 ## Component Diagram
@@ -118,9 +121,9 @@ graph LR
 
 ## Data Flow Summary
 
-1. **Song submission**: Client sends YouTube URL → API creates song record → enqueues StemSplit job
-2. **Stem separation**: BullMQ triggers StemSplit API → StemSplit processes → webhook notifies API → stems downloaded and uploaded to R2
-3. **Pitch analysis**: After stems are ready → Python worker extracts reference pitch from vocal stem → pitch data uploaded to R2 as JSON
+1. **Song submission**: Client sends YouTube URL + desired `source` (`STUDIO` or `DRAFT`, default `STUDIO`) → API creates a `Song` plus one `SongVariant` of that source, marks it active, and enqueues the matching stem-split job. The user can later request the other source via `POST /v1/songs/:id/variants` to get a second variant alongside the first.
+2. **Stem separation**: BullMQ routes by source — `STUDIO` variants go to the `stem-split` queue (StemSplit API → webhook → API downloads outputs to R2); `DRAFT` variants go to the `stem-split-local` queue, consumed by the in-house Python stem-splitter worker (BS-Roformer via `audio-separator`) which writes stems straight to R2. Both branches write under `stems/<songId>/<SOURCE>/{VOCALS,FULL}.mp3` and then enqueue a `pitch-analysis` job carrying `variantId` and `pitchOutputKey`.
+3. **Pitch analysis**: Python pitch worker extracts reference pitch from the variant's vocal stem and uploads JSON to `pitch/<songId>/<SOURCE>/reference.json`. It writes `pitchKey`/`frameCount`/`hopDuration` directly onto the `SongVariant` and flips it to `READY`.
 4. **Practice session**: Client fetches stems + pitch data from R2 → plays stems via shared AudioEngine (YouTube muted, video-only) → detects singer pitch via mic on same engine (AEC cancels stem audio) → compares against reference → displays on piano roll
 5. **Session save**: Client sends session summary (timestamped pitch data, score) → API stores in PostgreSQL
 
@@ -141,13 +144,14 @@ Clients (iOS, Web) → API → Services → Infrastructure (DB, R2, Redis, Queue
 
 Every external service is wrapped behind an interface/adapter. Business logic never imports `@aws-sdk/client-s3` or a StemSplit client directly — only the adapter does.
 
-| External Service   | Wrapper                       | Swap Scenario                                                           |
-| ------------------ | ----------------------------- | ----------------------------------------------------------------------- |
-| StemSplit API      | `StemSplitService`            | Self-hosted Demucs if StemSplit dies or pricing changes                 |
-| Cloudflare R2      | `StorageService`              | Switch to S3 or MinIO without touching business logic                   |
-| Apple Sign In      | `AuthProviderService`         | Already supports Apple, Google, and Email — add more via same interface |
-| Google OAuth       | `AuthProviderService`         | Same adapter pattern as Apple                                           |
-| YouTube IFrame API | `VideoPlayerProtocol` (Swift) | Support Vimeo or self-hosted video                                      |
+| External Service   | Wrapper                                                     | Swap Scenario                                                                              |
+| ------------------ | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| StemSplit API      | `StemSplitService`                                          | External premium path (Studio variant). Already swappable with Draft.                      |
+| In-house splitter  | `workers/stem-splitter` (BS-Roformer via `audio-separator`) | Free in-house path (Draft variant). Same `stems/<songId>/<SOURCE>/...` contract as Studio. |
+| Cloudflare R2      | `StorageService`                                            | Switch to S3 or MinIO without touching business logic                                      |
+| Apple Sign In      | `AuthProviderService`                                       | Already supports Apple, Google, and Email — add more via same interface                    |
+| Google OAuth       | `AuthProviderService`                                       | Same adapter pattern as Apple                                                              |
+| YouTube IFrame API | `VideoPlayerProtocol` (Swift)                               | Support Vimeo or self-hosted video                                                         |
 
 ### Storage Boundaries
 

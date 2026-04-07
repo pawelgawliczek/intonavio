@@ -2,7 +2,16 @@
 
 ## Processing Pipeline Overview
 
-End-to-end flow from YouTube URL submission to practice-ready song.
+End-to-end flow from YouTube URL submission to practice-ready song. A song can hold up to two `SongVariant` rows — one `STUDIO` (external StemSplit API) and one `DRAFT` (in-house BS-Roformer worker) — and the user chooses which one is active. Both sources feed the same downstream pitch-analysis step.
+
+### Source branches
+
+| Source   | Queue              | Worker                                      | Stems written to                          | Cost                   |
+| -------- | ------------------ | ------------------------------------------- | ----------------------------------------- | ---------------------- |
+| `STUDIO` | `stem-split`       | `StemSplitService` → stemsplit.io + webhook | `stems/{songId}/STUDIO/{VOCALS,FULL}.mp3` | Credits (external API) |
+| `DRAFT`  | `stem-split-local` | `workers/stem-splitter` (BS-Roformer)       | `stems/{songId}/DRAFT/{VOCALS,FULL}.mp3`  | Free (host CPU/GPU)    |
+
+Pitch analysis for either branch writes to `pitch/{songId}/{SOURCE}/reference.json` and persists `pitchKey`, `frameCount`, `hopDuration` on the owning `SongVariant`. Legacy variants backfilled from the pre-variant schema keep their original flat paths (`stems/{songId}/...`, `pitch/{songId}/reference.json`) — the storage adapter respects whatever string is in `stemsPrefix`/`pitchKey` rather than reconstructing paths.
 
 ```mermaid
 flowchart TD
@@ -229,7 +238,7 @@ The Python worker extracts reference pitch data from the vocal stem using libros
 
 ### Pipeline
 
-1. **Download** vocal stem from R2 (`stems/{songId}/VOCALS.mp3`)
+1. **Download** vocal stem from R2 at the key dictated by the owning variant's `stemsPrefix` — typically `stems/{songId}/{SOURCE}/VOCALS.mp3` for variant-flow songs, or the legacy `stems/{songId}/VOCALS.mp3` for backfilled rows
 2. **Load** audio with librosa at 44.1kHz mono
 3. **Extract pitch** using `librosa.pyin()`:
    - **Bandpass pre-filter** (scipy `butter` order 4, `sosfiltfilt`) restricts the signal to 65–1100 Hz before pYIN sees it — everything above C6 in a vocal stem is instrument bleed or harmonics
@@ -240,8 +249,8 @@ The Python worker extracts reference pitch data from the vocal stem using libros
 5. **Octave-error correction** — `fix_octave_errors()` post-processes the frame list with a sliding-window median filter (see below)
 6. **Convert** frequencies to MIDI note numbers
 7. **Build** JSON frame array with `t`, `hz`, `midi`, `voiced`, `rms` fields
-8. **Upload** JSON to R2 at `pitch/{songId}/reference.json`
-9. **Update** database: create PitchData record, set song status to READY
+8. **Upload** JSON to R2 at the `pitchOutputKey` carried on the job — `pitch/{songId}/{SOURCE}/reference.json` for variant-flow jobs, or the legacy `pitch/{songId}/reference.json` for jobs without a `variantId`
+9. **Update** database: write `pitchKey`/`frameCount`/`hopDuration` onto the `SongVariant` and flip it to `READY` (legacy jobs without `variantId` still write the old `PitchData` row instead)
 
 ### Key Parameters
 

@@ -188,6 +188,8 @@ License note: RMVPE upstream license is unclear; vendor weights from an RVC rele
 
 ### Step 5 — Upgrade stem separation to BS-Roformer (2–3 days + GPU)
 
+> **Status update (2026-04-07)**: BS-Roformer (via `audio-separator`) now ships as the **in-house `workers/stem-splitter` worker**, exposed as the `DRAFT` stem source alongside the external StemSplit `STUDIO` source (see `docs/05-audio-pipeline.md`). Users can opt into the cleaner separation per song. This is the "Draft" variant of the dual-source feature; the roadmap notes below still describe the research context.
+
 **Highest ceiling, most invasive.** Replace StemSplit with **BS-Roformer Viperx 1297** (`model_bs_roformer_ep_317_sdr_12.9755.ckpt`) via the `audio-separator` Python package (https://github.com/nomadkaraoke/python-audio-separator, **MIT**, v0.44.1 March 2026, very actively maintained, supports Apple Silicon).
 
 | Model                       | Vocals SDR |

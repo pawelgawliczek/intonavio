@@ -23,7 +23,7 @@ Defining all views, navigation, and layout decisions for the Intonavio singing p
 4. **Add Song Sheet** — Two-tab interface (segmented picker):
    - **Search tab (default)**: Search bar + results list. Each result shows thumbnail, title, artist, duration, and a magenta "Lyrics" badge when synced lyrics are available. Tapping a result navigates to the **Song Confirmation** screen.
    - **URL tab**: Paste a YouTube URL, tap "Check Song" to preview metadata and lyrics availability, then navigates to the **Song Confirmation** screen.
-   - **Song Confirmation** (navigation push): Large thumbnail, title, artist, duration, prominent lyrics status panel (green checkmark "Synced Lyrics Available" or gray X "No Synced Lyrics Found"), and "Add Song" button. User explicitly confirms before the song is added to their library.
+   - **Song Confirmation** (navigation push): Large thumbnail, title, artist, duration, prominent lyrics status panel (green checkmark "Synced Lyrics Available" or gray X "No Synced Lyrics Found"), a **Source** segmented picker (`Studio` / `Draft`, default `Studio`) with a one-line cost/quality hint underneath, and "Add Song" button. The selected source is sent as `source` on `POST /v1/songs` and determines which variant the song is created with.
 5. **Exercise Browser** — Browse/search community exercises, filter by category/difficulty.
 
 ### Recordings
@@ -41,6 +41,7 @@ Defining all views, navigation, and layout decisions for the Intonavio singing p
    - **Controls overlay**: Play/pause, A-B loop markers, stem mode selector (Original / Vocals / Instrumental), transpose picker (musical intervals from -2 octaves to +2 octaves)
    - **Loop score toast**: When A-B loop is active, a toast overlay appears after each pass showing the score percentage and improvement delta (green arrow up / red arrow down). Auto-dismisses after 2 seconds.
    - **Score invalidation banner**: When the user seeks or activates a loop, a capsule at the bottom shows "Song score won't be recorded (seeked or looped)". Song score saves automatically after the last phrase; invalidated sessions skip saving.
+   - **Source row**: Shows the currently active stem source (`Studio` or `Draft`). When the song has only one variant, the row includes a "Generate <other>" button that calls `POST /v1/songs/:id/variants` and polls until the new variant is `READY`. When both variants are `READY`, the row is a segmented toggle that calls `PATCH /v1/songs/:id/active-variant` — switching reloads the active variant's stems and pitch data from the variant-keyed cache.
    - **Progress sheet** (toolbar button, chart icon): Shows score history chart (dates on X-axis), practice frequency bar chart (day/week/month toggle), overall best score, and per-phrase score breakdown. Tapping a phrase row sets up an A-B loop around that phrase (with breathing room), dismisses the sheet, and seeks to the phrase start — without auto-playing. User presses play to start the loop.
    - **YouTube video**: Non-interactive — covered by a transparent touch-blocking overlay. All playback controlled via controls bar.
    - **Piano roll**: Interactive — touch to pause, swipe to scrub with momentum, long-press to loop a phrase (see Piano Roll Touch Gestures below).
@@ -185,6 +186,7 @@ Key differences from online practice:
 - No `VideoAudioSync` — stems run independently
 - All controls (loop, speed, audio mode, transpose) work identically
 - Auto-detected via `NetworkMonitor` — no user action needed
+- Offline availability is evaluated against the song's **active variant** — a song is tappable offline only if the active variant's stems and pitch data are cached under `~/Library/Caches/{stems,pitch}/{variantId}/`. Switching variants is disabled offline.
 
 ### Song Practice Layout (Toggleable)
 

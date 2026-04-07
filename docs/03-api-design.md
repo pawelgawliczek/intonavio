@@ -82,6 +82,8 @@ sequenceDiagram
 
 ## Song Processing Flow
 
+The diagram below shows the Studio (StemSplit API) branch. The Draft branch is identical except the API enqueues onto `stem-split-local` and the in-house `workers/stem-splitter` consumes the job, writes stems to R2 directly, and enqueues pitch analysis without a webhook hop. Both branches carry `variantId` end-to-end and persist results onto `SongVariant`.
+
 ```mermaid
 sequenceDiagram
     participant Client as App
@@ -244,14 +246,16 @@ sequenceDiagram
 
 ### Songs
 
-| Method   | Path             | Description                                                              |
-| -------- | ---------------- | ------------------------------------------------------------------------ |
-| `GET`    | `/songs/search`  | Search YouTube for songs with lyrics availability check                  |
-| `GET`    | `/songs/preview` | Preview a YouTube URL — fetches metadata and checks lyrics availability  |
-| `POST`   | `/songs`         | Submit YouTube URL — deduplicates by videoId, adds to user's library     |
-| `GET`    | `/songs/:id`     | Get song details (must be in user's library)                             |
-| `GET`    | `/songs`         | List user's library songs via UserSongLibrary (paginated)                |
-| `DELETE` | `/songs/:id`     | Remove song from user's library (does not delete the shared song record) |
+| Method   | Path                        | Description                                                               |
+| -------- | --------------------------- | ------------------------------------------------------------------------- |
+| `GET`    | `/songs/search`             | Search YouTube for songs with lyrics availability check                   |
+| `GET`    | `/songs/preview`            | Preview a YouTube URL — fetches metadata and checks lyrics availability   |
+| `POST`   | `/songs`                    | Submit YouTube URL — deduplicates by videoId, adds to user's library      |
+| `GET`    | `/songs/:id`                | Get song details (must be in user's library)                              |
+| `GET`    | `/songs`                    | List user's library songs via UserSongLibrary (paginated)                 |
+| `DELETE` | `/songs/:id`                | Remove song from user's library (does not delete the shared song record)  |
+| `POST`   | `/songs/:id/variants`       | Add the alternate stem source variant for a song and enqueue its pipeline |
+| `PATCH`  | `/songs/:id/active-variant` | Set the active variant for a song (must be `READY`)                       |
 
 #### `GET /songs/search`
 
@@ -302,9 +306,12 @@ Always returns `202` regardless of whether the song is new or existing.
 
 ```json
 {
-  "youtubeUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+  "youtubeUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+  "source": "STUDIO"
 }
 ```
+
+`source` is optional and defaults to `"STUDIO"`. Accepted values: `"STUDIO"` (external StemSplit API, premium quality, costs credits) or `"DRAFT"` (in-house BS-Roformer worker, free). The created song gets one `SongVariant` of the chosen source, marked active, and the matching stem-split pipeline is enqueued. The other source can be added later via `POST /v1/songs/:id/variants`.
 
 **Response (202) — new or re-queued song:**
 
@@ -401,9 +408,63 @@ Returns song details only if it exists in the authenticated user's library (via 
     "id": "cm7pitch1abcdefghijklmno",
     "storageKey": "pitch/cm7abc123def456ghijklmnop/reference.json"
   },
+  "activeVariantId": "cm7var1abcdefghijklmnop",
+  "variants": [
+    {
+      "id": "cm7var1abcdefghijklmnop",
+      "source": "STUDIO",
+      "status": "READY",
+      "stemsPrefix": "stems/cm7abc123def456ghijklmnop/STUDIO",
+      "pitchKey": "pitch/cm7abc123def456ghijklmnop/STUDIO/reference.json",
+      "frameCount": 20501,
+      "hopDuration": 0.0116,
+      "errorMessage": null,
+      "createdAt": "2025-06-01T12:00:00Z"
+    }
+  ],
   "createdAt": "2025-06-01T12:00:00Z"
 }
 ```
+
+`activeVariantId` points at the variant clients should currently use to look up stems and pitch data. `variants` lists every `SongVariant` attached to the song (max one per `source`). Legacy variants backfilled from the pre-variant schema keep their original `stemsPrefix` (`stems/{songId}`) and `pitchKey` (`pitch/{songId}/reference.json`) — clients must use these strings as opaque keys rather than reconstruct paths.
+
+#### `POST /songs/:id/variants`
+
+Adds the other stem-source variant for an existing song and enqueues its pipeline. Idempotent: if the requested source already has a variant on the song, the existing one is returned without re-enqueueing.
+
+**Request:**
+
+```json
+{ "source": "DRAFT" }
+```
+
+**Response (202):**
+
+```json
+{
+  "id": "cm7var2abcdefghijklmnop",
+  "source": "DRAFT",
+  "status": "QUEUED",
+  "stemsPrefix": "stems/cm7abc123def456ghijklmnop/DRAFT",
+  "pitchKey": null,
+  "frameCount": null,
+  "hopDuration": null,
+  "errorMessage": null,
+  "createdAt": "2026-04-07T17:00:00Z"
+}
+```
+
+#### `PATCH /songs/:id/active-variant`
+
+Switches which variant is currently active for the song. The target variant must already be `READY`; otherwise returns `400`.
+
+**Request:**
+
+```json
+{ "variantId": "cm7var2abcdefghijklmnop" }
+```
+
+**Response (200):** the full song response (same shape as `GET /songs/:id`) with `activeVariantId` updated.
 
 ---
 

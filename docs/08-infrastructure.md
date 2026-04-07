@@ -20,7 +20,8 @@ graph TD
         subgraph Docker Compose - Intonavio
             API[NestJS API Container]
             Web[Next.js Container]
-            Worker[Python Worker Container]
+            Worker[Python Pitch Worker Container]
+            StemWorker[Python Stem-Splitter<br/>Container — BS-Roformer]
             PG[(PostgreSQL Container)]
             Redis[(Redis Container)]
         end
@@ -54,8 +55,11 @@ graph TD
     API --> Apple
 
     Redis --> Worker
+    Redis --> StemWorker
     Worker --> R2
     Worker --> PG
+    StemWorker --> R2
+    StemWorker --> PG
 
     SS -->|Webhook| Caddy
 ```
@@ -117,13 +121,14 @@ Caddy runs as a reverse proxy handling automatic TLS certificate provisioning an
 
 ### Docker Services
 
-| Container  | Image                | Port | Purpose                          |
-| ---------- | -------------------- | ---- | -------------------------------- |
-| `api`      | Custom (Node.js 20)  | 3000 | NestJS REST API                  |
-| `web`      | Custom (Node.js 20)  | 3001 | Next.js SSR                      |
-| `worker`   | Custom (Python 3.11) | —    | Pitch analysis (no exposed port) |
-| `postgres` | `postgres:16-alpine` | 5432 | Primary database                 |
-| `redis`    | `redis:7-alpine`     | 6379 | BullMQ queue + cache             |
+| Container       | Image                | Port | Purpose                                                                                         |
+| --------------- | -------------------- | ---- | ----------------------------------------------------------------------------------------------- |
+| `api`           | Custom (Node.js 20)  | 3000 | NestJS REST API                                                                                 |
+| `web`           | Custom (Node.js 20)  | 3001 | Next.js SSR                                                                                     |
+| `worker`        | Custom (Python 3.11) | —    | Pitch analysis (no exposed port)                                                                |
+| `stem-splitter` | Custom (Python 3.11) | —    | In-house stem separation (BS-Roformer) for `DRAFT` variants — consumes `stem-split-local` queue |
+| `postgres`      | `postgres:16-alpine` | 5432 | Primary database                                                                                |
+| `redis`         | `redis:7-alpine`     | 6379 | BullMQ queue + cache                                                                            |
 
 ### External Services
 
@@ -140,7 +145,7 @@ Caddy runs as a reverse proxy handling automatic TLS certificate provisioning an
 
 The production compose file defines all backend services.
 
-Currently deployed: **API + Worker + PostgreSQL + Redis** (web not yet implemented).
+Currently deployed: **API + Pitch Worker + Stem-Splitter Worker + PostgreSQL + Redis** (web not yet implemented). The stem-splitter container consumes the `stem-split-local` queue and serves the `DRAFT` variant flow; the external StemSplit API path (`STUDIO` variants) needs no extra container.
 
 ```yaml
 # docker-compose.yml (production)

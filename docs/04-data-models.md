@@ -10,7 +10,9 @@ erDiagram
     SONG ||--o{ USER_SONG_LIBRARY : "shared via"
     USER ||--o{ SESSION : "records"
     SONG ||--o{ STEM : "has"
-    SONG ||--o| PITCH_DATA : "has"
+    SONG ||--o| PITCH_DATA : "has (legacy)"
+    SONG ||--o{ SONG_VARIANT : "has variants"
+    SONG ||--o| SONG_VARIANT : "active variant"
     SONG ||--o{ SESSION : "practiced in"
     USER ||--o{ EXERCISE_ATTEMPT : "records"
     EXERCISE ||--o{ EXERCISE_ATTEMPT : "attempted in"
@@ -73,6 +75,22 @@ erDiagram
         boolean hasLyrics "LRCLIB check at creation"
         string status "SongStatus enum"
         string externalJobId "StemSplit job ID"
+        string activeVariantId FK "currently selected SongVariant"
+        string errorMessage "nullable"
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    SONG_VARIANT {
+        string id PK "CUID"
+        string songId FK
+        string source "StemSource: STUDIO or DRAFT"
+        string status "VariantStatus enum"
+        string stemsPrefix "R2 prefix, e.g. stems/{songId}/STUDIO"
+        string pitchKey "R2 key for pitch reference.json, nullable"
+        int frameCount "nullable"
+        float hopDuration "nullable"
+        string externalJobId "StemSplit job ID, nullable"
         string errorMessage "nullable"
         datetime createdAt
         datetime updatedAt
@@ -162,6 +180,19 @@ enum StemType {
   FULL
 }
 
+enum StemSource {
+  STUDIO  // External StemSplit API — premium quality, costs credits
+  DRAFT   // In-house BS-Roformer worker — free, runs on the host
+}
+
+enum VariantStatus {
+  QUEUED
+  SPLITTING
+  ANALYZING
+  READY
+  FAILED
+}
+
 // ─── Models ──────────────────────────────────────────
 
 model User {
@@ -193,26 +224,54 @@ model AuthProvider {
 }
 
 model Song {
-  id            String     @id @default(cuid())
-  userId        String     // Original submitter (who triggered processing)
-  videoId       String     @unique
-  title         String     // Fetched from YouTube oEmbed API at creation
-  artist        String?    // Author name from YouTube oEmbed API
-  thumbnailUrl  String     // Best available thumbnail (maxresdefault → hqdefault → mqdefault fallback)
-  duration      Int        // seconds
-  status        SongStatus @default(QUEUED)
-  externalJobId String?    // StemSplit job ID
-  errorMessage  String?
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  id              String     @id @default(cuid())
+  userId          String     // Original submitter (who triggered processing)
+  videoId         String     @unique
+  title           String     // Fetched from YouTube oEmbed API at creation
+  artist          String?    // Author name from YouTube oEmbed API
+  thumbnailUrl    String     // Best available thumbnail (maxresdefault → hqdefault → mqdefault fallback)
+  duration        Int        // seconds
+  status          SongStatus @default(QUEUED)
+  hasLyrics       Boolean    @default(false)
+  externalJobId   String?    // StemSplit job ID (legacy; per-variant id lives on SongVariant)
+  errorMessage    String?
+  activeVariantId String?    @unique
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
 
   user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   stems           Stem[]
-  pitchData       PitchData?
+  pitchData       PitchData?        // legacy single-variant pitch data, retained read-only for backfilled rows
+  variants        SongVariant[]
+  activeVariant   SongVariant?      @relation("ActiveVariant", fields: [activeVariantId], references: [id], onDelete: SetNull)
   sessions        Session[]
   userSongLibrary UserSongLibrary[]
 
   @@index([userId])
+  @@index([status])
+}
+
+// A song can hold up to two variants — one STUDIO and one DRAFT — each with its own
+// stems and pitch data in R2. The user picks which one is active per song.
+model SongVariant {
+  id            String        @id @default(cuid())
+  songId        String
+  source        StemSource
+  status        VariantStatus @default(QUEUED)
+  stemsPrefix   String        // R2 prefix, e.g. "stems/{songId}/STUDIO"
+  pitchKey      String?       // R2 key, e.g. "pitch/{songId}/STUDIO/reference.json"
+  frameCount    Int?
+  hopDuration   Float?
+  externalJobId String?       // StemSplit job ID for STUDIO variants
+  errorMessage  String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  song          Song  @relation(fields: [songId], references: [id], onDelete: Cascade)
+  activeForSong Song? @relation("ActiveVariant")
+
+  @@unique([songId, source])
+  @@index([songId])
   @@index([status])
 }
 
@@ -246,6 +305,10 @@ model Stem {
   @@unique([songId, type])
 }
 
+// Legacy single-variant pitch table. New songs write pitch metadata directly onto
+// SongVariant — `PitchData` rows only exist for songs that pre-date the variant
+// migration (backfilled by `20260407170000_add_song_variants`) and for exercises.
+// Treat as read-only for songs.
 model PitchData {
   id          String   @id @default(cuid())
   songId      String?  @unique
@@ -400,6 +463,23 @@ A user can have multiple auth providers linked (e.g., sign up with email, later 
 | `GUITAR` | Isolated guitar track                                  |
 | `FULL`   | Full audio mix from StemSplit (replaces YouTube audio) |
 
+### StemSource
+
+| Value    | Description                                                                               |
+| -------- | ----------------------------------------------------------------------------------------- |
+| `STUDIO` | External StemSplit API — premium quality, costs credits. Default for new songs.           |
+| `DRAFT`  | In-house Python `workers/stem-splitter` worker (BS-Roformer via `audio-separator`). Free. |
+
+### VariantStatus
+
+| Value       | Description                                         |
+| ----------- | --------------------------------------------------- |
+| `QUEUED`    | Variant created, waiting for the stem-split worker  |
+| `SPLITTING` | Stems being separated (Studio or Draft branch)      |
+| `ANALYZING` | Pitch worker extracting reference pitch from vocals |
+| `READY`     | Stems + pitch data available under the variant keys |
+| `FAILED`    | Pipeline failed (see `errorMessage` on the variant) |
+
 ### ExerciseCategory
 
 | Value       | Description                                        |
@@ -460,7 +540,7 @@ The generator converts this definition into the standard `{t, hz, midi, voiced, 
 
 The pitch data file stored in R2 contains frame-by-frame pitch information. For songs, this is extracted by the Python worker using pYIN. For exercises, it is generated deterministically from the exercise note definition.
 
-**File location:** `pitch/{songId}/reference.json`
+**File location:** `pitch/{songId}/{SOURCE}/reference.json` for variant-flow songs (where `{SOURCE}` is `STUDIO` or `DRAFT`). Legacy backfilled songs keep the pre-variant path `pitch/{songId}/reference.json`. Clients must read the exact `pitchKey` stored on the `SongVariant` rather than reconstruct the path.
 
 ```json
 {

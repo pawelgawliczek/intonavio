@@ -195,6 +195,26 @@ intonavio/
 │       └── package.json
 │
 ├── workers/
+│   ├── stem-splitter/              # Python stem-separation worker (DRAFT variant)
+│   │   ├── src/
+│   │   │   ├── __init__.py
+│   │   │   ├── config.py           # pydantic-settings env config
+│   │   │   ├── consumer.py         # BullMQ Worker on stem-split-local queue
+│   │   │   ├── db.py               # SongVariant updates via psycopg2
+│   │   │   ├── logger.py
+│   │   │   ├── models.py           # Pydantic job/output models
+│   │   │   ├── processor.py        # Job orchestrator
+│   │   │   ├── queue_producer.py   # Enqueues pitch-analysis when stems are ready
+│   │   │   ├── separator.py        # BS-Roformer via audio-separator
+│   │   │   ├── sentry_setup.py
+│   │   │   ├── storage.py          # R2 upload (stems/{songId}/DRAFT/...)
+│   │   │   ├── youtube.py          # yt-dlp audio fetch
+│   │   │   └── worker.py
+│   │   ├── tests/
+│   │   ├── models/                 # BS-Roformer checkpoints (mounted/cached)
+│   │   ├── requirements.txt
+│   │   ├── Dockerfile
+│   │   └── pyproject.toml
 │   └── pitch-analyzer/             # Python pitch analysis worker
 │       ├── src/
 │       │   ├── __init__.py         # Package marker (empty)
@@ -258,6 +278,7 @@ graph TD
 
     subgraph workers
         Pitch[workers/pitch-analyzer<br/>Python]
+        Stem[workers/stem-splitter<br/>Python — BS-Roformer]
     end
 
     subgraph external
@@ -282,6 +303,10 @@ graph TD
     Pitch --> PG
     Pitch --> Redis
     Pitch --> R2
+
+    Stem --> PG
+    Stem --> Redis
+    Stem --> R2
 ```
 
 ---
@@ -295,6 +320,7 @@ graph TD
 | `apps/ios`               | Swift       | iOS 17+ / macOS 14+ | SwiftUI, AVFoundation, WebKit                                   |
 | `packages/shared`        | TypeScript  | —                   | Zod (validation), shared types                                  |
 | `workers/pitch-analyzer` | Python 3.11 | —                   | librosa, numpy, boto3 (R2), psycopg2, bullmq, pydantic-settings |
+| `workers/stem-splitter`  | Python 3.11 | —                   | audio-separator (BS-Roformer), yt-dlp, boto3, psycopg2, bullmq  |
 
 ---
 

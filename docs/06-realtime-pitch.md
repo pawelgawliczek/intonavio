@@ -391,7 +391,7 @@ The threshold of `0.02` was chosen empirically. In tested vocal stems, real voca
 
 ### Pitch Data Caching
 
-Pitch data is cached locally at `~/Library/Caches/pitch/{songId}/reference.json`. The cache persists across sessions. If pitch data is re-analyzed on the server (e.g., after a worker update), users can clear the cache via Settings > Data > "Clear Pitch Cache" to force a re-download.
+Pitch data and stems are cached locally keyed by `SongVariant` id (not `songId`), so a song's Studio and Draft variants coexist on disk without clobbering each other: `~/Library/Caches/pitch/{variantId}/reference.json` and `~/Library/Caches/stems/{variantId}/`. The client downloads the blob at the exact `pitchKey` / `stemsPrefix` strings returned on `SongVariant` — legacy backfilled variants still point at the pre-variant R2 paths, so the cache layer treats those keys as opaque. The cache persists across sessions. If pitch data is re-analyzed on the server, users can clear it via Settings > Data > "Clear Pitch Cache" to force a re-download.
 
 ---
 

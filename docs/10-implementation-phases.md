@@ -425,6 +425,30 @@ graph LR
 
 ---
 
+### Phase 6.9: Dual Stem Sources (Studio + Draft)
+
+**Goal:** Let every song hold up to two stem-separation variants side by side — `STUDIO` (external StemSplit API, premium, costs credits) and `DRAFT` (in-house BS-Roformer worker, free) — with the user picking which is active per song.
+
+> **Status:** Complete (schema + API + workers + iOS landed 2026-04-07, commits `e235387`, `efaabd8`, `b56bc2f`, `adc03ac`). Host deploy of the `stem-splitter` container under `docker-compose.yml` is a separate deployment task.
+
+**Deliverables:**
+
+- Prisma schema: `StemSource` enum (`STUDIO`/`DRAFT`), `VariantStatus` enum, `SongVariant` model with unique `(songId, source)`, `Song.activeVariantId` FK. Migration `20260407170000_add_song_variants` backfills one `STUDIO` variant per existing song at its legacy `stems/{songId}` / `pitch/{songId}/reference.json` paths and marks it active.
+- `SongVariantsService`: creates the alternate variant on demand, enqueues its pipeline, and flips the active variant when the target is `READY`.
+- `JobsService`: routes `enqueueStemSplit` by source — `STUDIO` onto the existing `stem-split` queue, `DRAFT` onto the new `stem-split-local` queue. `StemSplitJobData` and `PitchAnalysisJobData` both carry `variantId`.
+- New endpoints: `POST /v1/songs` accepts optional `source`; `POST /v1/songs/:id/variants` adds the other variant; `PATCH /v1/songs/:id/active-variant` switches the active variant. `GET /v1/songs/:id` response includes `activeVariantId` and `variants[]`.
+- Pitch worker writes pitch metadata directly onto `SongVariant` via `complete_variant_pitch_analysis` when the job carries `variantId`; legacy `complete_pitch_analysis` path remains for jobs without one.
+- In-house `workers/stem-splitter` Python worker (`audio-separator` + BS-Roformer) consumes `stem-split-local`, writes stems to `stems/{songId}/DRAFT/{VOCALS,FULL}.mp3`, and enqueues pitch analysis with the variant-scoped `pitchOutputKey`.
+- iOS: AddSong sheet has a Studio/Draft segmented picker; song detail shows a "Source" row with a generate-alternate button when only one variant exists and a segmented toggle when both are `READY`; stem and pitch caches are keyed by `SongVariant` id so both coexist on disk.
+
+**Quality gates:**
+
+- Studio and Draft variants on the same song produce independent R2 paths and do not overwrite each other
+- Switching active variant requires the target to be `READY` (API returns 400 otherwise)
+- Backfilled songs continue to play from their legacy paths without re-processing
+
+---
+
 ### Phase 7: macOS
 
 **Goal:** macOS app derived from the iOS codebase.
