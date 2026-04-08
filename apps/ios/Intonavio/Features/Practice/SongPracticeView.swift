@@ -18,6 +18,7 @@ struct SongPracticeView: View {
     @Environment(AppState.self) private var appState
     @State private var viewModel: PracticeViewModel?
     @State private var isShowingProgress = false
+    @State private var isShowingReferenceEditor = false
 
     var body: some View {
         mainContent
@@ -78,11 +79,35 @@ struct SongPracticeView: View {
                     totalPhrases: vm.totalPhrases,
                     scoreRepository: vm.scoreRepository,
                     instrumentalURL: vm.instrumentalStemURL,
+                    variants: vm.variants,
+                    activeVariantId: vm.activeVariantId,
+                    onGenerateVariant: { source in
+                        do {
+                            let variant = try await APIClient().createVariant(
+                                songId: vm.songId,
+                                source: source
+                            )
+                            vm.variants.append(variant)
+                        } catch {
+                            AppLogger.library.error(
+                                "Failed to create variant: \(error.localizedDescription)"
+                            )
+                        }
+                    },
                     onPhraseTap: { phraseIndex in
                         vm.setupPhraseLoop(phraseIndex: phraseIndex)
                         isShowingProgress = false
+                    },
+                    onEditReference: {
+                        isShowingProgress = false
+                        isShowingReferenceEditor = true
                     }
                 )
+            }
+        }
+        .fullScreenCover(isPresented: $isShowingReferenceEditor) {
+            if let vm = viewModel {
+                referenceEditor(vm: vm)
             }
         }
         .onAppear { setupIfNeeded() }
@@ -98,6 +123,34 @@ struct SongPracticeView: View {
             viewModel?.stemPlayer.teardown()
             viewModel?.audioEngine.shutdown()
         }
+    }
+}
+
+// MARK: - Reference Editor Host
+
+private extension SongPracticeView {
+    @ViewBuilder
+    func referenceEditor(vm: PracticeViewModel) -> some View {
+        let baseVariantId = vm.activeVariantId ?? vm.variants.first?.id ?? ""
+        let base = loadBasePitchData(songId: vm.songId, variantId: baseVariantId)
+        ReferenceEditorView(
+            songId: vm.songId,
+            baseVariantId: baseVariantId,
+            songDuration: vm.duration,
+            hopDuration: base?.hopDuration ?? vm.referenceStore.hopDuration,
+            baseFrames: base?.frames ?? [],
+            variants: vm.variants,
+            scoreRepository: vm.scoreRepository,
+            onSaved: {
+                vm.loadPitchDataIfAvailable()
+            }
+        )
+    }
+
+    func loadBasePitchData(songId: String, variantId: String) -> ReferencePitchData? {
+        let url = PitchDataDownloader.cacheURL(for: songId, variantId: variantId)
+        guard let data = try? Data(contentsOf: url) else { return nil }
+        return try? JSONDecoder().decode(ReferencePitchData.self, from: data)
     }
 }
 
