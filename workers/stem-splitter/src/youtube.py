@@ -20,7 +20,7 @@ def download_audio(youtube_url: str, output_dir: str, trace_id: str) -> str:
     """
     start = time.monotonic()
     output_template = os.path.join(output_dir, "FULL.%(ext)s")
-    ydl_opts = {
+    ydl_opts: dict = {
         "format": "bestaudio/best",
         "outtmpl": output_template,
         "quiet": True,
@@ -34,6 +34,9 @@ def download_audio(youtube_url: str, output_dir: str, trace_id: str) -> str:
             }
         ],
     }
+    cookies_file = os.environ.get("YOUTUBE_COOKIES_FILE")
+    if cookies_file and os.path.exists(cookies_file):
+        ydl_opts["cookiefile"] = cookies_file
     with YoutubeDL(ydl_opts) as ydl:
         ydl.download([youtube_url])
 
