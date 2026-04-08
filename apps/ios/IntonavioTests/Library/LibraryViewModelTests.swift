@@ -9,6 +9,10 @@ final class LibraryViewModelTests: XCTestCase {
     @MainActor
     override func setUp() {
         super.setUp()
+        let cacheURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("library", isDirectory: true)
+            .appendingPathComponent("songs.json")
+        try? FileManager.default.removeItem(at: cacheURL)
         mockClient = MockAPIClient()
         viewModel = LibraryViewModel(apiClient: mockClient)
     }
@@ -54,9 +58,13 @@ final class LibraryViewModelTests: XCTestCase {
         viewModel.addSong()
 
         try? await Task.sleep(nanoseconds: 200_000_000)
+        XCTAssertNil(viewModel.addSongError)
+        XCTAssertNotNil(viewModel.selectedSearchResult)
+
+        viewModel.confirmAddSong()
+        try? await Task.sleep(nanoseconds: 200_000_000)
 
         XCTAssertFalse(viewModel.isAddingSong)
-        XCTAssertNil(viewModel.addSongError)
         XCTAssertFalse(viewModel.songs.isEmpty)
     }
 }

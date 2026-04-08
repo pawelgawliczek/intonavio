@@ -125,26 +125,26 @@ final class ScoringEngineTests: XCTestCase {
         XCTAssertEqual(PitchAccuracy.fair.points(difficulty: .beginner), 40)
     }
 
-    // MARK: - Intermediate Thresholds (2.5x — ±25/50/75)
+    // MARK: - Intermediate Thresholds (±75/150/225)
 
-    func testIntermediateExcellentAt25Cents() {
-        XCTAssertEqual(PitchAccuracy.classify(cents: 25, difficulty: .intermediate), .excellent)
+    func testIntermediateExcellentAt75Cents() {
+        XCTAssertEqual(PitchAccuracy.classify(cents: 75, difficulty: .intermediate), .excellent)
     }
 
-    func testIntermediateTwentySixCentsIsGood() {
-        XCTAssertEqual(PitchAccuracy.classify(cents: 26, difficulty: .intermediate), .good)
+    func testIntermediate76CentsIsGood() {
+        XCTAssertEqual(PitchAccuracy.classify(cents: 76, difficulty: .intermediate), .good)
     }
 
-    func testIntermediateGoodAt50Cents() {
-        XCTAssertEqual(PitchAccuracy.classify(cents: 50, difficulty: .intermediate), .good)
+    func testIntermediateGoodAt150Cents() {
+        XCTAssertEqual(PitchAccuracy.classify(cents: 150, difficulty: .intermediate), .good)
     }
 
-    func testIntermediateFairAt75Cents() {
-        XCTAssertEqual(PitchAccuracy.classify(cents: 75, difficulty: .intermediate), .fair)
+    func testIntermediateFairAt225Cents() {
+        XCTAssertEqual(PitchAccuracy.classify(cents: 225, difficulty: .intermediate), .fair)
     }
 
-    func testIntermediatePoorAbove75Cents() {
-        XCTAssertEqual(PitchAccuracy.classify(cents: 76, difficulty: .intermediate), .poor)
+    func testIntermediatePoorAbove225Cents() {
+        XCTAssertEqual(PitchAccuracy.classify(cents: 226, difficulty: .intermediate), .poor)
     }
 
     func testIntermediateGoodPoints() {
@@ -240,8 +240,8 @@ final class ScoringEngineTests: XCTestCase {
         let perfect = makePitchResult(frequency: 440.0)
         engine.evaluate(detected: perfect, playbackTime: 0.0)
 
-        // Frame 1: poor (very off)
-        let poor = makePitchResult(frequency: 520.0)
+        // Frame 1: poor (very off — ~800 cents above ref, beyond beginner fair zone)
+        let poor = makePitchResult(frequency: 700.0)
         engine.evaluate(detected: poor, playbackTime: 0.01)
 
         // Score should be (100 + 0) / 2 = 50
