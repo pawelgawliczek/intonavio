@@ -5,10 +5,16 @@ RUN apt-get update && \
       libsndfile1 \
       ffmpeg \
       curl \
+      unzip \
       ca-certificates \
       build-essential \
       python3-dev && \
     rm -rf /var/lib/apt/lists/*
+
+# Deno is required by yt-dlp 2026+ to solve YouTube's signature/n-challenge JS.
+RUN curl -fsSL https://deno.land/install.sh | sh -s -- -y --no-modify-path && \
+    mv /root/.deno/bin/deno /usr/local/bin/deno && \
+    deno --version
 
 WORKDIR /app
 
