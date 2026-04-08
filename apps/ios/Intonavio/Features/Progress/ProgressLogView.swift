@@ -8,6 +8,7 @@ struct ProgressLogView: View {
     var instrumentalURL: URL?
     var variants: [SongVariant] = []
     var activeVariantId: String?
+    var onSwitchVariant: ((SongVariant) -> Void)?
     var onGenerateVariant: ((StemSource) async -> Void)?
     var onPhraseTap: ((Int) -> Void)?
     var onEditReference: (() -> Void)?
@@ -78,7 +79,26 @@ private extension ProgressLogView {
 
     var sourceSection: some View {
         Section("Source") {
-            if let active = activeVariant {
+            if readyVariants.count >= 2 {
+                Picker("Active", selection: Binding(
+                    get: { activeVariant?.id ?? readyVariants.first?.id ?? "" },
+                    set: { newId in
+                        if let v = readyVariants.first(where: { $0.id == newId }) {
+                            onSwitchVariant?(v)
+                        }
+                    }
+                )) {
+                    ForEach(readyVariants) { variant in
+                        Text(variant.source.displayName).tag(variant.id)
+                    }
+                }
+                .pickerStyle(.segmented)
+                if let active = activeVariant {
+                    Text(active.source.shortDescription)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            } else if let active = activeVariant {
                 HStack {
                     Label("Current", systemImage: "waveform.badge.magnifyingglass")
                     Spacer()
@@ -91,7 +111,7 @@ private extension ProgressLogView {
                         .lineLimit(1)
                 }
             }
-            if let other = otherVariantRow {
+            if readyVariants.count < 2, let other = otherVariantRow {
                 switch other {
                 case .existing(let variant):
                     HStack {
@@ -242,6 +262,10 @@ private extension ProgressLogView {
     enum OtherVariantRow {
         case existing(SongVariant)
         case missing(StemSource)
+    }
+
+    var readyVariants: [SongVariant] {
+        variants.filter { $0.status == .ready }
     }
 
     var activeVariant: SongVariant? {

@@ -81,6 +81,9 @@ struct SongPracticeView: View {
                     instrumentalURL: vm.instrumentalStemURL,
                     variants: vm.variants,
                     activeVariantId: vm.activeVariantId,
+                    onSwitchVariant: { variant in
+                        vm.switchToVariant(variant, apiClient: APIClient())
+                    },
                     onGenerateVariant: { source in
                         do {
                             let variant = try await APIClient().createVariant(
@@ -110,7 +113,10 @@ struct SongPracticeView: View {
                 referenceEditor(vm: vm)
             }
         }
-        .onAppear { setupIfNeeded() }
+        .onAppear {
+            setupIfNeeded()
+            refreshSongIfOnline()
+        }
         .onDisappear {
             viewModel?.cleanupBestTakeTemp()
             viewModel?.stopPitchDetection()
@@ -418,15 +424,8 @@ private extension SongPracticeView {
     }
 
     func controlsSection(_ vm: PracticeViewModel) -> some View {
-        VStack(spacing: 0) {
-            if !vm.variants.isEmpty && !isOffline {
-                VariantSourceRow(viewModel: vm)
-                    .padding(.horizontal)
-                    .padding(.top, 8)
-            }
-            ControlsBarView(viewModel: vm)
-                .padding()
-        }
+        ControlsBarView(viewModel: vm)
+            .padding()
     }
 
     var scoreInvalidatedBanner: some View {
@@ -689,140 +688,22 @@ private extension SongPracticeView {
 
         viewModel = vm
     }
-}
 
-// MARK: - Variant Source Row
-
-private struct VariantSourceRow: View {
-    let viewModel: PracticeViewModel
-    @State private var isCreating = false
-    @State private var errorText: String?
-
-    private var activeVariant: SongVariant? {
-        guard let id = viewModel.activeVariantId else { return viewModel.variants.first }
-        return viewModel.variants.first { $0.id == id }
-    }
-
-    private var otherVariant: SongVariant? {
-        viewModel.variants.first { $0.id != activeVariant?.id }
-    }
-
-    private var missingSource: StemSource? {
-        let existing = Set(viewModel.variants.map(\.source))
-        return StemSource.allCases.first { !existing.contains($0) }
-    }
-
-    var body: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "waveform.badge.magnifyingglass")
-                .foregroundStyle(Color.intonavioIce)
-            Text("Source")
-                .font(.caption.weight(.medium))
-                .foregroundStyle(Color.intonavioTextSecondary)
-            Spacer()
-            trailingControls
-        }
-        .padding(.vertical, 6)
-        .padding(.horizontal, 10)
-        .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color.intonavioSurface)
-        )
-        .overlay(alignment: .bottom) {
-            if let errorText {
-                Text(errorText)
-                    .font(.caption2)
-                    .foregroundStyle(.red)
-                    .padding(.top, 2)
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var trailingControls: some View {
-        if let other = otherVariant, other.status == .ready {
-            variantSegmentedPicker(other: other)
-        } else if let active = activeVariant {
-            HStack(spacing: 8) {
-                Text(active.source.displayName)
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.white)
-                if let missing = missingSource {
-                    generateButton(for: missing)
-                } else if let other = otherVariant {
-                    Text("(\(other.source.displayName) \(other.status.rawValue.lowercased()))")
-                        .font(.caption2)
-                        .foregroundStyle(Color.intonavioTextSecondary)
-                }
-            }
-        }
-    }
-
-    private func variantSegmentedPicker(other _: SongVariant) -> some View {
-        let active = activeVariant
-        return HStack(spacing: 6) {
-            ForEach(viewModel.variants) { variant in
-                Button {
-                    viewModel.switchToVariant(variant, apiClient: APIClient())
-                } label: {
-                    Text(variant.source.displayName)
-                        .font(.caption.weight(.semibold))
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 4)
-                        .background(
-                            Capsule().fill(
-                                variant.id == active?.id
-                                    ? Color.intonavioIce.opacity(0.25)
-                                    : Color.clear
-                            )
-                        )
-                        .foregroundStyle(variant.id == active?.id ? .white : Color.intonavioTextSecondary)
-                }
-                .buttonStyle(.plain)
-                .disabled(viewModel.isSwitchingVariant || variant.status != .ready)
-            }
-            if viewModel.isSwitchingVariant {
-                ProgressView().controlSize(.mini)
-            }
-        }
-    }
-
-    private func generateButton(for source: StemSource) -> some View {
-        Button {
-            createVariant(source: source)
-        } label: {
-            if isCreating {
-                ProgressView().controlSize(.mini)
-            } else {
-                Text("+ Generate \(source.displayName)")
-                    .font(.caption.weight(.semibold))
-            }
-        }
-        .buttonStyle(.plain)
-        .foregroundStyle(Color.intonavioIce)
-        .disabled(isCreating)
-    }
-
-    private func createVariant(source: StemSource) {
-        isCreating = true
-        errorText = nil
+    func refreshSongIfOnline() {
+        guard !isOffline, let vm = viewModel else { return }
         Task { @MainActor in
             do {
-                let variant = try await APIClient().createVariant(
-                    songId: viewModel.songId,
-                    source: source
-                )
-                viewModel.variants.append(variant)
+                let updated = try await APIClient().getSong(id: songId)
+                vm.applyUpdatedSong(updated)
             } catch {
-                errorText = (error as? APIError)?.message ?? error.localizedDescription
                 AppLogger.library.error(
-                    "Failed to create variant: \(error.localizedDescription)"
+                    "Failed to refresh song on practice open: \(error.localizedDescription)"
                 )
             }
-            isCreating = false
         }
     }
 }
+
 
 #Preview {
     NavigationStack {
