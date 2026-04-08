@@ -15,6 +15,14 @@ struct ReferenceEditorToolbar: View {
 
     var body: some View {
         VStack(spacing: 8) {
+            Picker("Tool", selection: $viewModel.gesture) {
+                Text("Range").tag(EditorGesture.range)
+                Text("Draw").tag(EditorGesture.draw)
+            }
+            .pickerStyle(.segmented)
+            if viewModel.gesture == .draw {
+                drawControls
+            }
             HStack(spacing: 8) {
                 variantButton(.studio)
                 variantButton(.draft)
@@ -59,6 +67,23 @@ struct ReferenceEditorToolbar: View {
             Text("Removes every edit in this session. You can undo this.")
         }
         .sheet(isPresented: $isShowingDespike) { despikeSheet }
+    }
+
+    private var drawControls: some View {
+        VStack(spacing: 6) {
+            Picker("Mode", selection: $viewModel.drawMode) {
+                Text("Replace").tag(DrawMode.replace)
+                Text("Additive").tag(DrawMode.additive)
+            }
+            .pickerStyle(.segmented)
+            HStack {
+                Toggle("Snap", isOn: $viewModel.snapToSemitone)
+                    .font(.caption)
+                Toggle("Smooth", isOn: $viewModel.smoothStroke)
+                    .font(.caption)
+            }
+            .toggleStyle(.switch)
+        }
     }
 
     private func variantButton(_ source: StemSource) -> some View {

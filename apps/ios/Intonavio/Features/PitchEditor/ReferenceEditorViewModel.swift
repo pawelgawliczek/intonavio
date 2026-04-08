@@ -1,4 +1,10 @@
 import Foundation
+import AVFoundation
+
+enum EditorGesture {
+    case range
+    case draw
+}
 
 /// State container for the reference pitch editor. Owns the operation stack,
 /// undo/redo history, and recomputes the preview frames after every mutation.
@@ -21,6 +27,19 @@ final class ReferenceEditorViewModel {
 
     var rangeStart: Double?
     var rangeEnd: Double?
+
+    // Phase D: gesture + draw tool state
+    var gesture: EditorGesture = .range
+    var drawMode: DrawMode = .replace
+    var snapToSemitone: Bool = false
+    var smoothStroke: Bool = false
+    var liveStroke: [(time: Double, midi: Double)] = []
+
+    // Phase D: playback state
+    var isPlaying: Bool = false
+    var playbackTime: Double = 0
+    @ObservationIgnored var audioPlayer: AVAudioPlayer?
+    @ObservationIgnored var pollTask: Task<Void, Never>?
 
     var isSaving = false
     var errorMessage: String?
@@ -51,7 +70,13 @@ final class ReferenceEditorViewModel {
         self.operations = ops
         self.initialOperations = ops
         recomputePreview()
+        self.setupAudioPlayer()
         Task { [weak self] in await self?.loadOtherVariantsInBackground() }
+    }
+
+    deinit {
+        pollTask?.cancel()
+        audioPlayer?.stop()
     }
 
     var canUndo: Bool { !undoStack.isEmpty }
@@ -162,6 +187,8 @@ final class ReferenceEditorViewModel {
         MergedFrameCache.invalidate(songId: songId)
         AppLogger.pitch.info("Reference edit script saved for \(self.songId)")
     }
+
+    // Playback + draw tool live in ReferenceEditorDrawTool.swift
 
     // MARK: - Variant Loading
 

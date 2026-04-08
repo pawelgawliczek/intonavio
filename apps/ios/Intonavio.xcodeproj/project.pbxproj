@@ -24,6 +24,8 @@
 		A1B2C3D4E5F60718293A4B28 /* ReferenceEditorToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B26 /* ReferenceEditorToolbar.swift */; };
 		A1B2C3D4E5F60718293A4B2A /* ReferenceEditorPianoRoll.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B29 /* ReferenceEditorPianoRoll.swift */; };
 		A1B2C3D4E5F60718293A4B2B /* ReferenceEditorPianoRoll.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B29 /* ReferenceEditorPianoRoll.swift */; };
+		A1B2C3D4E5F60718293A4B31 /* ReferenceEditorDrawTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B30 /* ReferenceEditorDrawTool.swift */; };
+		A1B2C3D4E5F60718293A4B32 /* ReferenceEditorDrawTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B30 /* ReferenceEditorDrawTool.swift */; };
 		A1B2C3D4E5F60718293A4B14 /* PracticeViewModel+PitchEdit.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B13 /* PracticeViewModel+PitchEdit.swift */; };
 		A1B2C3D4E5F60718293A4B15 /* PracticeViewModel+PitchEdit.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B13 /* PracticeViewModel+PitchEdit.swift */; };
 		D401D7E0A4C805B300DB65F2 /* OnboardingContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B6F21F780CEC51E0A9E156F /* OnboardingContainerView.swift */; };
@@ -381,6 +383,7 @@
 		A1B2C3D4E5F60718293A4B23 /* ReferenceEditorViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReferenceEditorViewModel.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F60718293A4B26 /* ReferenceEditorToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReferenceEditorToolbar.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F60718293A4B29 /* ReferenceEditorPianoRoll.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReferenceEditorPianoRoll.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B30 /* ReferenceEditorDrawTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReferenceEditorDrawTool.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F60718293A4B13 /* PracticeViewModel+PitchEdit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PracticeViewModel+PitchEdit.swift"; sourceTree = "<group>"; };
 		4B6F21F780CEC51E0A9E156F /* OnboardingContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingContainerView.swift; sourceTree = "<group>"; };
 		3881CB6B7AEF1C4CAB39BC9E /* OnboardingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModel.swift; sourceTree = "<group>"; };
@@ -830,6 +833,7 @@
 				A1B2C3D4E5F60718293A4B23 /* ReferenceEditorViewModel.swift */,
 				A1B2C3D4E5F60718293A4B26 /* ReferenceEditorToolbar.swift */,
 				A1B2C3D4E5F60718293A4B29 /* ReferenceEditorPianoRoll.swift */,
+				A1B2C3D4E5F60718293A4B30 /* ReferenceEditorDrawTool.swift */,
 			);
 			path = PitchEditor;
 			sourceTree = "<group>";
@@ -1267,6 +1271,7 @@
 				A1B2C3D4E5F60718293A4B24 /* ReferenceEditorViewModel.swift in Sources */,
 				A1B2C3D4E5F60718293A4B27 /* ReferenceEditorToolbar.swift in Sources */,
 				A1B2C3D4E5F60718293A4B2A /* ReferenceEditorPianoRoll.swift in Sources */,
+				A1B2C3D4E5F60718293A4B31 /* ReferenceEditorDrawTool.swift in Sources */,
 				A1B2C3D4E5F60718293A4B14 /* PracticeViewModel+PitchEdit.swift in Sources */,
 				7B71A0F36CC753563A0EF65A /* NoteMapper.swift in Sources */,
 				F3D30919AEA9C1CF1F893265 /* PaginatedResponse.swift in Sources */,
@@ -1422,6 +1427,7 @@
 				A1B2C3D4E5F60718293A4B25 /* ReferenceEditorViewModel.swift in Sources */,
 				A1B2C3D4E5F60718293A4B28 /* ReferenceEditorToolbar.swift in Sources */,
 				A1B2C3D4E5F60718293A4B2B /* ReferenceEditorPianoRoll.swift in Sources */,
+				A1B2C3D4E5F60718293A4B32 /* ReferenceEditorDrawTool.swift in Sources */,
 				A1B2C3D4E5F60718293A4B15 /* PracticeViewModel+PitchEdit.swift in Sources */,
 				85BB0B8FB629AE6B4D9950BB /* NoteMapper.swift in Sources */,
 				E1E489C14B84FDA445B5843D /* PaginatedResponse.swift in Sources */,

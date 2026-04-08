@@ -73,6 +73,7 @@ struct ReferenceEditorView: View {
     @ViewBuilder
     private func content(_ vm: ReferenceEditorViewModel) -> some View {
         VStack(spacing: 0) {
+            playbackBar(vm)
             rangeHeader(vm)
             rangeSliders(vm)
             Divider()
@@ -81,6 +82,25 @@ struct ReferenceEditorView: View {
             Divider()
             ReferenceEditorToolbar(viewModel: vm)
         }
+        .onDisappear { vm.stopPlayback() }
+    }
+
+    private func playbackBar(_ vm: ReferenceEditorViewModel) -> some View {
+        HStack(spacing: 12) {
+            Button {
+                vm.togglePlay()
+            } label: {
+                Image(systemName: vm.isPlaying ? "pause.fill" : "play.fill")
+                    .font(.title3)
+            }
+            .buttonStyle(.bordered)
+            Text("\(format(vm.playbackTime)) / \(format(songDuration))")
+                .font(.caption.monospacedDigit())
+                .foregroundStyle(.secondary)
+            Spacer()
+        }
+        .padding(.horizontal)
+        .padding(.top, 8)
     }
 
     @ToolbarContentBuilder
