@@ -33,6 +33,12 @@ struct ReferenceEditorToolbar: View {
                     addRangeOp { range in .mute(id: UUID(), range: range) }
                 }
             }
+            if viewModel.availableOtherSources.isEmpty {
+                Text("Process the alternate variant to swap sources for a range.")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
             HStack(spacing: 8) {
                 opButton("+8ve", systemImage: "arrow.up") {
                     addRangeOp { range in
@@ -83,6 +89,12 @@ struct ReferenceEditorToolbar: View {
                     .font(.caption)
             }
             .toggleStyle(.switch)
+            if viewModel.drawMode == .additive {
+                Text("Additive draw only fills unvoiced gaps.")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
         }
     }
 
