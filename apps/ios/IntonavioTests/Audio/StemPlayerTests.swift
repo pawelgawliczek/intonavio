@@ -16,13 +16,9 @@ final class StemPlayerTests: XCTestCase {
     }
 
     func testAudioModeProperties() {
-        XCTAssertFalse(AudioMode.original.isYouTubeMuted)
-        XCTAssertTrue(AudioMode.vocalsOnly.isYouTubeMuted)
-        XCTAssertTrue(AudioMode.instrumental.isYouTubeMuted)
-
-        XCTAssertFalse(AudioMode.original.isStemActive)
-        XCTAssertTrue(AudioMode.vocalsOnly.isStemActive)
-        XCTAssertTrue(AudioMode.instrumental.isStemActive)
+        XCTAssertTrue(AudioMode.original.hasFull)
+        XCTAssertFalse(AudioMode.vocalsOnly.hasFull)
+        XCTAssertFalse(AudioMode.instrumental.hasFull)
 
         XCTAssertTrue(AudioMode.vocalsOnly.hasVocals)
         XCTAssertFalse(AudioMode.instrumental.hasVocals)
