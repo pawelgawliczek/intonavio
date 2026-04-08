@@ -341,8 +341,11 @@ flowchart TD
     C --> G[Same frame format<br/>t hz midi voiced]
     F --> G
     I2 --> G
-    G --> H[Piano Roll + Scoring<br/>identical pipeline]
+    G --> Edit[PitchEditApplier<br/>local script if any]
+    Edit --> H[Piano Roll + Scoring<br/>identical pipeline]
 ```
+
+For songs, an optional local `PitchEditScript` (see `docs/04-data-models.md`) is reduced over the loaded `reference.json` by `PitchEditApplier` before frames reach the store. The applier may pull a sibling variant's frames for `useVariant` ranges. The merged result is cached under `Caches/pitch-merged/`. When no script exists the path is a no-op — server frames load directly.
 
 ### Exercise Pitch Data Generation
 

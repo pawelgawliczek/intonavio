@@ -81,6 +81,7 @@ Before writing any code, read the docs relevant to the work:
 - **Any instrument recording change** → read `docs/17-instrument-recording.md`, `docs/05-audio-pipeline.md` (Instrument Recording Pipeline section), `docs/16-ui-views-flow.md`
 - **Any subscription/paywall/credit change** → read `docs/19-monetization.md` (gitignored, local only)
 - **Any onboarding change** → read `docs/20-onboarding.md`, `docs/16-ui-views-flow.md` (App Launch Flow)
+- **Any pitch reference editor change** → read `docs/16-ui-views-flow.md` (Reference Editor), `docs/04-data-models.md` (PitchEditScript), `docs/06-realtime-pitch.md` (Reference Pitch Sources)
 
 Always read `docs/12-code-quality.md` — it applies to every change.
 

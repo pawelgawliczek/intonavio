@@ -426,6 +426,20 @@ CAF is used for recording because it supports raw PCM writes with no encoding ov
 
 See `docs/17-instrument-recording.md` for the full feature spec.
 
+### PitchEditScript (local JSON, iOS)
+
+Per-song client-side override of the active variant's reference pitch frames. Stored as JSON, no server model — sync-ready shape but local only in Phase 1.
+
+```
+Documents/pitch-edits/
+  {songId}.json                            // PitchEditScript: {schemaVersion, songId, baseVariantId, operations[], updatedAt}
+
+Caches/pitch-merged/
+  {songId}-{epochMs}.json                  // Materialized merged ReferencePitchData (rebuilt on script change)
+```
+
+`PitchEditScript.operations` is an ordered list of `PitchEditOp` cases: `useVariant`, `despike`, `mute`, `shiftOctave`, `addPassage` (replace or additive). `PitchEditApplier` reduces them over the base frames, falling back to a sibling variant when `useVariant` is used. Saving a script wipes all `Score` rows + `BestTake` for that song. See `docs/16-ui-views-flow.md` (Reference Editor) and the `Features/PitchEditor/` module.
+
 ---
 
 ## Enum Definitions
