@@ -96,8 +96,15 @@ class StemSeparator:
             os.makedirs(output_dir, exist_ok=True)
             self._sep.output_dir = output_dir
 
-            start = time.monotonic()
-            produced = self._sep.separate(input_path)
+            # audio-separator writes to cwd regardless of the output_dir property,
+            # so chdir into the target directory for the duration of the call.
+            previous_cwd = os.getcwd()
+            os.chdir(output_dir)
+            try:
+                start = time.monotonic()
+                produced = self._sep.separate(input_path)
+            finally:
+                os.chdir(previous_cwd)
             log_with_context(
                 logger,
                 logging.INFO,
