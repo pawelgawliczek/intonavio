@@ -26,6 +26,8 @@ def download_audio(youtube_url: str, output_dir: str, trace_id: str) -> str:
         "quiet": True,
         "no_warnings": True,
         "noprogress": True,
+        # Required for YouTube's JS signature/n-challenge solving via deno.
+        "remote_components": ["ejs:github"],
         "postprocessors": [
             {
                 "key": "FFmpegExtractAudio",
