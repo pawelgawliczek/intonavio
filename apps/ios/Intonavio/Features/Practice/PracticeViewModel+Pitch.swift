@@ -41,10 +41,9 @@ extension PracticeViewModel {
         let url = PitchDataDownloader.cacheURL(for: songId, variantId: activeVariantId)
 
         do {
-            try referenceStore.load(from: url)
-            isPitchReady = true
-            layoutMode = .lyrics
-            AppLogger.pitch.info("Reference pitch loaded for practice")
+            let data = try Data(contentsOf: url)
+            let baseData = try JSONDecoder().decode(ReferencePitchData.self, from: data)
+            applyPitchDataWithScript(baseData)
         } catch {
             isPitchReady = false
             AppLogger.pitch.error(
@@ -52,6 +51,7 @@ extension PracticeViewModel {
             )
         }
     }
+
 
     /// Download pitch data if the song has it but it's not yet cached.
     func downloadPitchDataIfNeeded(

@@ -32,6 +32,9 @@ final class PracticeViewModel {
     // Pitch
     var isPitchReady = false
     var isPitchLoading = false
+    /// True when a local `PitchEditScript` existed for this song at load time.
+    /// Reserved for Phase C/D/E UI affordances; no behaviour depends on it yet.
+    var hasCustomScript = false
     var layoutMode: PracticeLayoutMode = .lyrics
     var visualizationMode: VisualizationMode = .zonesLine
     var detectedPoints: [DetectedPitchPoint] = []

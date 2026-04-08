@@ -14,6 +14,10 @@
 		A1B2C3D4E5F60718293A4B08 /* PitchEditApplier.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B07 /* PitchEditApplier.swift */; };
 		A1B2C3D4E5F60718293A4B09 /* PitchEditApplier.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B07 /* PitchEditApplier.swift */; };
 		A1B2C3D4E5F60718293A4B0C /* PitchEditApplierTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B0B /* PitchEditApplierTests.swift */; };
+		A1B2C3D4E5F60718293A4B11 /* MergedFrameCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B10 /* MergedFrameCache.swift */; };
+		A1B2C3D4E5F60718293A4B12 /* MergedFrameCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B10 /* MergedFrameCache.swift */; };
+		A1B2C3D4E5F60718293A4B14 /* PracticeViewModel+PitchEdit.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B13 /* PracticeViewModel+PitchEdit.swift */; };
+		A1B2C3D4E5F60718293A4B15 /* PracticeViewModel+PitchEdit.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B13 /* PracticeViewModel+PitchEdit.swift */; };
 		D401D7E0A4C805B300DB65F2 /* OnboardingContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B6F21F780CEC51E0A9E156F /* OnboardingContainerView.swift */; };
 		C177D7C86E1D638285035984 /* OnboardingContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B6F21F780CEC51E0A9E156F /* OnboardingContainerView.swift */; };
 		CE0CAB7F7084EA254CAE181F /* OnboardingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3881CB6B7AEF1C4CAB39BC9E /* OnboardingViewModel.swift */; };
@@ -364,6 +368,8 @@
 		A1B2C3D4E5F60718293A4B04 /* PitchEditScriptStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchEditScriptStore.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F60718293A4B07 /* PitchEditApplier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchEditApplier.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F60718293A4B0B /* PitchEditApplierTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchEditApplierTests.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B10 /* MergedFrameCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MergedFrameCache.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B13 /* PracticeViewModel+PitchEdit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PracticeViewModel+PitchEdit.swift"; sourceTree = "<group>"; };
 		4B6F21F780CEC51E0A9E156F /* OnboardingContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingContainerView.swift; sourceTree = "<group>"; };
 		3881CB6B7AEF1C4CAB39BC9E /* OnboardingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModel.swift; sourceTree = "<group>"; };
 		0C16E81C922F66717145E315 /* WelcomeStepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeStepView.swift; sourceTree = "<group>"; };
@@ -661,6 +667,7 @@
 				0C4DA542E7170D34C1C2A918 /* PracticeViewModel+Lyrics.swift */,
 				203C906CB1D328DA6F3DC10F /* PracticeViewModel+Phrases.swift */,
 				C95189340F2BA2B17D3EA90D /* PracticeViewModel+Pitch.swift */,
+				A1B2C3D4E5F60718293A4B13 /* PracticeViewModel+PitchEdit.swift */,
 				889DC8B2F5F95A0437D1D4EE /* SongPracticeView.swift */,
 				F3FFD7BF8A122953153D950F /* SpeedSelectorView.swift */,
 				E77029F045FDE2ADE1C481DB /* TimelineBarView.swift */,
@@ -806,6 +813,7 @@
 				A1B2C3D4E5F60718293A4B07 /* PitchEditApplier.swift */,
 				A1B2C3D4E5F60718293A4B01 /* PitchEditScript.swift */,
 				A1B2C3D4E5F60718293A4B04 /* PitchEditScriptStore.swift */,
+				A1B2C3D4E5F60718293A4B10 /* MergedFrameCache.swift */,
 			);
 			path = PitchEditor;
 			sourceTree = "<group>";
@@ -1238,6 +1246,8 @@
 				A1B2C3D4E5F60718293A4B02 /* PitchEditScript.swift in Sources */,
 				A1B2C3D4E5F60718293A4B05 /* PitchEditScriptStore.swift in Sources */,
 				A1B2C3D4E5F60718293A4B08 /* PitchEditApplier.swift in Sources */,
+				A1B2C3D4E5F60718293A4B11 /* MergedFrameCache.swift in Sources */,
+				A1B2C3D4E5F60718293A4B14 /* PracticeViewModel+PitchEdit.swift in Sources */,
 				7B71A0F36CC753563A0EF65A /* NoteMapper.swift in Sources */,
 				F3D30919AEA9C1CF1F893265 /* PaginatedResponse.swift in Sources */,
 				A22287646AB40FB483AB3AE9 /* PerformanceSummaryView.swift in Sources */,
@@ -1387,6 +1397,8 @@
 				A1B2C3D4E5F60718293A4B03 /* PitchEditScript.swift in Sources */,
 				A1B2C3D4E5F60718293A4B06 /* PitchEditScriptStore.swift in Sources */,
 				A1B2C3D4E5F60718293A4B09 /* PitchEditApplier.swift in Sources */,
+				A1B2C3D4E5F60718293A4B12 /* MergedFrameCache.swift in Sources */,
+				A1B2C3D4E5F60718293A4B15 /* PracticeViewModel+PitchEdit.swift in Sources */,
 				85BB0B8FB629AE6B4D9950BB /* NoteMapper.swift in Sources */,
 				E1E489C14B84FDA445B5843D /* PaginatedResponse.swift in Sources */,
 				549CE5C59CF2E1626C40EEB9 /* PerformanceSummaryView.swift in Sources */,
