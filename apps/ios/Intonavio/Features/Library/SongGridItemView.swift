@@ -3,6 +3,7 @@ import SwiftUI
 struct SongGridItemView: View {
     let song: SongResponse
     var isOfflineUnavailable = false
+    var isEdited: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -64,6 +65,12 @@ private extension SongGridItemView {
                 if song.hasLyrics == true {
                     lyricsBadge
                 }
+                ForEach(readyVariantSources, id: \.self) { source in
+                    variantBadge(source)
+                }
+                if isEdited {
+                    editedBadge
+                }
             }
         }
     }
@@ -82,6 +89,42 @@ private extension SongGridItemView {
             Capsule()
                 .fill(Color.intonavioMagenta.opacity(0.15))
         )
+    }
+
+    var editedBadge: some View {
+        HStack(spacing: 2) {
+            Image(systemName: "pencil")
+                .font(.system(size: 7))
+            Text("Edited")
+                .font(.system(size: 8, weight: .medium))
+        }
+        .foregroundStyle(Color.intonavioMagenta)
+        .padding(.horizontal, 4)
+        .padding(.vertical, 1)
+        .background(Capsule().fill(Color.intonavioMagenta.opacity(0.15)))
+        .accessibilityLabel("Reference pitch edited")
+    }
+
+    var readyVariantSources: [StemSource] {
+        song.variants
+            .filter { $0.status == .ready }
+            .map(\.source)
+    }
+
+    func variantBadge(_ source: StemSource) -> some View {
+        let letter = source == .studio ? "S" : "D"
+        let color: Color = source == .studio ? .intonavioAmber : .intonavioIce
+        return HStack(spacing: 2) {
+            Image(systemName: "waveform")
+                .font(.system(size: 7))
+            Text(letter)
+                .font(.system(size: 8, weight: .bold))
+        }
+        .foregroundStyle(color)
+        .padding(.horizontal, 4)
+        .padding(.vertical, 1)
+        .background(Capsule().fill(color.opacity(0.15)))
+        .accessibilityLabel("\(source.displayName) version available")
     }
 
     func formatDuration(_ seconds: Int) -> String {

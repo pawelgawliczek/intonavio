@@ -56,6 +56,7 @@ struct HomeView: View {
             if viewModel.songs.isEmpty, appState.isAuthenticated {
                 viewModel.fetchSongs()
             }
+            viewModel.refreshEditedSongIds()
         }
         .onChange(of: appState.isAuthenticated) { _, isAuthenticated in
             if isAuthenticated, viewModel.songs.isEmpty {
@@ -95,11 +96,15 @@ private extension HomeView {
                 if !network.isConnected && !isAvailableOffline {
                     SongGridItemView(
                         song: song,
-                        isOfflineUnavailable: true
+                        isOfflineUnavailable: true,
+                        isEdited: viewModel.editedSongIds.contains(song.id)
                     )
                 } else {
                     NavigationLink(value: song.id) {
-                        SongGridItemView(song: song)
+                        SongGridItemView(
+                            song: song,
+                            isEdited: viewModel.editedSongIds.contains(song.id)
+                        )
                     }
                     .buttonStyle(.plain)
                 }

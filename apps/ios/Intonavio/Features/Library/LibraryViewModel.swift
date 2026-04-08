@@ -9,6 +9,7 @@ enum AddSongMode: Int {
 @Observable
 final class LibraryViewModel {
     var songs: [SongResponse] = []
+    var editedSongIds: Set<String> = []
     var isLoading = false
     var isAddingSong = false
     var errorMessage: String?
@@ -42,6 +43,10 @@ final class LibraryViewModel {
 
     // MARK: - Fetch Songs
 
+    func refreshEditedSongIds() {
+        editedSongIds = PitchEditScriptStore.editedSongIds()
+    }
+
     func fetchSongs() {
         guard !isLoading else { return }
         Task { @MainActor in
@@ -59,16 +64,21 @@ final class LibraryViewModel {
             do {
                 let response = try await apiClient.listSongs(page: 1, limit: 100)
                 songs = response.data
+                editedSongIds = PitchEditScriptStore.editedSongIds()
+                let variantSummary = response.data.map { "\($0.title.prefix(20))=\($0.variants.count)v" }.joined(separator: ", ")
+                AppLogger.library.info("Fetched \(response.data.count) songs: \(variantSummary)")
                 persistSongsToCache()
                 startPollingIfNeeded()
                 cacheMissingPitchData()
             } catch {
                 loadSongsFromCache()
+                editedSongIds = PitchEditScriptStore.editedSongIds()
                 errorMessage = (error as? APIError)?.message ?? error.localizedDescription
                 AppLogger.library.error("Failed to load songs: \(error.localizedDescription)")
             }
         } else {
             loadSongsFromCache()
+            editedSongIds = PitchEditScriptStore.editedSongIds()
         }
 
         isLoading = false
