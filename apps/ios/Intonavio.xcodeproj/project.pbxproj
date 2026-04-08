@@ -7,6 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A1B2C3D4E5F60718293A4B02 /* PitchEditScript.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B01 /* PitchEditScript.swift */; };
+		A1B2C3D4E5F60718293A4B03 /* PitchEditScript.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B01 /* PitchEditScript.swift */; };
+		A1B2C3D4E5F60718293A4B05 /* PitchEditScriptStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B04 /* PitchEditScriptStore.swift */; };
+		A1B2C3D4E5F60718293A4B06 /* PitchEditScriptStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B04 /* PitchEditScriptStore.swift */; };
+		A1B2C3D4E5F60718293A4B08 /* PitchEditApplier.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B07 /* PitchEditApplier.swift */; };
+		A1B2C3D4E5F60718293A4B09 /* PitchEditApplier.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B07 /* PitchEditApplier.swift */; };
+		A1B2C3D4E5F60718293A4B0C /* PitchEditApplierTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B0B /* PitchEditApplierTests.swift */; };
 		D401D7E0A4C805B300DB65F2 /* OnboardingContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B6F21F780CEC51E0A9E156F /* OnboardingContainerView.swift */; };
 		C177D7C86E1D638285035984 /* OnboardingContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B6F21F780CEC51E0A9E156F /* OnboardingContainerView.swift */; };
 		CE0CAB7F7084EA254CAE181F /* OnboardingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3881CB6B7AEF1C4CAB39BC9E /* OnboardingViewModel.swift */; };
@@ -353,6 +360,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		A1B2C3D4E5F60718293A4B01 /* PitchEditScript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchEditScript.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B04 /* PitchEditScriptStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchEditScriptStore.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B07 /* PitchEditApplier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchEditApplier.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B0B /* PitchEditApplierTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchEditApplierTests.swift; sourceTree = "<group>"; };
 		4B6F21F780CEC51E0A9E156F /* OnboardingContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingContainerView.swift; sourceTree = "<group>"; };
 		3881CB6B7AEF1C4CAB39BC9E /* OnboardingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModel.swift; sourceTree = "<group>"; };
 		0C16E81C922F66717145E315 /* WelcomeStepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeStepView.swift; sourceTree = "<group>"; };
@@ -757,6 +768,7 @@
 				553C5BD7EA0D3149C0F3F2B4 /* Auth */,
 				FB7EE155934422EDB109FC41 /* Library */,
 				9D678C62ED91AB3645C59A74 /* Networking */,
+				A1B2C3D4E5F60718293A4B0D /* PitchEditor */,
 				F3EE4A6AFB139D24D4439C1D /* Sessions */,
 				67AD258BAB015C7295DD5FED /* Utilities */,
 				17B763937F90150633F0562A /* IntonavioTests.swift */,
@@ -778,6 +790,7 @@
 				EE24ED8B2734702BA5291F38 /* Auth */,
 				2BC2D4D862629DCCE5D3C18E /* Library */,
 				4911F37302089DC330B5BFD8 /* Onboarding */,
+				A1B2C3D4E5F60718293A4B0A /* PitchEditor */,
 				3450D609ABDAB9686926996F /* Practice */,
 				96CB91CB1269ABA7C06E9A5A /* Progress */,
 				47F8A3128E57FD6C255B7677 /* Recording */,
@@ -785,6 +798,24 @@
 				FA79DB7E058B855904D1DAF0 /* Settings */,
 			);
 			path = Features;
+			sourceTree = "<group>";
+		};
+		A1B2C3D4E5F60718293A4B0A /* PitchEditor */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D4E5F60718293A4B07 /* PitchEditApplier.swift */,
+				A1B2C3D4E5F60718293A4B01 /* PitchEditScript.swift */,
+				A1B2C3D4E5F60718293A4B04 /* PitchEditScriptStore.swift */,
+			);
+			path = PitchEditor;
+			sourceTree = "<group>";
+		};
+		A1B2C3D4E5F60718293A4B0D /* PitchEditor */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D4E5F60718293A4B0B /* PitchEditApplierTests.swift */,
+			);
+			path = PitchEditor;
 			sourceTree = "<group>";
 		};
 		6F6ECC9480537365FA2AFE1C /* Products */ = {
@@ -1204,6 +1235,9 @@
 				948A90A78B8988F73C2C6D4E /* MetronomeTick.swift in Sources */,
 				8D09205FA0E70F989F2F07F6 /* MockAPIClient.swift in Sources */,
 				FFE973E6820282C25C14C20B /* NetworkMonitor.swift in Sources */,
+				A1B2C3D4E5F60718293A4B02 /* PitchEditScript.swift in Sources */,
+				A1B2C3D4E5F60718293A4B05 /* PitchEditScriptStore.swift in Sources */,
+				A1B2C3D4E5F60718293A4B08 /* PitchEditApplier.swift in Sources */,
 				7B71A0F36CC753563A0EF65A /* NoteMapper.swift in Sources */,
 				F3D30919AEA9C1CF1F893265 /* PaginatedResponse.swift in Sources */,
 				A22287646AB40FB483AB3AE9 /* PerformanceSummaryView.swift in Sources */,
@@ -1350,6 +1384,9 @@
 				F6495CAB4F1ABDABB96405C2 /* MetronomeTick.swift in Sources */,
 				2F57476F02D130B2201A5652 /* MockAPIClient.swift in Sources */,
 				5D795422CA790A83EDE54806 /* NetworkMonitor.swift in Sources */,
+				A1B2C3D4E5F60718293A4B03 /* PitchEditScript.swift in Sources */,
+				A1B2C3D4E5F60718293A4B06 /* PitchEditScriptStore.swift in Sources */,
+				A1B2C3D4E5F60718293A4B09 /* PitchEditApplier.swift in Sources */,
 				85BB0B8FB629AE6B4D9950BB /* NoteMapper.swift in Sources */,
 				E1E489C14B84FDA445B5843D /* PaginatedResponse.swift in Sources */,
 				549CE5C59CF2E1626C40EEB9 /* PerformanceSummaryView.swift in Sources */,
@@ -1443,6 +1480,7 @@
 				B399BBAFDD9AE402663522BA /* IntonavioTests.swift in Sources */,
 				B42263E63AAAC35CDC135864 /* LibraryViewModelTests.swift in Sources */,
 				A8BDD0AD049454EAC70E689A /* NoteMapperTests.swift in Sources */,
+				A1B2C3D4E5F60718293A4B0C /* PitchEditApplierTests.swift in Sources */,
 				A0285A25441B4ADEF368F760 /* ReferencePitchStoreTests.swift in Sources */,
 				93745239B967DFDE952F507F /* ScoringEngineTests.swift in Sources */,
 				C31F1AC2ED998A36DE006CDC /* SessionsViewModelTests.swift in Sources */,
