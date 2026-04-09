@@ -33,6 +33,7 @@ struct PianoRollView: View {
     var onSeek: ((Double) -> Void)?
     var onResume: (() -> Void)?
     var onSetupPhraseLoop: ((Int) -> Void)?
+    var onEditReference: ((Double) -> Void)?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -102,7 +103,8 @@ private extension PianoRollView {
                         onPause: pause,
                         onSeek: seek,
                         onResume: resume,
-                        onSetupPhraseLoop: phraseLoop
+                        onSetupPhraseLoop: phraseLoop,
+                        onEditReference: onEditReference
                     )
                 }
             }

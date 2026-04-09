@@ -9,18 +9,21 @@ import SwiftUI
 struct ReferenceEditorPianoRoll: View {
     @Bindable var viewModel: ReferenceEditorViewModel
 
-    static let windowSeconds: Double = 4.0
+    @State private var dragStartTime: Double?
+    @GestureState private var pinchState = PinchState()
 
     private var centerTime: Double {
         if viewModel.isPlaying { return viewModel.playbackTime }
-        if let start = viewModel.rangeStart, let end = viewModel.rangeEnd {
-            return (start + end) / 2
-        }
-        return viewModel.rangeStart ?? viewModel.playbackTime
+        return viewModel.scrollCenter
     }
 
     private var midiRange: (min: Double, max: Double) {
-        let voiced = viewModel.previewFrames.compactMap { f -> Double? in
+        var allFrames: [[ReferencePitchFrame]] = [viewModel.previewFrames]
+        if viewModel.showBaseLayer { allFrames.append(viewModel.baseFrames) }
+        if viewModel.showOtherVariantLayer {
+            allFrames.append(contentsOf: viewModel.otherVariantFrames.values)
+        }
+        let voiced = allFrames.flatMap { $0 }.compactMap { f -> Double? in
             guard f.isVoiced, f.isAudible, let m = f.midiNote else { return nil }
             return m
         }
@@ -30,10 +33,13 @@ struct ReferenceEditorPianoRoll: View {
 
     var body: some View {
         GeometryReader { geo in
+            let effectiveZoom = viewModel.zoomLevel * (pinchState.isActive ? pinchState.scale : 1.0)
+            let effectiveSpan = 8.0 / max(0.5, min(effectiveZoom, 8.0))
+            let panOffset = pinchState.isActive ? pinchState.panOffset : 0
             let geometry = EditorRollGeometry(
                 size: geo.size,
-                centerTime: centerTime,
-                windowSpan: Self.windowSeconds * 2,
+                centerTime: centerTime + panOffset,
+                windowSpan: effectiveSpan,
                 midiMin: midiRange.min,
                 midiMax: midiRange.max
             )
@@ -41,33 +47,77 @@ struct ReferenceEditorPianoRoll: View {
                 Color.intonavioBackground
                 Canvas { ctx, _ in
                     drawGrid(ctx, geometry: geometry)
-                    drawFrames(ctx, geometry: geometry)
+                    if viewModel.showBaseLayer {
+                        drawFramePath(ctx, geometry: geometry,
+                                      frames: viewModel.baseFrames,
+                                      color: .blue.opacity(0.35), lineWidth: 1.5)
+                    }
+                    if viewModel.showOtherVariantLayer {
+                        for (source, frames) in viewModel.otherVariantFrames {
+                            drawFramePath(ctx, geometry: geometry,
+                                          frames: frames,
+                                          color: source.editorColor.opacity(0.35),
+                                          lineWidth: 1.5)
+                        }
+                    }
+                    drawFramePath(ctx, geometry: geometry,
+                                  frames: viewModel.previewFrames,
+                                  color: .intonavioAmber, lineWidth: 2)
                     drawRange(ctx, geometry: geometry)
                     drawCursor(ctx, geometry: geometry)
                     drawStroke(ctx, geometry: geometry)
                 }
             }
+            .overlay(alignment: .topTrailing) {
+                ReferenceEditorLegend(viewModel: viewModel)
+                    .padding(8)
+            }
             .contentShape(Rectangle())
-            .gesture(dragGesture(geometry: geometry))
+            .gesture(primaryDragGesture(geometry: geometry))
+            .simultaneousGesture(pinchGesture(canvasWidth: geo.size.width))
+            .onTapGesture { location in
+                let time = geometry.time(atX: location.x)
+                viewModel.seek(to: time)
+            }
         }
     }
 
-    // MARK: - Gesture
+    // MARK: - Gestures
 
-    private func dragGesture(geometry: EditorRollGeometry) -> some Gesture {
-        DragGesture(minimumDistance: 0)
+    private func primaryDragGesture(geometry: EditorRollGeometry) -> some Gesture {
+        DragGesture(minimumDistance: 5)
             .onChanged { value in
                 let time = geometry.time(atX: value.location.x)
                 switch viewModel.gesture {
                 case .range:
-                    viewModel.seek(to: time)
+                    if dragStartTime == nil {
+                        dragStartTime = geometry.time(atX: value.startLocation.x)
+                    }
+                    guard let anchor = dragStartTime else { return }
+                    viewModel.rangeStart = max(0, min(anchor, time))
+                    viewModel.rangeEnd = min(viewModel.songDuration, max(anchor, time))
                 case .draw:
                     let midi = geometry.midi(atY: value.location.y)
                     viewModel.liveStroke.append((time: time, midi: midi))
                 }
             }
             .onEnded { _ in
+                dragStartTime = nil
                 if viewModel.gesture == .draw { viewModel.commitStroke() }
+            }
+    }
+
+    private func pinchGesture(canvasWidth: CGFloat) -> some Gesture {
+        MagnifyGesture()
+            .updating($pinchState) { value, state, _ in
+                state = PinchState(
+                    scale: value.magnification,
+                    isActive: true
+                )
+            }
+            .onEnded { value in
+                let newZoom = viewModel.zoomLevel * value.magnification
+                viewModel.setZoom(newZoom)
             }
     }
 
@@ -86,8 +136,13 @@ struct ReferenceEditorPianoRoll: View {
         }
     }
 
-    private func drawFrames(_ ctx: GraphicsContext, geometry g: EditorRollGeometry) {
-        let frames = viewModel.previewFrames
+    private func drawFramePath(
+        _ ctx: GraphicsContext,
+        geometry g: EditorRollGeometry,
+        frames: [ReferencePitchFrame],
+        color: Color,
+        lineWidth: CGFloat
+    ) {
         guard !frames.isEmpty else { return }
         let hop = viewModel.hopDuration
         guard hop > 0 else { return }
@@ -105,7 +160,7 @@ struct ReferenceEditorPianoRoll: View {
             let p = CGPoint(x: g.x(forTime: f.time), y: g.y(forMidi: midi))
             if started { path.addLine(to: p) } else { path.move(to: p); started = true }
         }
-        ctx.stroke(path, with: .color(.intonavioAmber), lineWidth: 2)
+        ctx.stroke(path, with: .color(color), lineWidth: lineWidth)
     }
 
     private func drawRange(_ ctx: GraphicsContext, geometry g: EditorRollGeometry) {
@@ -136,6 +191,13 @@ struct ReferenceEditorPianoRoll: View {
         }
         ctx.stroke(path, with: .color(.cyan), lineWidth: 2.5)
     }
+}
+
+/// Transient state during a two-finger pinch gesture.
+struct PinchState {
+    var scale: CGFloat = 1.0
+    var panOffset: Double = 0
+    var isActive: Bool = false
 }
 
 /// Screen ↔ (time, midi) transforms for the editor roll.

@@ -28,6 +28,12 @@ final class ReferenceEditorViewModel {
     var rangeStart: Double?
     var rangeEnd: Double?
 
+    // Zoom & scroll
+    var zoomLevel: Double = 1.0
+    var scrollCenter: Double = 0
+
+    var visibleWindowSpan: Double { 8.0 / zoomLevel }
+
     // Phase D: gesture + draw tool state
     var gesture: EditorGesture = .range
     var drawMode: DrawMode = .replace
@@ -40,6 +46,10 @@ final class ReferenceEditorViewModel {
     var playbackTime: Double = 0
     @ObservationIgnored var audioPlayer: AVAudioPlayer?
     @ObservationIgnored var pollTask: Task<Void, Never>?
+
+    // Layer visibility
+    var showBaseLayer: Bool = true
+    var showOtherVariantLayer: Bool = true
 
     var isSaving = false
     var errorMessage: String?
@@ -64,6 +74,8 @@ final class ReferenceEditorViewModel {
         self.baseFrames = baseFrames
         self.variants = variants
         self.onSavedScoreWipe = onSavedScoreWipe
+
+        self.scrollCenter = songDuration / 2
 
         let existing = PitchEditScriptStore.load(songId: songId)
         let ops = existing?.operations ?? []
@@ -113,6 +125,16 @@ final class ReferenceEditorViewModel {
     func selectFullSong() {
         rangeStart = 0
         rangeEnd = songDuration
+    }
+
+    // MARK: - Zoom & Scroll
+
+    func setZoom(_ level: Double) {
+        zoomLevel = max(0.5, min(level, 8.0))
+    }
+
+    func setScrollCenter(_ time: Double) {
+        scrollCenter = max(0, min(time, songDuration))
     }
 
     // MARK: - Ops

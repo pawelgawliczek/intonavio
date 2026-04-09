@@ -11,6 +11,7 @@ struct ReferenceEditorView: View {
     let baseFrames: [ReferencePitchFrame]
     let variants: [SongVariant]
     let scoreRepository: ScoreRepository?
+    var initialTime: Double?
     let onSaved: () -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -56,7 +57,7 @@ struct ReferenceEditorView: View {
 
     private func makeViewModelIfNeeded() {
         guard viewModel == nil else { return }
-        viewModel = ReferenceEditorViewModel(
+        let vm = ReferenceEditorViewModel(
             songId: songId,
             baseVariantId: baseVariantId,
             hopDuration: hopDuration,
@@ -68,6 +69,12 @@ struct ReferenceEditorView: View {
                 BestTakeStorage.delete(for: songId)
             }
         )
+        if let t = initialTime {
+            vm.setRangeStart(max(0, t - 2))
+            vm.setRangeEnd(min(songDuration, t + 2))
+            vm.setScrollCenter(t)
+        }
+        viewModel = vm
     }
 
     @ViewBuilder
@@ -75,7 +82,6 @@ struct ReferenceEditorView: View {
         VStack(spacing: 0) {
             playbackBar(vm)
             rangeHeader(vm)
-            rangeSliders(vm)
             Divider()
             ReferenceEditorPianoRoll(viewModel: vm)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -146,7 +152,7 @@ struct ReferenceEditorView: View {
                 Text("A: \(format(start))  B: \(format(end))  (dur \(String(format: "%.1f", end - start))s)")
                     .font(.subheadline.monospacedDigit())
             } else {
-                Text("Drag sliders below to select a time range.")
+                Text("Drag to select range · Pinch to zoom")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -159,39 +165,6 @@ struct ReferenceEditorView: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
-    }
-
-    private func rangeSliders(_ vm: ReferenceEditorViewModel) -> some View {
-        VStack(spacing: 4) {
-            HStack {
-                Text("A").font(.caption2).frame(width: 14)
-                Slider(
-                    value: Binding(
-                        get: { vm.rangeStart ?? 0 },
-                        set: { vm.setRangeStart($0) }
-                    ),
-                    in: 0...max(0.01, songDuration)
-                )
-                Text(format(vm.rangeStart ?? 0))
-                    .font(.caption2.monospacedDigit())
-                    .frame(width: 44, alignment: .trailing)
-            }
-            HStack {
-                Text("B").font(.caption2).frame(width: 14)
-                Slider(
-                    value: Binding(
-                        get: { vm.rangeEnd ?? songDuration },
-                        set: { vm.setRangeEnd($0) }
-                    ),
-                    in: 0...max(0.01, songDuration)
-                )
-                Text(format(vm.rangeEnd ?? songDuration))
-                    .font(.caption2.monospacedDigit())
-                    .frame(width: 44, alignment: .trailing)
-            }
-        }
-        .padding(.horizontal)
-        .padding(.bottom, 8)
     }
 
     private func opListSheet(_ vm: ReferenceEditorViewModel) -> some View {

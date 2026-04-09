@@ -13,6 +13,11 @@ import SwiftUI
 ///   MOMENTUM → [decay] → seek + resume → IDLE
 ///   MOMENTUM → [touch] → stop engine → TOUCHING
 /// ```
+struct LongPressResult {
+    let time: Double
+    let phraseIndex: Int?
+}
+
 struct PianoRollGestureOverlay: View {
     let gestureState: PianoRollGestureState
     let momentumEngine: PianoRollMomentumEngine
@@ -24,6 +29,7 @@ struct PianoRollGestureOverlay: View {
     let onSeek: (Double) -> Void
     let onResume: () -> Void
     let onSetupPhraseLoop: (Int) -> Void
+    var onEditReference: ((Double) -> Void)?
 
     private let windowDuration: Double = 8.0
     private let dragThreshold: CGFloat = 10
@@ -33,11 +39,36 @@ struct PianoRollGestureOverlay: View {
     @State private var longPressTimer: Timer?
     @State private var touchStartLocation: CGPoint = .zero
     @State private var isDragConfirmed = false
+    @State private var longPressResult: LongPressResult?
+    @State private var isShowingLongPressMenu = false
 
     var body: some View {
         Color.clear
             .contentShape(Rectangle())
             .gesture(dragGesture)
+            .confirmationDialog(
+                "Options",
+                isPresented: $isShowingLongPressMenu,
+                titleVisibility: .hidden
+            ) {
+                if let result = longPressResult {
+                    if let phraseIndex = result.phraseIndex {
+                        Button("Loop Phrase") {
+                            onSetupPhraseLoop(phraseIndex)
+                            gestureState.phase = .idle
+                        }
+                    }
+                    if onEditReference != nil {
+                        Button("Edit Reference") {
+                            onEditReference?(result.time)
+                            gestureState.phase = .idle
+                        }
+                    }
+                    Button("Cancel", role: .cancel) {
+                        gestureState.phase = .idle
+                    }
+                }
+            }
     }
 }
 
@@ -183,15 +214,16 @@ private extension PianoRollGestureOverlay {
 
     func handleLongPress(at location: CGPoint) {
         let touchTime = touchPositionToTime(x: location.x)
+        let phrase = findPhrase(near: touchTime)
+        triggerHaptic(phrase != nil ? .medium : .rigid)
 
-        if let phrase = findPhrase(near: touchTime) {
-            triggerHaptic(.medium)
-            onSetupPhraseLoop(phrase.index)
-        } else {
-            triggerHaptic(.rigid)
+        if phrase == nil && onEditReference == nil {
+            gestureState.phase = .idle
+            return
         }
 
-        gestureState.phase = .idle
+        longPressResult = LongPressResult(time: touchTime, phraseIndex: phrase?.index)
+        isShowingLongPressMenu = true
     }
 
     func touchPositionToTime(x: CGFloat) -> Double {

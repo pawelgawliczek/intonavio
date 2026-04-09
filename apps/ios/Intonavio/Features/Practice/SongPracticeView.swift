@@ -19,6 +19,7 @@ struct SongPracticeView: View {
     @State private var viewModel: PracticeViewModel?
     @State private var isShowingProgress = false
     @State private var isShowingReferenceEditor = false
+    @State private var editorInitialTime: Double?
 
     var body: some View {
         mainContent
@@ -147,8 +148,10 @@ private extension SongPracticeView {
             baseFrames: base?.frames ?? [],
             variants: vm.variants,
             scoreRepository: vm.scoreRepository,
+            initialTime: editorInitialTime,
             onSaved: {
                 vm.loadPitchDataIfAvailable()
+                editorInitialTime = nil
             }
         )
     }
@@ -252,7 +255,10 @@ private extension SongPracticeView {
                         offlineSongHeader
                     }
                     Divider()
-                    PianoRollSection(viewModel: vm)
+                    PianoRollSection(viewModel: vm, onEditReference: { time in
+                        editorInitialTime = time
+                        isShowingReferenceEditor = true
+                    })
                     Divider()
                     controlsSection(vm)
                 }
@@ -293,7 +299,10 @@ private extension SongPracticeView {
                     videoPlayer(vm)
                         .frame(height: topHeight)
                     Divider()
-                    PianoRollSection(viewModel: vm)
+                    PianoRollSection(viewModel: vm, onEditReference: { time in
+                        editorInitialTime = time
+                        isShowingReferenceEditor = true
+                    })
                     Divider()
                     controlsSection(vm)
                 }
@@ -312,7 +321,10 @@ private extension SongPracticeView {
                     LyricsPanelSection(viewModel: vm)
                         .frame(height: topHeight)
                     Divider()
-                    PianoRollSection(viewModel: vm)
+                    PianoRollSection(viewModel: vm, onEditReference: { time in
+                        editorInitialTime = time
+                        isShowingReferenceEditor = true
+                    })
                     Divider()
                     controlsSection(vm)
                 }
@@ -404,7 +416,10 @@ private extension SongPracticeView {
             videoPlayer(vm)
                 .aspectRatio(16 / 9, contentMode: .fit)
             Divider()
-            PianoRollSection(viewModel: vm)
+            PianoRollSection(viewModel: vm, onEditReference: { time in
+                editorInitialTime = time
+                isShowingReferenceEditor = true
+            })
             Divider()
             controlsSection(vm)
         }
@@ -537,6 +552,7 @@ private extension SongPracticeView {
 /// is scoped here and doesn't trigger re-renders of the parent (controls, video).
 private struct PianoRollSection: View {
     let viewModel: PracticeViewModel
+    var onEditReference: ((Double) -> Void)?
     @State private var gestureState = PianoRollGestureState()
     @State private var momentumEngine = PianoRollMomentumEngine()
 
@@ -601,7 +617,8 @@ private struct PianoRollSection: View {
             onSetupPhraseLoop: { phraseIndex in
                 viewModel.setupPhraseLoop(phraseIndex: phraseIndex)
                 gestureState.exitBrowsing()
-            }
+            },
+            onEditReference: onEditReference
         )
         .onChange(of: viewModel.loopState) { _, newState in
             guard gestureState.isBrowsing else { return }
