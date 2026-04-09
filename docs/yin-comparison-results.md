@@ -214,10 +214,10 @@ Only commit to this if steps 1–4 leave dense orchestral sections still unusabl
 Cheapest first, measure marginal benefit on a regression set after each step.
 
 1. ✅ **DONE (2026-04-07)**: Step 1 — `fmax=1100` + Butterworth bandpass 65–1100 Hz (scipy `butter` order 4 + `sosfiltfilt`) pre-filter in `analyzer.extract_pitch`. All 8 songs re-analyzed against the new pipeline.
-2. **This week**: Step 2 — `voiced_prob ≥ 0.8`. Trivial.
-3. **This week**: Step 3 — Spike PESTO behind a feature flag, keep pYIN as fallback.
-4. **Next**: Step 4 — RMVPE second opinion + reconciliation.
-5. **Bigger project, only if needed**: Step 5 — BS-Roformer stem separation.
+2. ✅ **DONE (2026-04-07)**: Step 2 — `pyin_voiced_prob_thresh=0.8` in `WorkerConfig`.
+3. ✅ **DONE (2026-04-09)**: Step 3 — PESTO integration via `config.pitch_estimator="pesto"` (default). pYIN kept as fallback via `pitch_estimator="pyin"`. PESTO v2.0.1, confidence threshold 0.5, vocal range clamp 65–1100 Hz. No `fix_octave_errors` needed — PESTO has built-in octave-error resistance. All 30 tests pass.
+4. **Next**: Step 4 — RMVPE second opinion + reconciliation (already scaffolded in `worker.py` behind `enable_rmvpe_reconcile` flag).
+5. ✅ **DONE (2026-04-09)**: Step 5 — BS-Roformer stem separation shipped as DRAFT source. Comparison shows pYIN was the bottleneck, not stem quality — STUDIO vs DRAFT pitch data differ by <5 cents in 80% of frames.
 
 ## Evaluation Metric
 

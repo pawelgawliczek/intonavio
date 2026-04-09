@@ -17,7 +17,10 @@ class WorkerConfig(BaseSettings):
     r2_secret_access_key: str
     r2_bucket_name: str
 
-    # pYIN extraction parameters
+    # Pitch estimator selection: "pyin" (legacy) or "pesto" (Step 3 of roadmap).
+    pitch_estimator: str = "pesto"
+
+    # pYIN extraction parameters (used when pitch_estimator="pyin")
     pyin_fmin: float = 65.0
     pyin_fmax: float = 1100.0
     pyin_hop_length: int = 512
@@ -27,6 +30,11 @@ class WorkerConfig(BaseSettings):
     # frames that were silently accepted by the default (0.5) and caused
     # instrument-bleed garbage pitches in dense sections.
     pyin_voiced_prob_thresh: float = 0.8
+
+    # PESTO extraction parameters (used when pitch_estimator="pesto")
+    pesto_step_size_ms: float = 11.6  # ~512 hop at 44100 Hz, matches pYIN output density
+    pesto_sample_rate: int = 44100
+    pesto_confidence_thresh: float = 0.5
 
     # RMVPE reconciliation (step 4 of the pitch quality roadmap).
     # RMVPE runs on the FULL mix as a second opinion; its per-frame output

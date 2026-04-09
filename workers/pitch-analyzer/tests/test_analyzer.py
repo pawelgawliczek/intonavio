@@ -1,13 +1,16 @@
-"""Core algorithmic tests for pYIN extraction pipeline — target 95% branch coverage."""
+"""Core algorithmic tests for pitch extraction pipeline — target 95% branch coverage."""
 
 import math
 
 import numpy as np
+import pytest
 
 from src.analyzer import (
     build_frames,
     compute_stats,
     extract_pitch,
+    extract_pitch_pesto,
+    extract_pitch_pyin,
     fix_octave_errors,
     hz_to_midi,
     validate_analysis,
@@ -303,6 +306,91 @@ def test_extract_pitch_idempotent(
     """Same input produces identical output on two runs."""
     frames1, stats1 = extract_pitch(sine_440_bytes, sample_config, "trace-1")
     frames2, stats2 = extract_pitch(sine_440_bytes, sample_config, "trace-2")
+
+    assert stats1.frame_count == stats2.frame_count
+    assert stats1.voiced_frame_count == stats2.voiced_frame_count
+    for f1, f2 in zip(frames1, frames2, strict=True):
+        assert f1.t == f2.t
+        assert f1.hz == f2.hz
+        assert f1.voiced == f2.voiced
+
+
+# --- PESTO extraction tests ---
+
+
+def test_pesto_extract_440hz_sine(
+    sine_440_bytes: bytes,
+    pesto_config: WorkerConfig,
+) -> None:
+    """PESTO detects 440Hz sine wave with voiced frames near 440Hz."""
+    frames, stats = extract_pitch_pesto(sine_440_bytes, pesto_config, "pesto-440")
+
+    voiced = [f for f in frames if f.voiced and f.hz is not None]
+    assert len(voiced) > 0
+
+    # Skip onset frames (first ~100ms) where PESTO's CQT window is still filling
+    steady = [f for f in voiced if f.t > 0.1]
+    assert len(steady) > 0
+    for f in steady:
+        assert f.hz is not None
+        assert abs(f.hz - 440.0) < 5.0
+
+
+def test_pesto_extract_261hz_sine(
+    sine_261_bytes: bytes,
+    pesto_config: WorkerConfig,
+) -> None:
+    """PESTO detects 261.63Hz (C4) sine wave within tolerance."""
+    frames, stats = extract_pitch_pesto(sine_261_bytes, pesto_config, "pesto-261")
+
+    voiced = [f for f in frames if f.voiced and f.hz is not None]
+    assert len(voiced) > 0
+
+    steady = [f for f in voiced if f.t > 0.1]
+    assert len(steady) > 0
+    for f in steady:
+        assert f.hz is not None
+        assert abs(f.hz - 261.63) < 5.0
+
+
+def test_pesto_extract_silence(
+    silence_bytes: bytes,
+    pesto_config: WorkerConfig,
+) -> None:
+    """PESTO produces mostly unvoiced frames for silence."""
+    frames, stats = extract_pitch_pesto(silence_bytes, pesto_config, "pesto-silence")
+    assert stats.voiced_frame_percent < 10.0
+
+
+def test_pesto_extract_1500hz_clamped(
+    sine_1500_bytes: bytes,
+    pesto_config: WorkerConfig,
+) -> None:
+    """1500Hz is above vocal range clamp — PESTO may detect it but we filter it out."""
+    frames, _ = extract_pitch_pesto(sine_1500_bytes, pesto_config, "pesto-1500")
+    voiced = [f for f in frames if f.voiced and f.hz is not None]
+    for f in voiced:
+        assert f.hz is not None
+        assert f.hz <= 1100.0
+
+
+def test_pesto_routing_via_config(
+    sine_440_bytes: bytes,
+    pesto_config: WorkerConfig,
+) -> None:
+    """extract_pitch routes to PESTO when config says so."""
+    frames, stats = extract_pitch(sine_440_bytes, pesto_config, "pesto-route")
+    voiced = [f for f in frames if f.voiced and f.hz is not None]
+    assert len(voiced) > 0
+
+
+def test_pesto_idempotent(
+    sine_440_bytes: bytes,
+    pesto_config: WorkerConfig,
+) -> None:
+    """PESTO produces identical output on two runs."""
+    frames1, stats1 = extract_pitch_pesto(sine_440_bytes, pesto_config, "pesto-1")
+    frames2, stats2 = extract_pitch_pesto(sine_440_bytes, pesto_config, "pesto-2")
 
     assert stats1.frame_count == stats2.frame_count
     assert stats1.voiced_frame_count == stats2.voiced_frame_count

@@ -218,12 +218,21 @@ def _process_job(job_data: PitchAnalysisJobData, config: WorkerConfig) -> None:
         )
 
     # 4. Build output and serialize to camelCase JSON
-    hop_duration = config.pyin_hop_length / config.pyin_sample_rate
+    if config.pitch_estimator == "pesto":
+        hop_duration = config.pesto_step_size_ms / 1000.0
+    else:
+        hop_duration = config.pyin_hop_length / config.pyin_sample_rate
     phrases = detect_phrases(frames, hop_duration)
+    if config.pitch_estimator == "pesto":
+        sample_rate = config.pesto_sample_rate
+        hop_size = int(config.pesto_step_size_ms / 1000.0 * sample_rate)
+    else:
+        sample_rate = config.pyin_sample_rate
+        hop_size = config.pyin_hop_length
     output = PitchAnalysisOutput(
         song_id=song_id,
-        sample_rate=config.pyin_sample_rate,
-        hop_size=config.pyin_hop_length,
+        sample_rate=sample_rate,
+        hop_size=hop_size,
         hop_duration=hop_duration,
         frame_count=stats.frame_count,
         frames=frames,

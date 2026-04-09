@@ -13,7 +13,7 @@ from src.config import WorkerConfig
 
 @pytest.fixture()
 def sample_config() -> WorkerConfig:
-    """WorkerConfig with test values (no real connections needed)."""
+    """WorkerConfig with pYIN (legacy) for backward-compatible tests."""
     return WorkerConfig(
         redis_url="redis://localhost:6379",
         database_url="postgresql://test:test@localhost:5432/test",
@@ -21,6 +21,21 @@ def sample_config() -> WorkerConfig:
         r2_access_key_id="test-key",
         r2_secret_access_key="test-secret",
         r2_bucket_name="test-bucket",
+        pitch_estimator="pyin",
+    )
+
+
+@pytest.fixture()
+def pesto_config() -> WorkerConfig:
+    """WorkerConfig with PESTO pitch estimator."""
+    return WorkerConfig(
+        redis_url="redis://localhost:6379",
+        database_url="postgresql://test:test@localhost:5432/test",
+        r2_account_id="test-account",
+        r2_access_key_id="test-key",
+        r2_secret_access_key="test-secret",
+        r2_bucket_name="test-bucket",
+        pitch_estimator="pesto",
     )
 
 
