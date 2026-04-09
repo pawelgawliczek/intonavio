@@ -3,7 +3,7 @@ import SwiftUI
 extension StemSource {
     var editorColor: Color {
         switch self {
-        case .studio: return .blue
+        case .studio: return .cyan
         case .draft: return .green
         }
     }
@@ -14,11 +14,18 @@ extension StemSource {
 struct ReferenceEditorLegend: View {
     @Bindable var viewModel: ReferenceEditorViewModel
 
+    private var baseSourceName: String {
+        viewModel.baseSource?.displayName ?? "Base"
+    }
+
     var body: some View {
         HStack(spacing: 10) {
-            legendItem(color: .intonavioAmber, label: "Edited", isOn: .constant(true))
-            legendItem(color: .blue, label: "Base",
-                       isOn: $viewModel.showBaseLayer)
+            let editedLabel = viewModel.isDirty ? "Edited" : baseSourceName
+            legendItem(color: .intonavioAmber, label: editedLabel, isOn: .constant(true))
+            if viewModel.isDirty {
+                legendItem(color: viewModel.baseSource?.editorColor ?? .blue, label: baseSourceName,
+                           isOn: $viewModel.showBaseLayer)
+            }
             if !viewModel.otherVariantFrames.isEmpty {
                 let source = viewModel.otherVariantFrames.keys.first ?? .draft
                 legendItem(color: source.editorColor, label: source.displayName,

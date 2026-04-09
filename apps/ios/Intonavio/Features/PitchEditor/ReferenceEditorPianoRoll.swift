@@ -41,22 +41,25 @@ struct ReferenceEditorPianoRoll: View {
                 Canvas { ctx, _ in
                     drawGrid(ctx, geometry: geometry)
                     drawTimeMarkers(ctx, geometry: geometry)
-                    if viewModel.showBaseLayer {
+                    // Edited (amber) first — behind so other layers show on top
+                    drawFramePath(ctx, geometry: geometry,
+                                  frames: viewModel.previewFrames,
+                                  color: .intonavioAmber, lineWidth: 2.5)
+                    // Base layer on top of edited (only when edits exist, otherwise identical)
+                    if viewModel.showBaseLayer, viewModel.isDirty {
+                        let baseColor = viewModel.baseSource?.editorColor ?? .blue
                         drawFramePath(ctx, geometry: geometry,
                                       frames: viewModel.baseFrames,
-                                      color: .blue.opacity(0.35), lineWidth: 1.5)
+                                      color: baseColor, lineWidth: 1.5)
                     }
+                    // Other variants on top
                     if viewModel.showOtherVariantLayer {
                         for (source, frames) in viewModel.otherVariantFrames {
                             drawFramePath(ctx, geometry: geometry,
                                           frames: frames,
-                                          color: source.editorColor.opacity(0.35),
-                                          lineWidth: 1.5)
+                                          color: source.editorColor, lineWidth: 1.5)
                         }
                     }
-                    drawFramePath(ctx, geometry: geometry,
-                                  frames: viewModel.previewFrames,
-                                  color: .intonavioAmber, lineWidth: 2)
                     drawRange(ctx, geometry: geometry)
                     drawCursor(ctx, geometry: geometry)
                     drawStroke(ctx, geometry: geometry)

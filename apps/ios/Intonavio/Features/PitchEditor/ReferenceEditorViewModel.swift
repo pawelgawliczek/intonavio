@@ -96,6 +96,10 @@ final class ReferenceEditorViewModel {
     var isDirty: Bool { operations != initialOperations }
     var hasRange: Bool { rangeStart != nil && rangeEnd != nil }
 
+    var baseSource: StemSource? {
+        variants.first { $0.id == baseVariantId }?.source
+    }
+
     var currentRange: TimeRange? {
         guard let start = rangeStart, let end = rangeEnd, end > start else { return nil }
         return TimeRange(start: start, end: end)
@@ -216,7 +220,15 @@ final class ReferenceEditorViewModel {
 
     private func loadOtherVariantsInBackground() async {
         let apiClient = APIClient()
-        let others = variants.filter { $0.id != baseVariantId && $0.status == .ready }
+
+        // Fetch fresh variant list from API so we pick up newly-ready variants.
+        var freshVariants = variants
+        if let song = try? await apiClient.getSong(id: songId) {
+            freshVariants = song.variants
+        }
+
+        let others = freshVariants.filter { $0.id != baseVariantId && $0.status == .ready }
+
         var loaded: [StemSource: [ReferencePitchFrame]] = [:]
         var available: [StemSource] = []
         for variant in others {
