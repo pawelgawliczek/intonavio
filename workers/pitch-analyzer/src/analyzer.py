@@ -195,7 +195,8 @@ def extract_pitch_pesto(
     # Build PitchFrames
     frames: list[PitchFrame] = []
     for i in range(len(hz_np)):
-        t = round(float(times_np[i]), 4)
+        # PESTO returns timesteps in milliseconds — convert to seconds
+        t = round(float(times_np[i]) / 1000.0, 4)
         hz_val = float(hz_np[i])
         conf_val = float(conf_np[i])
         rms_val = round(float(rms[i]), 6) if i < len(rms) else None
