@@ -11,6 +11,7 @@ from __future__ import annotations
 import gc
 import logging
 import os
+import shutil
 import threading
 import time
 
@@ -96,8 +97,9 @@ class StemSeparator:
             os.makedirs(output_dir, exist_ok=True)
             self._sep.output_dir = output_dir
 
-            # audio-separator writes to cwd regardless of the output_dir property,
-            # so chdir into the target directory for the duration of the call.
+            # audio-separator caches its output path at init time and ignores
+            # both the output_dir property and cwd changes. Belt-and-suspenders:
+            # chdir AND post-hoc relocate files that land in the wrong place.
             previous_cwd = os.getcwd()
             os.chdir(output_dir)
             try:
@@ -119,6 +121,19 @@ class StemSeparator:
             instrumental_path: str | None = None
             for filename in produced:
                 full = filename if os.path.isabs(filename) else os.path.join(output_dir, filename)
+                # If the file isn't where expected, check the original cwd (library fallback)
+                if not os.path.exists(full):
+                    fallback = os.path.join(previous_cwd, os.path.basename(filename))
+                    if os.path.exists(fallback):
+                        shutil.move(fallback, full)
+                        log_with_context(
+                            logger,
+                            logging.WARNING,
+                            "Relocated stem from cwd fallback",
+                            traceId=trace_id,
+                            src=fallback,
+                            dst=full,
+                        )
                 lower = filename.lower()
                 if "vocals" in lower:
                     vocals_path = full
