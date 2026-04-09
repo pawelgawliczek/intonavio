@@ -1,16 +1,12 @@
 import SwiftUI
 
 /// Canvas-based editor roll: draws preview frames, playback cursor, range
-/// highlight, and the in-progress draw stroke. Owns the gesture that either
-/// scrubs playback (Range mode) or captures a stroke (Draw mode).
+/// highlight, and the in-progress draw stroke.
 ///
-/// This deliberately does NOT reuse `PianoRollView` — it needs tight control
-/// over the screen ↔ (time, midi) math for drawing.
+/// All touch gestures (tap, 1-finger drag, 2-finger pan) are handled by a
+/// single UIKit overlay (`EditorGestureView`) to avoid SwiftUI/UIKit conflicts.
 struct ReferenceEditorPianoRoll: View {
     @Bindable var viewModel: ReferenceEditorViewModel
-
-    @State private var dragStartTime: Double?
-    @GestureState private var pinchState = PinchState()
 
     private var centerTime: Double {
         if viewModel.isPlaying { return viewModel.playbackTime }
@@ -33,13 +29,10 @@ struct ReferenceEditorPianoRoll: View {
 
     var body: some View {
         GeometryReader { geo in
-            let effectiveZoom = viewModel.zoomLevel * (pinchState.isActive ? pinchState.scale : 1.0)
-            let effectiveSpan = 8.0 / max(0.5, min(effectiveZoom, 8.0))
-            let panOffset = pinchState.isActive ? pinchState.panOffset : 0
             let geometry = EditorRollGeometry(
                 size: geo.size,
-                centerTime: centerTime + panOffset,
-                windowSpan: effectiveSpan,
+                centerTime: centerTime,
+                windowSpan: viewModel.visibleWindowSpan,
                 midiMin: midiRange.min,
                 midiMax: midiRange.max
             )
@@ -47,6 +40,7 @@ struct ReferenceEditorPianoRoll: View {
                 Color.intonavioBackground
                 Canvas { ctx, _ in
                     drawGrid(ctx, geometry: geometry)
+                    drawTimeMarkers(ctx, geometry: geometry)
                     if viewModel.showBaseLayer {
                         drawFramePath(ctx, geometry: geometry,
                                       frames: viewModel.baseFrames,
@@ -67,58 +61,41 @@ struct ReferenceEditorPianoRoll: View {
                     drawCursor(ctx, geometry: geometry)
                     drawStroke(ctx, geometry: geometry)
                 }
+                EditorGestureOverlay(viewModel: viewModel, geometry: geometry)
             }
             .overlay(alignment: .topTrailing) {
                 ReferenceEditorLegend(viewModel: viewModel)
                     .padding(8)
             }
-            .contentShape(Rectangle())
-            .gesture(primaryDragGesture(geometry: geometry))
-            .simultaneousGesture(pinchGesture(canvasWidth: geo.size.width))
-            .onTapGesture { location in
-                let time = geometry.time(atX: location.x)
-                viewModel.seek(to: time)
+            .overlay(alignment: .trailing) {
+                zoomButtons.padding(8)
             }
         }
     }
 
-    // MARK: - Gestures
-
-    private func primaryDragGesture(geometry: EditorRollGeometry) -> some Gesture {
-        DragGesture(minimumDistance: 5)
-            .onChanged { value in
-                let time = geometry.time(atX: value.location.x)
-                switch viewModel.gesture {
-                case .range:
-                    if dragStartTime == nil {
-                        dragStartTime = geometry.time(atX: value.startLocation.x)
-                    }
-                    guard let anchor = dragStartTime else { return }
-                    viewModel.rangeStart = max(0, min(anchor, time))
-                    viewModel.rangeEnd = min(viewModel.songDuration, max(anchor, time))
-                case .draw:
-                    let midi = geometry.midi(atY: value.location.y)
-                    viewModel.liveStroke.append((time: time, midi: midi))
+    private var zoomButtons: some View {
+        VStack(spacing: 8) {
+            Button {
+                withAnimation(.easeOut(duration: 0.2)) {
+                    viewModel.setZoom(viewModel.zoomLevel * 1.5)
                 }
+            } label: {
+                Image(systemName: "plus")
+                    .font(.title3.weight(.semibold))
+                    .frame(width: 36, height: 36)
+                    .background(.ultraThinMaterial, in: Circle())
             }
-            .onEnded { _ in
-                dragStartTime = nil
-                if viewModel.gesture == .draw { viewModel.commitStroke() }
+            Button {
+                withAnimation(.easeOut(duration: 0.2)) {
+                    viewModel.setZoom(viewModel.zoomLevel / 1.5)
+                }
+            } label: {
+                Image(systemName: "minus")
+                    .font(.title3.weight(.semibold))
+                    .frame(width: 36, height: 36)
+                    .background(.ultraThinMaterial, in: Circle())
             }
-    }
-
-    private func pinchGesture(canvasWidth: CGFloat) -> some Gesture {
-        MagnifyGesture()
-            .updating($pinchState) { value, state, _ in
-                state = PinchState(
-                    scale: value.magnification,
-                    isActive: true
-                )
-            }
-            .onEnded { value in
-                let newZoom = viewModel.zoomLevel * value.magnification
-                viewModel.setZoom(newZoom)
-            }
+        }
     }
 
     // MARK: - Drawing
@@ -133,6 +110,39 @@ struct ReferenceEditorPianoRoll: View {
             path.addLine(to: CGPoint(x: g.size.width, y: y))
             let alpha = (midi % 12 == 0) ? 0.18 : 0.06
             ctx.stroke(path, with: .color(.white.opacity(alpha)), lineWidth: 0.5)
+        }
+    }
+
+    private func drawTimeMarkers(_ ctx: GraphicsContext, geometry g: EditorRollGeometry) {
+        let span = g.windowEnd - g.windowStart
+        // Pick interval: 1s, 2s, 5s, 10s, 15s, 30s, 60s based on visible span
+        let intervals: [Double] = [1, 2, 5, 10, 15, 30, 60]
+        let targetCount = Double(g.size.width) / 80 // ~80pt between labels
+        let ideal = span / max(targetCount, 1)
+        let interval = intervals.first { $0 >= ideal } ?? 60
+
+        let firstTick = (max(0, g.windowStart) / interval).rounded(.up) * interval
+        var t = firstTick
+        while t <= min(g.windowEnd, viewModel.songDuration) {
+            let x = g.x(forTime: t)
+
+            // Vertical tick line
+            var tick = Path()
+            tick.move(to: CGPoint(x: x, y: 0))
+            tick.addLine(to: CGPoint(x: x, y: g.size.height))
+            ctx.stroke(tick, with: .color(.white.opacity(0.12)), lineWidth: 0.5)
+
+            // Time label at top
+            let total = Int(t)
+            let label = String(format: "%d:%02d", total / 60, total % 60)
+            let text = ctx.resolve(
+                Text(label)
+                    .font(.caption2.monospacedDigit())
+                    .foregroundStyle(.white.opacity(0.5))
+            )
+            ctx.draw(text, at: CGPoint(x: x, y: 8), anchor: .top)
+
+            t += interval
         }
     }
 
@@ -193,11 +203,124 @@ struct ReferenceEditorPianoRoll: View {
     }
 }
 
-/// Transient state during a two-finger pinch gesture.
-struct PinchState {
-    var scale: CGFloat = 1.0
-    var panOffset: Double = 0
-    var isActive: Bool = false
+// MARK: - All-UIKit Gesture Overlay
+
+/// Full-frame transparent UIView that handles all canvas gestures via UIKit:
+/// - Tap (1 finger) → seek
+/// - Drag (1 finger) → select range or draw stroke
+/// - Drag (2 fingers) → scroll/pan
+struct EditorGestureOverlay: UIViewRepresentable {
+    let viewModel: ReferenceEditorViewModel
+    let geometry: EditorRollGeometry
+
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView()
+        view.backgroundColor = .clear
+        view.isMultipleTouchEnabled = true
+
+        // Tap → seek
+        let tap = UITapGestureRecognizer(
+            target: context.coordinator,
+            action: #selector(Coordinator.handleTap(_:))
+        )
+
+        // 1-finger drag → select / draw
+        let oneFinger = UIPanGestureRecognizer(
+            target: context.coordinator,
+            action: #selector(Coordinator.handleOneFingerPan(_:))
+        )
+        oneFinger.minimumNumberOfTouches = 1
+        oneFinger.maximumNumberOfTouches = 1
+
+        // 2-finger drag → scroll
+        let twoFinger = UIPanGestureRecognizer(
+            target: context.coordinator,
+            action: #selector(Coordinator.handleTwoFingerPan(_:))
+        )
+        twoFinger.minimumNumberOfTouches = 2
+        twoFinger.maximumNumberOfTouches = 2
+
+        // Tap requires 1-finger drag to fail (so quick taps aren't swallowed)
+        tap.require(toFail: oneFinger)
+
+        view.addGestureRecognizer(tap)
+        view.addGestureRecognizer(oneFinger)
+        view.addGestureRecognizer(twoFinger)
+
+        return view
+    }
+
+    func updateUIView(_ uiView: UIView, context: Context) {
+        context.coordinator.viewModel = viewModel
+        context.coordinator.geometry = geometry
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator(viewModel: viewModel, geometry: geometry) }
+
+    @MainActor final class Coordinator: NSObject {
+        var viewModel: ReferenceEditorViewModel
+        var geometry: EditorRollGeometry
+        private var dragStartTime: Double?
+        private var scrollAnchorCenter: Double = 0
+
+        init(viewModel: ReferenceEditorViewModel, geometry: EditorRollGeometry) {
+            self.viewModel = viewModel
+            self.geometry = geometry
+        }
+
+        @objc func handleTap(_ gesture: UITapGestureRecognizer) {
+            let x = gesture.location(in: gesture.view).x
+            let time = geometry.time(atX: x)
+            viewModel.seek(to: time)
+        }
+
+        @objc func handleOneFingerPan(_ gesture: UIPanGestureRecognizer) {
+            guard let view = gesture.view else { return }
+            let location = gesture.location(in: view)
+
+            switch gesture.state {
+            case .began:
+                dragStartTime = geometry.time(atX: location.x)
+
+            case .changed:
+                let time = geometry.time(atX: location.x)
+                switch viewModel.gesture {
+                case .range:
+                    guard let anchor = dragStartTime else { return }
+                    viewModel.rangeStart = max(0, min(anchor, time))
+                    viewModel.rangeEnd = min(viewModel.songDuration, max(anchor, time))
+                case .draw:
+                    let midi = geometry.midi(atY: location.y)
+                    viewModel.liveStroke.append((time: time, midi: midi))
+                }
+
+            case .ended, .cancelled:
+                dragStartTime = nil
+                if viewModel.gesture == .draw { viewModel.commitStroke() }
+
+            default:
+                break
+            }
+        }
+
+        @objc func handleTwoFingerPan(_ gesture: UIPanGestureRecognizer) {
+            guard let view = gesture.view, view.bounds.width > 0 else { return }
+
+            switch gesture.state {
+            case .began:
+                scrollAnchorCenter = viewModel.scrollCenter
+
+            case .changed:
+                let tx = gesture.translation(in: view).x
+                let span = viewModel.visibleWindowSpan
+                let delta = -(Double(tx) / Double(view.bounds.width)) * span
+                viewModel.setScrollCenter(scrollAnchorCenter + delta)
+
+            default:
+                break
+            }
+        }
+    }
 }
 
 /// Screen ↔ (time, midi) transforms for the editor roll.

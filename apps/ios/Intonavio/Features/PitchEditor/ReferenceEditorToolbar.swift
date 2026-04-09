@@ -40,14 +40,14 @@ struct ReferenceEditorToolbar: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             HStack(spacing: 8) {
-                opButton("+8ve", systemImage: "arrow.up") {
+                opButton("+1 st", systemImage: "arrow.up") {
                     addRangeOp { range in
-                        .shiftOctave(id: UUID(), range: range, octaves: 1)
+                        .shiftSemitones(id: UUID(), range: range, semitones: 1)
                     }
                 }
-                opButton("-8ve", systemImage: "arrow.down") {
+                opButton("-1 st", systemImage: "arrow.down") {
                     addRangeOp { range in
-                        .shiftOctave(id: UUID(), range: range, octaves: -1)
+                        .shiftSemitones(id: UUID(), range: range, semitones: -1)
                     }
                 }
                 Button(role: .destructive) {

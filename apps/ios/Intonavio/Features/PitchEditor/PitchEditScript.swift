@@ -18,6 +18,7 @@ enum PitchEditOp: Codable, Sendable, Identifiable, Equatable {
     case despike(id: UUID, range: TimeRange, maxJumpSemitones: Double)
     case mute(id: UUID, range: TimeRange)
     case shiftOctave(id: UUID, range: TimeRange, octaves: Int)
+    case shiftSemitones(id: UUID, range: TimeRange, semitones: Int)
     case addPassage(id: UUID, range: TimeRange, frames: [ReferencePitchFrame], mode: DrawMode)
 
     var id: UUID {
@@ -26,6 +27,7 @@ enum PitchEditOp: Codable, Sendable, Identifiable, Equatable {
              .despike(let id, _, _),
              .mute(let id, _),
              .shiftOctave(let id, _, _),
+             .shiftSemitones(let id, _, _),
              .addPassage(let id, _, _, _):
             return id
         }
@@ -37,6 +39,7 @@ enum PitchEditOp: Codable, Sendable, Identifiable, Equatable {
              .despike(_, let r, _),
              .mute(_, let r),
              .shiftOctave(_, let r, _),
+             .shiftSemitones(_, let r, _),
              .addPassage(_, let r, _, _):
             return r
         }
@@ -48,16 +51,17 @@ enum PitchEditOp: Codable, Sendable, Identifiable, Equatable {
         case .despike: return "Despike"
         case .mute: return "Mute"
         case .shiftOctave(_, _, let oct): return "Shift \(oct > 0 ? "+" : "")\(oct) oct"
+        case .shiftSemitones(_, _, let st): return "Shift \(st > 0 ? "+" : "")\(st) st"
         case .addPassage(_, _, _, let mode): return "Draw (\(mode.rawValue))"
         }
     }
 
     private enum Kind: String, Codable {
-        case useVariant, despike, mute, shiftOctave, addPassage
+        case useVariant, despike, mute, shiftOctave, shiftSemitones, addPassage
     }
 
     private enum CodingKeys: String, CodingKey {
-        case type, id, range, source, maxJumpSemitones, octaves, frames, mode
+        case type, id, range, source, maxJumpSemitones, octaves, semitones, frames, mode
     }
 
     init(from decoder: Decoder) throws {
@@ -77,6 +81,9 @@ enum PitchEditOp: Codable, Sendable, Identifiable, Equatable {
         case .shiftOctave:
             let octaves = try c.decode(Int.self, forKey: .octaves)
             self = .shiftOctave(id: id, range: range, octaves: octaves)
+        case .shiftSemitones:
+            let semitones = try c.decode(Int.self, forKey: .semitones)
+            self = .shiftSemitones(id: id, range: range, semitones: semitones)
         case .addPassage:
             let frames = try c.decode([ReferencePitchFrame].self, forKey: .frames)
             let mode = try c.decode(DrawMode.self, forKey: .mode)
@@ -100,6 +107,9 @@ enum PitchEditOp: Codable, Sendable, Identifiable, Equatable {
         case .shiftOctave(_, _, let octaves):
             try c.encode(Kind.shiftOctave, forKey: .type)
             try c.encode(octaves, forKey: .octaves)
+        case .shiftSemitones(_, _, let semitones):
+            try c.encode(Kind.shiftSemitones, forKey: .type)
+            try c.encode(semitones, forKey: .semitones)
         case .addPassage(_, _, let frames, let mode):
             try c.encode(Kind.addPassage, forKey: .type)
             try c.encode(frames, forKey: .frames)

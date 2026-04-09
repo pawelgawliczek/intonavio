@@ -24,8 +24,8 @@ final class PracticeViewModel {
     var stemDownloadDetail: String?
     var stemsDownloadedCount: Int = 0
 
-    // Offline mode
-    let isOffline: Bool
+    // Offline mode (or YouTube-unavailable fallback)
+    private(set) var isOffline: Bool
     private var offlineTimer: Timer?
     private let offlineTimerInterval: TimeInterval = 0.02
 
@@ -471,6 +471,21 @@ extension PracticeViewModel {
         offlineTimer = nil
     }
 
+    /// Switch to offline-style playback when YouTube is unavailable (e.g. error 150).
+    func switchToVideoFallback() {
+        guard !isOffline else { return }
+        isOffline = true
+        errorMessage = nil
+
+        sync?.stop()
+        sync = nil
+        controller.stopTimePolling()
+        server.stop()
+
+        setDurationFromStems()
+        AppLogger.player.info("Switched to video-unavailable fallback mode")
+    }
+
     /// Set duration from loaded stem audio files.
     func setDurationFromStems() {
         // Use the FULL stem if available, otherwise any stem
@@ -531,8 +546,12 @@ private extension PracticeViewModel {
             checkLoopBoundary()
 
         case .error(let code):
-            errorMessage = "YouTube error: \(code)"
             AppLogger.player.error("YouTube error code: \(code)")
+            if code == 150 || code == 101 {
+                switchToVideoFallback()
+            } else {
+                errorMessage = "YouTube error: \(code)"
+            }
 
         case .unknown:
             break

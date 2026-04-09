@@ -23,6 +23,8 @@ enum PitchEditApplier {
                 applyMute(&frames, lo: lo, hi: hi)
             case .shiftOctave(_, _, let octaves):
                 applyShiftOctave(&frames, lo: lo, hi: hi, octaves: octaves)
+            case .shiftSemitones(_, _, let semitones):
+                applyShiftSemitones(&frames, lo: lo, hi: hi, semitones: semitones)
             case .addPassage(_, _, let opFrames, let mode):
                 applyAddPassage(&frames, lo: lo, hi: hi, opFrames: opFrames,
                                 mode: mode, hopDuration: hopDuration)
@@ -153,6 +155,27 @@ enum PitchEditApplier {
     ) {
         let factor = pow(2.0, Double(octaves))
         let midiDelta = Double(12 * octaves)
+        for i in lo..<hi {
+            let f = frames[i]
+            guard f.isVoiced, let hz = f.frequency else { continue }
+            frames[i] = ReferencePitchFrame(
+                time: f.time,
+                frequency: hz * factor,
+                isVoiced: true,
+                midiNote: f.midiNote.map { $0 + midiDelta },
+                rms: f.rms
+            )
+        }
+    }
+
+    private static func applyShiftSemitones(
+        _ frames: inout [ReferencePitchFrame],
+        lo: Int,
+        hi: Int,
+        semitones: Int
+    ) {
+        let factor = pow(2.0, Double(semitones) / 12.0)
+        let midiDelta = Double(semitones)
         for i in lo..<hi {
             let f = frames[i]
             guard f.isVoiced, let hz = f.frequency else { continue }
