@@ -55,7 +55,10 @@ def _process_job(job_data: PitchAnalysisJobData, config: WorkerConfig) -> None:
     frames, stats = extract_pitch(audio_bytes, config, trace_id)
 
     # 2b. Optional: RMVPE second-opinion reconciliation (Phase C, dark-launch).
-    if config.enable_rmvpe_reconcile:
+    # Skip when PESTO is the primary estimator — PESTO already handles octave
+    # errors natively and RMVPE reconciliation destroys valid low-pitch frames
+    # (e.g., Disturbed SoS at B2/123 Hz).
+    if config.enable_rmvpe_reconcile and config.pitch_estimator != "pesto":
         from src.analyzer import compute_stats, hz_to_midi
         from src.frame_align import align_candidates
         from src.reconcile import PitchCandidate, reconcile_tracks
