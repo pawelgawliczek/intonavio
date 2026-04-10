@@ -1,4 +1,4 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { ParseCuidPipe } from '../common/pipes/parse-cuid.pipe';
@@ -11,7 +11,10 @@ export class PitchController {
   constructor(private readonly pitch: PitchService) {}
 
   @Get('url')
-  getPresignedUrl(@Param('songId', ParseCuidPipe) songId: string): Promise<PresignedUrlResponse> {
-    return this.pitch.getPresignedUrl(songId);
+  getPresignedUrl(
+    @Param('songId', ParseCuidPipe) songId: string,
+    @Query('variantId') variantId?: string,
+  ): Promise<PresignedUrlResponse> {
+    return this.pitch.getPresignedUrl(songId, variantId);
   }
 }

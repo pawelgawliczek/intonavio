@@ -26,7 +26,7 @@ protocol APIClientProtocol: Sendable {
     func stemDownloadURL(songId: String, stemId: String) async throws -> PresignedURLResponse
 
     // Pitch
-    func pitchDownloadURL(songId: String) async throws -> PresignedURLResponse
+    func pitchDownloadURL(songId: String, variantId: String?) async throws -> PresignedURLResponse
 
     // Sessions
     func createSession(_ request: CreateSessionRequest) async throws -> SessionResponse

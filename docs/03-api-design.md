@@ -468,6 +468,35 @@ Switches which variant is currently active for the song. The target variant must
 
 ---
 
+### Pitch Data
+
+| Method | Path                       | Description                          |
+| ------ | -------------------------- | ------------------------------------ |
+| `GET`  | `/songs/:songId/pitch/url` | Get presigned download URL for pitch |
+
+#### `GET /songs/:songId/pitch/url`
+
+Returns a short-lived presigned URL for downloading the pitch `reference.json` from R2.
+
+**Query parameters:**
+
+| Name        | Type   | Required | Description                                                             |
+| ----------- | ------ | -------- | ----------------------------------------------------------------------- |
+| `variantId` | string | No       | Target variant. When provided and valid, uses the variant's `pitchKey`. |
+
+Resolution order: if `variantId` is provided and the variant exists with a non-null `pitchKey`, that key is used. Otherwise falls back to the legacy `PitchData.storageKey` for the song.
+
+**Response (200):**
+
+```json
+{
+  "url": "https://r2.example.com/pitch/.../reference.json?X-Amz-...",
+  "expiresIn": 3600
+}
+```
+
+---
+
 ### Stems
 
 | Method | Path                               | Description                |

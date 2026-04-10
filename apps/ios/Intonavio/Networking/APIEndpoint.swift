@@ -26,7 +26,7 @@ enum APIEndpoint {
     case stemDownloadURL(songId: String, stemId: String)
 
     // Pitch
-    case pitchDownloadURL(songId: String)
+    case pitchDownloadURL(songId: String, variantId: String?)
 
     // Sessions
     case createSession(CreateSessionRequest)
@@ -51,7 +51,7 @@ enum APIEndpoint {
         case .listStems(let songId): return "/songs/\(songId)/stems"
         case .stemDownloadURL(let songId, let stemId):
             return "/songs/\(songId)/stems/\(stemId)/url"
-        case .pitchDownloadURL(let songId):
+        case let .pitchDownloadURL(songId, _):
             return "/songs/\(songId)/pitch/url"
         case .createSession: return "/sessions"
         case .listSessions: return "/sessions"
@@ -110,6 +110,9 @@ enum APIEndpoint {
                 URLQueryItem(name: "page", value: "\(page)"),
                 URLQueryItem(name: "limit", value: "\(limit)")
             ]
+        case .pitchDownloadURL(_, let variantId):
+            guard let variantId else { return nil }
+            return [URLQueryItem(name: "variantId", value: variantId)]
         default:
             return nil
         }

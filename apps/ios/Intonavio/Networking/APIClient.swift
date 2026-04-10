@@ -100,8 +100,8 @@ extension APIClient {
         try await execute(.stemDownloadURL(songId: songId, stemId: stemId))
     }
 
-    func pitchDownloadURL(songId: String) async throws -> PresignedURLResponse {
-        try await execute(.pitchDownloadURL(songId: songId))
+    func pitchDownloadURL(songId: String, variantId: String?) async throws -> PresignedURLResponse {
+        try await execute(.pitchDownloadURL(songId: songId, variantId: variantId))
     }
 
     func createSession(_ request: CreateSessionRequest) async throws -> SessionResponse {

@@ -18,7 +18,7 @@ enum PitchDataDownloader {
             return cached
         }
 
-        let response = try await apiClient.pitchDownloadURL(songId: songId)
+        let response = try await apiClient.pitchDownloadURL(songId: songId, variantId: variantId)
         guard let downloadURL = URL(string: response.url) else {
             throw PitchDownloadError.invalidURL
         }

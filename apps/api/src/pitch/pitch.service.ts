@@ -15,7 +15,26 @@ export class PitchService {
     private readonly storage: StorageService,
   ) {}
 
-  async getPresignedUrl(songId: string): Promise<PresignedUrlResponse> {
+  async getPresignedUrl(songId: string, variantId?: string): Promise<PresignedUrlResponse> {
+    const storageKey = await this.resolveStorageKey(songId, variantId);
+    const url = await this.storage.getPresignedUrl(storageKey, PRESIGNED_TTL);
+    this.logger.log('Pitch presigned URL generated', { songId, variantId });
+
+    return { url, expiresIn: PRESIGNED_TTL };
+  }
+
+  private async resolveStorageKey(songId: string, variantId?: string): Promise<string> {
+    if (variantId) {
+      const variant = await this.prisma.songVariant.findUnique({
+        where: { id: variantId },
+        select: { pitchKey: true, songId: true },
+      });
+
+      if (variant?.pitchKey && variant.songId === songId) {
+        return variant.pitchKey;
+      }
+    }
+
     const pitchData = await this.prisma.pitchData.findFirst({
       where: { songId },
     });
@@ -24,9 +43,6 @@ export class PitchService {
       throw new NotFoundException('Pitch data not found for this song');
     }
 
-    const url = await this.storage.getPresignedUrl(pitchData.storageKey, PRESIGNED_TTL);
-    this.logger.log('Pitch presigned URL generated', { songId, pitchDataId: pitchData.id });
-
-    return { url, expiresIn: PRESIGNED_TTL };
+    return pitchData.storageKey;
   }
 }
