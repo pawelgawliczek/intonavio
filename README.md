@@ -21,7 +21,15 @@ I built this because I started taking singing lessons and realized that practici
 - **Any YouTube song** - Paste a lyrics video URL. The app extracts audio and prepares it for practice.
 - **AI stem separation** - Vocals and instrumental get split automatically using the StemSplit API, so you can karaoke any song or isolate the singer to study their technique.
 - **Real-time pitch detection** - Sing into the mic and see your pitch on a piano roll, overlaid on the reference vocalist. Color-coded: green when you're close, red when you're off.
-- **Reference pitch editor** - Fix wrong notes in the AI-generated reference. Draw corrections, sing a passage to replace it with your voice, swap between Studio and Draft sources, despike, mute, shift semitones. Multi-layer overlay shows your edits against the original. Long-press any phrase during practice to jump straight into the editor.
+- **Reference pitch editor** - Fix wrong notes in the AI-generated reference. Long-press any phrase during practice to jump straight into the editor. Multi-layer canvas shows your edits (bold amber) over the original algorithm output (faded). Tools:
+  - **Draw** - Freehand draw pitch corrections directly on the piano roll. Replace or additive mode (fills unvoiced gaps only). Optional snap-to-semitone and smoothing.
+  - **Sing** - Record your voice over a selected range. 3-2-1 countdown, then live pitch capture replaces the reference with what you sang.
+  - **Use Studio / Use Draft** - Swap the reference source for a range. If the AI got it wrong with one model, try the other.
+  - **Despike** - Remove pitch spikes (octave jumps) with a configurable max-jump threshold.
+  - **Mute** - Silence a range (mark frames as unvoiced).
+  - **Fill** - Interpolate across unvoiced gaps in a range.
+  - **Shift (+1 / -1 semitone)** - Nudge pitch up or down for a selected range.
+  - Full undo/redo, operation list with swipe-to-delete, and a reset option.
 - **Synced lyrics** - Lyrics from LRCLIB displayed directly on the piano roll, synced to the music. Toggle between a full lyrics panel and the YouTube video.
 - **Offline practice** - Songs are cached automatically after first play. When you lose connectivity, the app switches to offline mode seamlessly — fullscreen piano roll with all controls, no video needed.
 - **A-B looping** - Set markers on any section, slow it down, repeat until it clicks. Speed goes from 0.25x to 4x.
