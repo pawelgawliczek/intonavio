@@ -41,25 +41,24 @@ struct ReferenceEditorPianoRoll: View {
                 Canvas { ctx, _ in
                     drawGrid(ctx, geometry: geometry)
                     drawTimeMarkers(ctx, geometry: geometry)
-                    // Edited (amber) first — behind so other layers show on top
-                    drawFramePath(ctx, geometry: geometry,
-                                  frames: viewModel.previewFrames,
-                                  color: .intonavioAmber, lineWidth: 2.5)
-                    // Base layer on top of edited (only when edits exist, otherwise identical)
+                    // Base + other variants behind, thin and faded
                     if viewModel.showBaseLayer, viewModel.isDirty {
-                        let baseColor = viewModel.baseSource?.editorColor ?? .blue
+                        let baseColor = (viewModel.baseSource?.editorColor ?? .blue).opacity(0.35)
                         drawFramePath(ctx, geometry: geometry,
                                       frames: viewModel.baseFrames,
-                                      color: baseColor, lineWidth: 1.5)
+                                      color: baseColor, lineWidth: 1)
                     }
-                    // Other variants on top
                     if viewModel.showOtherVariantLayer {
                         for (source, frames) in viewModel.otherVariantFrames {
                             drawFramePath(ctx, geometry: geometry,
                                           frames: frames,
-                                          color: source.editorColor, lineWidth: 1.5)
+                                          color: source.editorColor.opacity(0.35), lineWidth: 1)
                         }
                     }
+                    // Edited on top — bold and bright
+                    drawFramePath(ctx, geometry: geometry,
+                                  frames: viewModel.previewFrames,
+                                  color: .intonavioAmber, lineWidth: 3)
                     drawRange(ctx, geometry: geometry)
                     drawCursor(ctx, geometry: geometry)
                     drawStroke(ctx, geometry: geometry)

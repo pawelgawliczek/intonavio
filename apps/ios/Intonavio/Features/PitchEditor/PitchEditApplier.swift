@@ -28,6 +28,8 @@ enum PitchEditApplier {
             case .addPassage(_, _, let opFrames, let mode):
                 applyAddPassage(&frames, lo: lo, hi: hi, opFrames: opFrames,
                                 mode: mode, hopDuration: hopDuration)
+            case .fillGaps:
+                applyFillGaps(&frames, lo: lo, hi: hi)
             }
         }
         return frames
@@ -227,5 +229,73 @@ enum PitchEditApplier {
             }
         }
         return best
+    }
+
+    /// A frame counts as "visible" (drawn on the piano roll) when it is
+    /// voiced AND its RMS is above the audibility threshold.  Fill Gaps
+    /// must treat non-visible frames the same as unvoiced ones so that
+    /// the visual gaps the user sees actually get filled.
+    private static func isVisible(_ f: ReferencePitchFrame) -> Bool {
+        f.isVoiced && f.isAudible && f.frequency != nil
+    }
+
+    private static func nearestVisible(
+        _ frames: [ReferencePitchFrame],
+        from index: Int,
+        step: Int
+    ) -> (Double, Double, Int)? {
+        var i = index + step
+        while i >= 0 && i < frames.count {
+            let f = frames[i]
+            if isVisible(f), let hz = f.frequency, let midi = f.midiNote {
+                return (hz, midi, i)
+            }
+            i += step
+        }
+        return nil
+    }
+
+    private static func applyFillGaps(
+        _ frames: inout [ReferencePitchFrame],
+        lo: Int,
+        hi: Int
+    ) {
+        // Two-pass: first collect all gap runs within [lo, hi),
+        // then interpolate each using anchors from the full array.
+        // A "gap" is any frame that is not visible (unvoiced OR low RMS).
+        var gaps: [(start: Int, end: Int)] = []
+        var i = lo
+        while i < hi {
+            if !isVisible(frames[i]) {
+                let gapStart = i
+                while i < hi && !isVisible(frames[i]) { i += 1 }
+                gaps.append((start: gapStart, end: i))
+            } else {
+                i += 1
+            }
+        }
+        for gap in gaps {
+            guard let (leftHz, leftMidi, leftIdx) = nearestVisible(frames, from: gap.start, step: -1)
+            else { continue }
+            let searchBase = max(0, gap.end - 1)
+            guard let (rightHz, rightMidi, rightIdx) = nearestVisible(frames, from: searchBase, step: 1)
+            else { continue }
+            guard rightIdx > leftIdx else { continue }
+            let span = Double(rightIdx - leftIdx)
+            // Use the average RMS of the two anchors for filled frames
+            let anchorRms = ((frames[leftIdx].rms ?? 0.05) + (frames[rightIdx].rms ?? 0.05)) / 2
+            for j in gap.start..<gap.end {
+                let t = Double(j - leftIdx) / span
+                let hz = leftHz + (rightHz - leftHz) * t
+                let midi = leftMidi + (rightMidi - leftMidi) * t
+                frames[j] = ReferencePitchFrame(
+                    time: frames[j].time,
+                    frequency: hz,
+                    isVoiced: true,
+                    midiNote: midi,
+                    rms: anchorRms
+                )
+            }
+        }
     }
 }

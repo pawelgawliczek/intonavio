@@ -146,9 +146,13 @@ private extension SongPracticeView {
             songDuration: vm.duration,
             hopDuration: base?.hopDuration ?? vm.referenceStore.hopDuration,
             baseFrames: base?.frames ?? [],
+            baseSampleRate: base?.sampleRate ?? 44100,
+            baseHopSize: base?.hopSize ?? 512,
+            basePhrases: base?.phrases ?? [],
             variants: vm.variants,
             scoreRepository: vm.scoreRepository,
-            initialTime: editorInitialTime,
+            initialTime: editorInitialTime ?? vm.currentTime,
+            selectRangeOnOpen: editorInitialTime != nil,
             onSaved: {
                 vm.loadPitchDataIfAvailable()
                 editorInitialTime = nil

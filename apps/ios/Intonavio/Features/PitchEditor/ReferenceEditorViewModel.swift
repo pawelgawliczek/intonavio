@@ -16,6 +16,9 @@ final class ReferenceEditorViewModel {
     let hopDuration: Double
     let songDuration: Double
     let baseFrames: [ReferencePitchFrame]
+    let baseSampleRate: Int
+    let baseHopSize: Int
+    let basePhrases: [ReferencePhraseInfo]
 
     var otherVariantFrames: [StemSource: [ReferencePitchFrame]] = [:]
     var availableOtherSources: [StemSource] = []
@@ -47,6 +50,11 @@ final class ReferenceEditorViewModel {
     @ObservationIgnored var audioPlayer: AVAudioPlayer?
     @ObservationIgnored var pollTask: Task<Void, Never>?
 
+    // Phase D: sing-to-record state
+    var isRecording: Bool = false
+    var recordingCountdown: Int = 0
+    var recordingProgress: Double = 0
+
     // Layer visibility
     var showBaseLayer: Bool = true
     var showOtherVariantLayer: Bool = true
@@ -64,6 +72,9 @@ final class ReferenceEditorViewModel {
         hopDuration: Double,
         songDuration: Double,
         baseFrames: [ReferencePitchFrame],
+        baseSampleRate: Int,
+        baseHopSize: Int,
+        basePhrases: [ReferencePhraseInfo],
         variants: [SongVariant],
         onSavedScoreWipe: @escaping (String) -> Void
     ) {
@@ -72,6 +83,9 @@ final class ReferenceEditorViewModel {
         self.hopDuration = hopDuration
         self.songDuration = songDuration
         self.baseFrames = baseFrames
+        self.baseSampleRate = baseSampleRate
+        self.baseHopSize = baseHopSize
+        self.basePhrases = basePhrases
         self.variants = variants
         self.onSavedScoreWipe = onSavedScoreWipe
 
@@ -202,15 +216,28 @@ final class ReferenceEditorViewModel {
     func save() async throws {
         isSaving = true
         defer { isSaving = false }
+        let now = Date()
         let script = PitchEditScript(
             songId: songId,
             baseVariantId: baseVariantId,
             operations: operations,
-            updatedAt: Date()
+            updatedAt: now
         )
         try PitchEditScriptStore.save(script)
         onSavedScoreWipe(songId)
+
+        // Write preview frames directly to cache so practice loads instantly.
+        let mergedData = ReferencePitchData(
+            songId: songId,
+            sampleRate: baseSampleRate,
+            hopSize: baseHopSize,
+            frameCount: previewFrames.count,
+            hopDuration: hopDuration,
+            frames: previewFrames,
+            phrases: basePhrases
+        )
         MergedFrameCache.invalidate(songId: songId)
+        MergedFrameCache.save(songId: songId, updatedAt: now, data: mergedData)
         AppLogger.pitch.info("Reference edit script saved for \(self.songId)")
     }
 

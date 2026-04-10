@@ -8,7 +8,6 @@ struct ReferenceEditorToolbar: View {
     @State private var isShowingResetConfirm = false
 
     private var baseSource: StemSource? {
-        // Base variant source is whatever is not in availableOtherSources among the two.
         let others = Set(viewModel.availableOtherSources)
         return StemSource.allCases.first { !others.contains($0) }
     }
@@ -23,42 +22,12 @@ struct ReferenceEditorToolbar: View {
             if viewModel.gesture == .draw {
                 drawControls
             }
-            HStack(spacing: 8) {
-                variantButton(.studio)
-                variantButton(.draft)
-                opButton("Despike", systemImage: "waveform.path") {
-                    isShowingDespike = true
-                }
-                opButton("Mute", systemImage: "speaker.slash") {
-                    addRangeOp { range in .mute(id: UUID(), range: range) }
-                }
-            }
+            opGrid
             if viewModel.availableOtherSources.isEmpty {
                 Text("Process the alternate variant to swap sources for a range.")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            HStack(spacing: 8) {
-                opButton("+1 st", systemImage: "arrow.up") {
-                    addRangeOp { range in
-                        .shiftSemitones(id: UUID(), range: range, semitones: 1)
-                    }
-                }
-                opButton("-1 st", systemImage: "arrow.down") {
-                    addRangeOp { range in
-                        .shiftSemitones(id: UUID(), range: range, semitones: -1)
-                    }
-                }
-                Button(role: .destructive) {
-                    isShowingResetConfirm = true
-                } label: {
-                    Label("Reset", systemImage: "trash")
-                        .font(.caption.weight(.semibold))
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.bordered)
-                .disabled(viewModel.operations.isEmpty)
             }
         }
         .padding()
@@ -74,6 +43,89 @@ struct ReferenceEditorToolbar: View {
         }
         .sheet(isPresented: $isShowingDespike) { despikeSheet }
     }
+
+    // MARK: - Op Grid
+
+    private var opGrid: some View {
+        let columns = Array(repeating: GridItem(.flexible(), spacing: 6), count: 5)
+        return LazyVGrid(columns: columns, spacing: 6) {
+            variantCell(.studio)
+            variantCell(.draft)
+            opCell("Despike", icon: "waveform.path") { isShowingDespike = true }
+            opCell("Mute", icon: "speaker.slash") {
+                addRangeOp { range in .mute(id: UUID(), range: range) }
+            }
+            opCell("Fill", icon: "line.diagonal") {
+                addRangeOp { range in .fillGaps(id: UUID(), range: range) }
+            }
+            opCell("Sing", icon: "mic", tint: viewModel.isRecording ? .red : nil) {
+                viewModel.startSinging()
+            }
+            .disabled(viewModel.isRecording)
+            opCell("+1 st", icon: "arrow.up") {
+                addRangeOp { range in .shiftSemitones(id: UUID(), range: range, semitones: 1) }
+            }
+            opCell("-1 st", icon: "arrow.down") {
+                addRangeOp { range in .shiftSemitones(id: UUID(), range: range, semitones: -1) }
+            }
+            Button(role: .destructive) {
+                isShowingResetConfirm = true
+            } label: {
+                VStack(spacing: 2) {
+                    Image(systemName: "trash")
+                        .font(.body)
+                    Text("Reset")
+                        .font(.caption2)
+                }
+                .frame(maxWidth: .infinity, minHeight: 40)
+            }
+            .buttonStyle(.bordered)
+            .disabled(viewModel.operations.isEmpty)
+        }
+    }
+
+    // MARK: - Cells
+
+    private func opCell(
+        _ title: String,
+        icon: String,
+        tint: Color? = nil,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            VStack(spacing: 2) {
+                Image(systemName: icon)
+                    .font(.body)
+                Text(title)
+                    .font(.caption2)
+            }
+            .frame(maxWidth: .infinity, minHeight: 40)
+        }
+        .buttonStyle(.bordered)
+        .tint(tint)
+        .disabled(!viewModel.hasRange)
+    }
+
+    private func variantCell(_ source: StemSource) -> some View {
+        let isBase = source == baseSource
+        let loaded = viewModel.availableOtherSources.contains(source)
+        let disabled = isBase || !loaded || !viewModel.hasRange
+        return Button {
+            addRangeOp { range in .useVariant(id: UUID(), range: range, source: source) }
+        } label: {
+            VStack(spacing: 2) {
+                Image(systemName: "arrow.triangle.2.circlepath")
+                    .font(.body)
+                Text(source.displayName)
+                    .font(.caption2)
+            }
+            .frame(maxWidth: .infinity, minHeight: 40)
+        }
+        .buttonStyle(.borderedProminent)
+        .disabled(disabled)
+    }
+
+    // MARK: - Draw Controls
 
     private var drawControls: some View {
         VStack(spacing: 6) {
@@ -98,36 +150,7 @@ struct ReferenceEditorToolbar: View {
         }
     }
 
-    private func variantButton(_ source: StemSource) -> some View {
-        let isBase = source == baseSource
-        let loaded = viewModel.availableOtherSources.contains(source)
-        let disabled = isBase || !loaded || !viewModel.hasRange
-        return Button {
-            addRangeOp { range in
-                .useVariant(id: UUID(), range: range, source: source)
-            }
-        } label: {
-            Label("Use \(source.displayName)", systemImage: "arrow.triangle.2.circlepath")
-                .font(.caption.weight(.semibold))
-                .frame(maxWidth: .infinity)
-        }
-        .buttonStyle(.borderedProminent)
-        .disabled(disabled)
-    }
-
-    private func opButton(
-        _ title: String,
-        systemImage: String,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            Label(title, systemImage: systemImage)
-                .font(.caption.weight(.semibold))
-                .frame(maxWidth: .infinity)
-        }
-        .buttonStyle(.bordered)
-        .disabled(!viewModel.hasRange)
-    }
+    // MARK: - Helpers
 
     private func addRangeOp(_ make: (TimeRange) -> PitchEditOp) {
         guard let range = viewModel.currentRange else { return }

@@ -9,9 +9,13 @@ struct ReferenceEditorView: View {
     let songDuration: Double
     let hopDuration: Double
     let baseFrames: [ReferencePitchFrame]
+    let baseSampleRate: Int
+    let baseHopSize: Int
+    let basePhrases: [ReferencePhraseInfo]
     let variants: [SongVariant]
     let scoreRepository: ScoreRepository?
     var initialTime: Double?
+    var selectRangeOnOpen: Bool = false
     let onSaved: () -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -63,6 +67,9 @@ struct ReferenceEditorView: View {
             hopDuration: hopDuration,
             songDuration: songDuration,
             baseFrames: baseFrames,
+            baseSampleRate: baseSampleRate,
+            baseHopSize: baseHopSize,
+            basePhrases: basePhrases,
             variants: variants,
             onSavedScoreWipe: { [scoreRepository] songId in
                 scoreRepository?.deleteAllScores(songId: songId)
@@ -70,9 +77,11 @@ struct ReferenceEditorView: View {
             }
         )
         if let t = initialTime {
-            vm.setRangeStart(max(0, t - 2))
-            vm.setRangeEnd(min(songDuration, t + 2))
             vm.setScrollCenter(t)
+            if selectRangeOnOpen {
+                vm.setRangeStart(max(0, t - 2))
+                vm.setRangeEnd(min(songDuration, t + 2))
+            }
         }
         viewModel = vm
     }
@@ -83,8 +92,13 @@ struct ReferenceEditorView: View {
             playbackBar(vm)
             rangeHeader(vm)
             Divider()
-            ReferenceEditorPianoRoll(viewModel: vm)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            ZStack {
+                ReferenceEditorPianoRoll(viewModel: vm)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                if vm.isRecording {
+                    recordingOverlay(vm)
+                }
+            }
             Divider()
             ReferenceEditorToolbar(viewModel: vm)
         }
@@ -193,6 +207,33 @@ struct ReferenceEditorView: View {
                 }
             }
         }
+    }
+
+    @ViewBuilder
+    private func recordingOverlay(_ vm: ReferenceEditorViewModel) -> some View {
+        VStack(spacing: 16) {
+            if vm.recordingCountdown > 0 {
+                Text("\(vm.recordingCountdown)")
+                    .font(.system(size: 72, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+            } else {
+                Image(systemName: "mic.fill")
+                    .font(.system(size: 48))
+                    .foregroundStyle(.red)
+                    .symbolEffect(.pulse, isActive: true)
+                ProgressView(value: vm.recordingProgress)
+                    .tint(.red)
+                    .frame(width: 200)
+                Text("Singing...")
+                    .font(.headline)
+                    .foregroundStyle(.white)
+            }
+            Button("Cancel") { vm.cancelSinging() }
+                .buttonStyle(.borderedProminent)
+                .tint(.gray)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(.black.opacity(0.6))
     }
 
     private func performSave() async {

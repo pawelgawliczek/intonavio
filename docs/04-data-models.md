@@ -438,7 +438,7 @@ Caches/pitch-merged/
   {songId}-{epochMs}.json                  // Materialized merged ReferencePitchData (rebuilt on script change)
 ```
 
-`PitchEditScript.operations` is an ordered list of `PitchEditOp` cases: `useVariant`, `despike`, `mute`, `shiftOctave`, `addPassage` (replace or additive). `PitchEditApplier` reduces them over the base frames, falling back to a sibling variant when `useVariant` is used. Saving a script wipes all `Score` rows + `BestTake` for that song. See `docs/16-ui-views-flow.md` (Reference Editor) and the `Features/PitchEditor/` module.
+`PitchEditScript.operations` is an ordered list of `PitchEditOp` cases: `useVariant`, `despike`, `mute`, `shiftSemitones`, `fillGaps`, `addPassage` (replace or additive — the Sing tool creates addPassage ops from live YIN capture). `PitchEditApplier` reduces them over the base frames, falling back to a sibling variant when `useVariant` is used. Saving a script wipes all `Score` rows + `BestTake` for that song and writes merged frames to cache for immediate reflection in practice. See `docs/16-ui-views-flow.md` (Reference Editor) and the `Features/PitchEditor/` module.
 
 ---
 

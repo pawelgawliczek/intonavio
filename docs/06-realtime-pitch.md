@@ -345,7 +345,7 @@ flowchart TD
     Edit --> H[Piano Roll + Scoring<br/>identical pipeline]
 ```
 
-For songs, an optional local `PitchEditScript` (see `docs/04-data-models.md`) is reduced over the loaded `reference.json` by `PitchEditApplier` before frames reach the store. The applier may pull a sibling variant's frames for `useVariant` ranges. The merged result is cached under `Caches/pitch-merged/`. When no script exists the path is a no-op — server frames load directly.
+For songs, an optional local `PitchEditScript` (see `docs/04-data-models.md`) is reduced over the loaded `reference.json` by `PitchEditApplier` before frames reach the store. The applier may pull a sibling variant's frames for `useVariant` ranges, and can insert frames from the **Sing** tool (live YIN capture via `PitchDetector` during an editor recording session, stored as `addPassage` ops). The merged result is cached under `Caches/pitch-merged/`. When the editor saves, it writes the merged frames directly to cache so practice reflects changes immediately without a re-merge step. When no script exists the path is a no-op — server frames load directly.
 
 ### Exercise Pitch Data Generation
 
