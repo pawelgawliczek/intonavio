@@ -78,8 +78,11 @@ def _process_job(job_data: PitchAnalysisJobData, config: WorkerConfig) -> None:
         # gate still fires via pyin_voiced_thresh.
         pyin_cands = [PitchCandidate(hz=f.hz, confidence=1.0 if f.voiced else 0.0) for f in frames]
 
-        pyin_hop = config.pyin_hop_length / config.pyin_sample_rate
-        aligned_rmvpe = align_candidates(rmvpe_cands, RMVPE_HOP_SECONDS, len(pyin_cands), pyin_hop)
+        if config.pitch_estimator == "pesto":
+            primary_hop = config.pesto_step_size_ms / 1000.0
+        else:
+            primary_hop = config.pyin_hop_length / config.pyin_sample_rate
+        aligned_rmvpe = align_candidates(rmvpe_cands, RMVPE_HOP_SECONDS, len(pyin_cands), primary_hop)
 
         reconciled = reconcile_tracks(
             pyin_cands,
@@ -98,7 +101,7 @@ def _process_job(job_data: PitchAnalysisJobData, config: WorkerConfig) -> None:
 
         from src.reconcile import ReconciledFrame
 
-        anchor_window = max(1, int(0.5 / pyin_hop))
+        anchor_window = max(1, int(0.5 / primary_hop))
         max_anchor_semitones = 7.0  # > perfect-fifth from nearest vocal anchor → instrument
         pyin_anchor_hz: list[float | None] = [
             c.hz if (c.hz is not None and c.confidence >= config.pyin_voiced_prob_thresh) else None
@@ -165,8 +168,10 @@ def _process_job(job_data: PitchAnalysisJobData, config: WorkerConfig) -> None:
         # bass/guitar bleed during vocal rests. When both pYIN and RMVPE
         # agree on a sub-vocal pitch but no vocal-range frame exists nearby,
         # it's almost certainly an instrument — demote.
-        bass_hz_max = 130.0  # ~C3, below typical vocal melody
-        bass_window = max(1, int(0.5 / pyin_hop))
+        # Note: 130 Hz was too aggressive — Disturbed's SoS has legitimate
+        # B2 vocals at ~123 Hz. Use 85 Hz (~E2) to avoid gating low baritones.
+        bass_hz_max = 85.0  # ~E2, safely below baritone range
+        bass_window = max(1, int(0.5 / primary_hop))
         hz_list = [f.hz for f in new_frames]
 
         def has_vocal_anchor(idx: int) -> bool:
