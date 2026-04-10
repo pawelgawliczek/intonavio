@@ -21,6 +21,7 @@ I built this because I started taking singing lessons and realized that practici
 - **Any YouTube song** - Paste a lyrics video URL. The app extracts audio and prepares it for practice.
 - **AI stem separation** - Vocals and instrumental get split automatically using the StemSplit API, so you can karaoke any song or isolate the singer to study their technique.
 - **Real-time pitch detection** - Sing into the mic and see your pitch on a piano roll, overlaid on the reference vocalist. Color-coded: green when you're close, red when you're off.
+- **Reference pitch editor** - Fix wrong notes in the AI-generated reference. Draw corrections, sing a passage to replace it with your voice, swap between Studio and Draft sources, despike, mute, shift semitones. Multi-layer overlay shows your edits against the original. Long-press any phrase during practice to jump straight into the editor.
 - **Synced lyrics** - Lyrics from LRCLIB displayed directly on the piano roll, synced to the music. Toggle between a full lyrics panel and the YouTube video.
 - **Offline practice** - Songs are cached automatically after first play. When you lose connectivity, the app switches to offline mode seamlessly — fullscreen piano roll with all controls, no video needed.
 - **A-B looping** - Set markers on any section, slow it down, repeat until it clicks. Speed goes from 0.25x to 4x.
@@ -34,7 +35,7 @@ I built this because I started taking singing lessons and realized that practici
 
 1. You paste a YouTube URL
 2. The API extracts audio and sends it to StemSplit for stem separation
-3. A Python worker analyzes the vocal stem with pYIN to build a reference pitch graph
+3. A Python worker analyzes the vocal stem with PESTO (self-supervised pitch estimation) to build a reference pitch graph
 4. The iOS app downloads the stems and pitch data, plays the song, listens to your mic, and scores you in real time
 
 ```
@@ -57,7 +58,7 @@ Web App (Next.js)   ─┘        │
 | API            | NestJS, TypeScript, Prisma, BullMQ               |
 | Database       | PostgreSQL 16                                    |
 | Queue          | Redis 7 (BullMQ)                                 |
-| Pitch worker   | Python 3.11, librosa, pYIN                       |
+| Pitch worker   | Python 3.11, PESTO, librosa                      |
 | Storage        | Cloudflare R2                                    |
 | Auth           | Apple Sign In, Google OAuth, Email/Password, JWT |
 | Infrastructure | Docker Compose, Caddy, GitHub Actions            |
