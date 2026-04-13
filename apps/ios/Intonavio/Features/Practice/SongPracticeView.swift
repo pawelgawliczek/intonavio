@@ -239,10 +239,10 @@ private extension SongPracticeView {
                 standardLayout(vm)
             }
 
-            if !vm.isPlayerReady {
+            if !isLoadingComplete(vm) {
                 loadingOverlay
                     .transition(.opacity)
-                    .animation(.easeOut(duration: 0.3), value: vm.isPlayerReady)
+                    .animation(.easeOut(duration: 0.3), value: isLoadingComplete(vm))
             }
         }
     }
@@ -457,6 +457,13 @@ private extension SongPracticeView {
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
         .background(Color.intonavioSurface.opacity(0.9), in: Capsule())
+    }
+
+    func isLoadingComplete(_ vm: PracticeViewModel) -> Bool {
+        let playerDone = vm.isOffline || vm.isPlayerReady
+        let stemsDone = vm.stems.isEmpty || vm.isStemsReady
+        let pitchDone = !hasPitchData || vm.isPitchReady
+        return playerDone && stemsDone && pitchDone
     }
 
     var loadingOverlay: some View {
