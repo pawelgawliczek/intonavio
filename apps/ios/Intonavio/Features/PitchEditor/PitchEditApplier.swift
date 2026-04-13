@@ -1,6 +1,6 @@
 import Foundation
 
-/// Pure applier that folds a `PitchEditScript` onto a base frame array.
+/// Folds a `PitchEditScript` onto a base frame array. Refine in separate file.
 enum PitchEditApplier {
     static func apply(
         base: [ReferencePitchFrame],
@@ -30,6 +30,8 @@ enum PitchEditApplier {
                                 mode: mode, hopDuration: hopDuration)
             case .fillGaps:
                 applyFillGaps(&frames, lo: lo, hi: hi)
+            case .refine:
+                applyRefine(&frames, lo: lo, hi: hi, base: base)
             }
         }
         return frames
@@ -231,11 +233,8 @@ enum PitchEditApplier {
         return best
     }
 
-    /// A frame counts as "visible" (drawn on the piano roll) when it is
-    /// voiced AND its RMS is above the audibility threshold.  Fill Gaps
-    /// must treat non-visible frames the same as unvoiced ones so that
-    /// the visual gaps the user sees actually get filled.
-    private static func isVisible(_ f: ReferencePitchFrame) -> Bool {
+    /// Visible = voiced + audible RMS + has frequency. Used by Fill Gaps and Refine.
+    static func isVisible(_ f: ReferencePitchFrame) -> Bool {
         f.isVoiced && f.isAudible && f.frequency != nil
     }
 

@@ -21,6 +21,7 @@ enum PitchEditOp: Codable, Sendable, Identifiable, Equatable {
     case shiftSemitones(id: UUID, range: TimeRange, semitones: Int)
     case addPassage(id: UUID, range: TimeRange, frames: [ReferencePitchFrame], mode: DrawMode)
     case fillGaps(id: UUID, range: TimeRange)
+    case refine(id: UUID, range: TimeRange)
 
     var id: UUID {
         switch self {
@@ -30,7 +31,8 @@ enum PitchEditOp: Codable, Sendable, Identifiable, Equatable {
              .shiftOctave(let id, _, _),
              .shiftSemitones(let id, _, _),
              .addPassage(let id, _, _, _),
-             .fillGaps(let id, _):
+             .fillGaps(let id, _),
+             .refine(let id, _):
             return id
         }
     }
@@ -43,7 +45,8 @@ enum PitchEditOp: Codable, Sendable, Identifiable, Equatable {
              .shiftOctave(_, let r, _),
              .shiftSemitones(_, let r, _),
              .addPassage(_, let r, _, _),
-             .fillGaps(_, let r):
+             .fillGaps(_, let r),
+             .refine(_, let r):
             return r
         }
     }
@@ -57,11 +60,12 @@ enum PitchEditOp: Codable, Sendable, Identifiable, Equatable {
         case .shiftSemitones(_, _, let st): return "Shift \(st > 0 ? "+" : "")\(st) st"
         case .addPassage(_, _, _, let mode): return "Draw (\(mode.rawValue))"
         case .fillGaps: return "Fill Gaps"
+        case .refine: return "Refine"
         }
     }
 
     private enum Kind: String, Codable {
-        case useVariant, despike, mute, shiftOctave, shiftSemitones, addPassage, fillGaps
+        case useVariant, despike, mute, shiftOctave, shiftSemitones, addPassage, fillGaps, refine
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -94,6 +98,8 @@ enum PitchEditOp: Codable, Sendable, Identifiable, Equatable {
             self = .addPassage(id: id, range: range, frames: frames, mode: mode)
         case .fillGaps:
             self = .fillGaps(id: id, range: range)
+        case .refine:
+            self = .refine(id: id, range: range)
         }
     }
 
@@ -122,6 +128,8 @@ enum PitchEditOp: Codable, Sendable, Identifiable, Equatable {
             try c.encode(mode, forKey: .mode)
         case .fillGaps:
             try c.encode(Kind.fillGaps, forKey: .type)
+        case .refine:
+            try c.encode(Kind.refine, forKey: .type)
         }
     }
 }

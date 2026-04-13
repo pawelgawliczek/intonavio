@@ -95,14 +95,17 @@ struct ReferenceEditorView: View {
             ZStack {
                 ReferenceEditorPianoRoll(viewModel: vm)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                if vm.isRecording {
-                    recordingOverlay(vm)
+                if vm.isSingLooping {
+                    singLoopOverlay(vm)
                 }
             }
             Divider()
             ReferenceEditorToolbar(viewModel: vm)
         }
-        .onDisappear { vm.stopPlayback() }
+        .onDisappear {
+            vm.cancelSingLoop()
+            vm.stopPlayback()
+        }
     }
 
     private func playbackBar(_ vm: ReferenceEditorViewModel) -> some View {
@@ -210,13 +213,16 @@ struct ReferenceEditorView: View {
     }
 
     @ViewBuilder
-    private func recordingOverlay(_ vm: ReferenceEditorViewModel) -> some View {
+    private func singLoopOverlay(_ vm: ReferenceEditorViewModel) -> some View {
         VStack(spacing: 16) {
-            if vm.recordingCountdown > 0 {
-                Text("\(vm.recordingCountdown)")
+            switch vm.singLoopPhase {
+            case .idle:
+                EmptyView()
+            case .countdown(let n):
+                Text("\(n)")
                     .font(.system(size: 72, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
-            } else {
+            case .recording:
                 Image(systemName: "mic.fill")
                     .font(.system(size: 48))
                     .foregroundStyle(.red)
@@ -224,13 +230,34 @@ struct ReferenceEditorView: View {
                 ProgressView(value: vm.recordingProgress)
                     .tint(.red)
                     .frame(width: 200)
-                Text("Singing...")
+                Text("Pass \(vm.singLoopCount + 1)")
                     .font(.headline)
                     .foregroundStyle(.white)
+            case .reviewing:
+                Image(systemName: "checkmark.circle")
+                    .font(.system(size: 48))
+                    .foregroundStyle(.green)
+                Text("Pass \(vm.singLoopCount)")
+                    .font(.headline)
+                    .foregroundStyle(.white)
+                HStack(spacing: 16) {
+                    Button("Use This Take") { vm.confirmSingLoop() }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.green)
+                    Button("Retake") { vm.retakeSingLoop() }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.orange)
+                }
             }
-            Button("Cancel") { vm.cancelSinging() }
-                .buttonStyle(.borderedProminent)
-                .tint(.gray)
+            if vm.singLoopPhase != .reviewing {
+                Button("Cancel") { vm.cancelSingLoop() }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.gray)
+            } else {
+                Button("Discard") { vm.cancelSingLoop() }
+                    .buttonStyle(.bordered)
+                    .tint(.gray)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(.black.opacity(0.6))

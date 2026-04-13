@@ -32,6 +32,8 @@
 		A1B2C3D4E5F60718293A4B38 /* ReferenceEditorSingTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B36 /* ReferenceEditorSingTool.swift */; };
 		A1B2C3D4E5F60718293A4B14 /* PracticeViewModel+PitchEdit.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B13 /* PracticeViewModel+PitchEdit.swift */; };
 		A1B2C3D4E5F60718293A4B15 /* PracticeViewModel+PitchEdit.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B13 /* PracticeViewModel+PitchEdit.swift */; };
+		A1B2C3D4E5F60718293A4B3A /* PitchEditApplierRefine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B39 /* PitchEditApplierRefine.swift */; };
+		A1B2C3D4E5F60718293A4B3B /* PitchEditApplierRefine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B39 /* PitchEditApplierRefine.swift */; };
 		D401D7E0A4C805B300DB65F2 /* OnboardingContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B6F21F780CEC51E0A9E156F /* OnboardingContainerView.swift */; };
 		C177D7C86E1D638285035984 /* OnboardingContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B6F21F780CEC51E0A9E156F /* OnboardingContainerView.swift */; };
 		CE0CAB7F7084EA254CAE181F /* OnboardingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3881CB6B7AEF1C4CAB39BC9E /* OnboardingViewModel.swift */; };
@@ -391,6 +393,7 @@
 		A1B2C3D4E5F60718293A4B36 /* ReferenceEditorSingTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReferenceEditorSingTool.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F60718293A4B33 /* ReferenceEditorLegend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReferenceEditorLegend.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F60718293A4B13 /* PracticeViewModel+PitchEdit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PracticeViewModel+PitchEdit.swift"; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B39 /* PitchEditApplierRefine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchEditApplierRefine.swift; sourceTree = "<group>"; };
 		4B6F21F780CEC51E0A9E156F /* OnboardingContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingContainerView.swift; sourceTree = "<group>"; };
 		3881CB6B7AEF1C4CAB39BC9E /* OnboardingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModel.swift; sourceTree = "<group>"; };
 		0C16E81C922F66717145E315 /* WelcomeStepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeStepView.swift; sourceTree = "<group>"; };
@@ -832,6 +835,7 @@
 			isa = PBXGroup;
 			children = (
 				A1B2C3D4E5F60718293A4B07 /* PitchEditApplier.swift */,
+				A1B2C3D4E5F60718293A4B39 /* PitchEditApplierRefine.swift */,
 				A1B2C3D4E5F60718293A4B01 /* PitchEditScript.swift */,
 				A1B2C3D4E5F60718293A4B04 /* PitchEditScriptStore.swift */,
 				A1B2C3D4E5F60718293A4B10 /* MergedFrameCache.swift */,
@@ -1274,6 +1278,7 @@
 				A1B2C3D4E5F60718293A4B02 /* PitchEditScript.swift in Sources */,
 				A1B2C3D4E5F60718293A4B05 /* PitchEditScriptStore.swift in Sources */,
 				A1B2C3D4E5F60718293A4B08 /* PitchEditApplier.swift in Sources */,
+				A1B2C3D4E5F60718293A4B3A /* PitchEditApplierRefine.swift in Sources */,
 				A1B2C3D4E5F60718293A4B11 /* MergedFrameCache.swift in Sources */,
 				A1B2C3D4E5F60718293A4B21 /* ReferenceEditorView.swift in Sources */,
 				A1B2C3D4E5F60718293A4B24 /* ReferenceEditorViewModel.swift in Sources */,
@@ -1432,6 +1437,7 @@
 				A1B2C3D4E5F60718293A4B03 /* PitchEditScript.swift in Sources */,
 				A1B2C3D4E5F60718293A4B06 /* PitchEditScriptStore.swift in Sources */,
 				A1B2C3D4E5F60718293A4B09 /* PitchEditApplier.swift in Sources */,
+				A1B2C3D4E5F60718293A4B3B /* PitchEditApplierRefine.swift in Sources */,
 				A1B2C3D4E5F60718293A4B12 /* MergedFrameCache.swift in Sources */,
 				A1B2C3D4E5F60718293A4B22 /* ReferenceEditorView.swift in Sources */,
 				A1B2C3D4E5F60718293A4B25 /* ReferenceEditorViewModel.swift in Sources */,

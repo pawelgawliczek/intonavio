@@ -42,6 +42,7 @@ final class PitchEditApplierTests: XCTestCase {
             .addPassage(id: UUID(), range: TimeRange(start: 0.4, end: 0.5),
                         frames: passage, mode: .replace),
             .fillGaps(id: UUID(), range: TimeRange(start: 0.5, end: 0.6)),
+            .refine(id: UUID(), range: TimeRange(start: 0.6, end: 0.7)),
         ]
         let script = makeScript(ops: ops)
         let enc = JSONEncoder()
@@ -388,5 +389,96 @@ final class PitchEditApplierTests: XCTestCase {
             let expected = leftHz + (rHz - leftHz) * t
             XCTAssertEqual(out[i].frequency ?? -1, expected, accuracy: 0.01)
         }
+    }
+
+    // MARK: - Refine
+
+    func testRefineKeepsCorrectRawFrames() {
+        // Base at 220 Hz, shift octave up (to 440), then refine
+        // Raw base is already at 220 Hz. After shift, anchors are 440 Hz.
+        // Refine should see raw (220) is ~12 st below anchor (440) → octave correct to 440.
+        let base = makeBase(hz: 220.0)
+        let ops: [PitchEditOp] = [
+            .shiftOctave(id: UUID(), range: TimeRange(start: 0.2, end: 0.5), octaves: 1),
+            .refine(id: UUID(), range: TimeRange(start: 0.2, end: 0.5)),
+        ]
+        let out = PitchEditApplier.apply(
+            base: base, hopDuration: hop, otherVariants: [:],
+            script: makeScript(ops: ops)
+        )
+        // Refined frames should be octave-corrected raw → 440 Hz
+        for i in 20..<50 {
+            XCTAssertEqual(out[i].frequency ?? -1, 440.0, accuracy: eps)
+        }
+    }
+
+    func testRefineFixesOctaveUpError() {
+        // Base has an octave-up error at frame 30: 440 Hz instead of 220 Hz
+        var base = makeBase(hz: 220.0)
+        let errorMidi = 69.0 + 12.0 * log2(440.0 / 440.0)
+        base[30] = ReferencePitchFrame(
+            time: 0.3, frequency: 440.0, isVoiced: true,
+            midiNote: errorMidi, rms: 0.1
+        )
+        // First despike to set the correct anchor, then refine
+        let ops: [PitchEditOp] = [
+            .despike(id: UUID(), range: TimeRange(start: 0.2, end: 0.4), maxJumpSemitones: 4),
+            .refine(id: UUID(), range: TimeRange(start: 0.2, end: 0.4)),
+        ]
+        let out = PitchEditApplier.apply(
+            base: base, hopDuration: hop, otherVariants: [:],
+            script: makeScript(ops: ops)
+        )
+        // Frame 30 should be corrected back to ~220 Hz
+        XCTAssertEqual(out[30].frequency ?? -1, 220.0, accuracy: eps)
+    }
+
+    func testRefineMutedAnchorSilencesRawVoiced() {
+        let base = makeBase(hz: 220.0)
+        let ops: [PitchEditOp] = [
+            .mute(id: UUID(), range: TimeRange(start: 0.3, end: 0.5)),
+            .refine(id: UUID(), range: TimeRange(start: 0.3, end: 0.5)),
+        ]
+        let out = PitchEditApplier.apply(
+            base: base, hopDuration: hop, otherVariants: [:],
+            script: makeScript(ops: ops)
+        )
+        for i in 30..<50 {
+            XCTAssertFalse(out[i].isVoiced)
+            XCTAssertNil(out[i].frequency)
+        }
+    }
+
+    func testRefinePreservesFramesWithinTwoSemitones() {
+        // Base at 220 Hz, slight pitch shift of +1 st as anchor
+        // Raw is still 220, anchor is ~233 Hz (+1 st). Diff < 2 st → keep raw
+        let base = makeBase(hz: 220.0)
+        let ops: [PitchEditOp] = [
+            .shiftSemitones(id: UUID(), range: TimeRange(start: 0.1, end: 0.2), semitones: 1),
+            .refine(id: UUID(), range: TimeRange(start: 0.1, end: 0.2)),
+        ]
+        let out = PitchEditApplier.apply(
+            base: base, hopDuration: hop, otherVariants: [:],
+            script: makeScript(ops: ops)
+        )
+        // Within 2 st → raw preserved at 220 Hz
+        for i in 10..<20 {
+            XCTAssertEqual(out[i].frequency ?? -1, 220.0, accuracy: eps)
+        }
+    }
+
+    func testRefineOutsideRangeUntouched() {
+        let base = makeBase(hz: 220.0)
+        let ops: [PitchEditOp] = [
+            .shiftOctave(id: UUID(), range: TimeRange(start: 0.2, end: 0.5), octaves: 1),
+            .refine(id: UUID(), range: TimeRange(start: 0.2, end: 0.5)),
+        ]
+        let out = PitchEditApplier.apply(
+            base: base, hopDuration: hop, otherVariants: [:],
+            script: makeScript(ops: ops)
+        )
+        // Outside range → original 220 Hz
+        XCTAssertEqual(out[0].frequency ?? -1, 220.0, accuracy: eps)
+        XCTAssertEqual(out[99].frequency ?? -1, 220.0, accuracy: eps)
     }
 }

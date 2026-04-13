@@ -1,92 +1,39 @@
 import AVFoundation
 import Foundation
 
-/// Sing-to-record tool for the reference editor. Records the user's voice
-/// via PitchDetector and converts detected pitches into an addPassage operation.
+/// Sing-loop phases for the editor's looping record tool.
+enum SingLoopPhase: Equatable {
+    case idle
+    case countdown(Int)
+    case recording
+    case reviewing
+}
+
+/// Sing-to-record tool for the reference editor. Loops the vocal stem over
+/// the selected range while capturing the user's voice via PitchDetector.
+/// The user keeps looping until they confirm or cancel.
 @MainActor
 extension ReferenceEditorViewModel {
 
-    // MARK: - Sing Recording
+    // MARK: - Sing Loop Lifecycle
 
-    func startSinging() {
+    func startSingLoop() {
         guard let range = currentRange else { return }
-
         stopPlayback()
-        isRecording = true
-        recordingProgress = 0
-        recordingCountdown = 3
-
-        Task { [weak self] in
-            await self?.runCountdownAndRecord(range: range)
-        }
+        singLoopPhase = .idle
+        singLoopFrames = nil
+        singLoopCount = 0
+        singLoopRange = range
+        beginNextPass()
     }
 
-    func cancelSinging() {
-        isRecording = false
-        recordingCountdown = 0
-        recordingProgress = 0
-        singCleanup()
-    }
-
-    private func runCountdownAndRecord(range: TimeRange) async {
-        // 3-2-1 countdown
-        for i in stride(from: 3, through: 1, by: -1) {
-            recordingCountdown = i
-            try? await Task.sleep(nanoseconds: 800_000_000)
-            guard isRecording else { return }
-        }
-        recordingCountdown = 0
-
-        await recordVoice(range: range)
-    }
-
-    private func recordVoice(range: TimeRange) async {
-        let engine = AudioEngine()
-        let detector = PitchDetector(engine: engine)
-
-        var captured: [(time: Double, hz: Float, midi: Int)] = []
-        let duration = range.end - range.start
-        let startWall = CFAbsoluteTimeGetCurrent()
-
-        detector.onPitchDetected = { result in
-            let elapsed = CFAbsoluteTimeGetCurrent() - startWall
-            guard elapsed >= 0, elapsed <= duration + 0.1 else { return }
-            captured.append((time: range.start + elapsed, hz: result.frequency, midi: result.midiNote))
-        }
-
-        do {
-            try detector.start()
-        } catch {
-            AppLogger.pitch.error("Sing tool: failed to start detector: \(error.localizedDescription)")
-            isRecording = false
+    func confirmSingLoop() {
+        guard let frames = singLoopFrames,
+              let range = singLoopRange,
+              !frames.isEmpty else {
+            cancelSingLoop()
             return
         }
-
-        // Poll progress until duration elapsed
-        let pollInterval: UInt64 = 50_000_000 // 50ms
-        while isRecording {
-            try? await Task.sleep(nanoseconds: pollInterval)
-            let elapsed = CFAbsoluteTimeGetCurrent() - startWall
-            recordingProgress = min(elapsed / duration, 1.0)
-            if elapsed >= duration { break }
-        }
-
-        detector.stop()
-        engine.shutdown()
-
-        guard isRecording, !captured.isEmpty else {
-            isRecording = false
-            recordingProgress = 0
-            return
-        }
-
-        let frames = buildFramesFromCapture(captured, range: range)
-        guard !frames.isEmpty else {
-            isRecording = false
-            recordingProgress = 0
-            return
-        }
-
         let op = PitchEditOp.addPassage(
             id: UUID(),
             range: range,
@@ -94,12 +41,120 @@ extension ReferenceEditorViewModel {
             mode: drawMode
         )
         addOperation(op)
+        cleanupSingLoop()
+    }
 
-        isRecording = false
+    func cancelSingLoop() {
+        cleanupSingLoop()
+    }
+
+    func retakeSingLoop() {
+        singLoopFrames = nil
+        beginNextPass()
+    }
+
+    // MARK: - Internal Loop Flow
+
+    private func beginNextPass() {
+        guard let range = singLoopRange else { return }
+        singLoopPhase = .countdown(3)
+        Task { [weak self] in
+            await self?.runCountdownThenRecord(range: range)
+        }
+    }
+
+    private func runCountdownThenRecord(range: TimeRange) async {
+        for i in stride(from: 3, through: 1, by: -1) {
+            singLoopPhase = .countdown(i)
+            try? await Task.sleep(nanoseconds: 800_000_000)
+            guard isSingLooping else { return }
+        }
+        singLoopPhase = .recording
+        recordingProgress = 0
+        await capturePass(range: range)
+    }
+
+    private func capturePass(range: TimeRange) async {
+        let captureEngine = AudioEngine()
+        let detector = PitchDetector(engine: captureEngine)
+
+        var captured: [(time: Double, hz: Float, midi: Int)] = []
+        let duration = range.end - range.start
+
+        detector.onPitchDetected = { result in
+            captured.append((
+                time: result.timestamp,
+                hz: result.frequency,
+                midi: result.midiNote
+            ))
+        }
+
+        do {
+            try detector.start()
+        } catch {
+            AppLogger.pitch.error(
+                "Sing loop: failed to start detector: \(error.localizedDescription)"
+            )
+            cleanupSingLoop()
+            return
+        }
+
+        // Start stem playback from range start
+        seek(to: range.start)
+        audioPlayer?.play()
+
+        let startWall = CFAbsoluteTimeGetCurrent()
+        let pollInterval: UInt64 = 50_000_000
+
+        while isSingLooping {
+            try? await Task.sleep(nanoseconds: pollInterval)
+            let elapsed = CFAbsoluteTimeGetCurrent() - startWall
+            recordingProgress = min(elapsed / duration, 1.0)
+            if elapsed >= duration { break }
+        }
+
+        detector.stop()
+        captureEngine.shutdown()
+        audioPlayer?.pause()
+
+        guard isSingLooping else { return }
+
+        // Remap wall-clock timestamps to song time
+        let remapped = captured.map { entry in
+            let elapsed = entry.time - startWall
+            return (time: range.start + elapsed, hz: entry.hz, midi: entry.midi)
+        }
+
+        let frames = buildFramesFromCapture(remapped, range: range)
+        singLoopCount += 1
+
+        if frames.isEmpty {
+            // Nothing captured — auto-retry
+            beginNextPass()
+            return
+        }
+
+        singLoopFrames = frames
+        singLoopPhase = .reviewing
         recordingProgress = 0
     }
 
-    private func buildFramesFromCapture(
+    // MARK: - Helpers
+
+    var isSingLooping: Bool {
+        singLoopPhase != .idle
+    }
+
+    private func cleanupSingLoop() {
+        audioPlayer?.pause()
+        singLoopPhase = .idle
+        singLoopFrames = nil
+        singLoopRange = nil
+        singLoopCount = 0
+        recordingProgress = 0
+    }
+
+    func buildFramesFromCapture(
         _ captured: [(time: Double, hz: Float, midi: Int)],
         range: TimeRange
     ) -> [ReferencePitchFrame] {
@@ -109,22 +164,19 @@ extension ReferenceEditorViewModel {
         let endIdx = Int((range.end / hopDuration).rounded(.down))
         guard endIdx >= startIdx else { return [] }
 
-        // Group detections into hop-aligned buckets
+        let sorted = captured.sorted { $0.time < $1.time }
         var frames: [ReferencePitchFrame] = []
         var captureIdx = 0
-        let sorted = captured.sorted { $0.time < $1.time }
 
         for i in startIdx...endIdx {
             let t = Double(i) * hopDuration
             let bucketStart = t - hopDuration / 2
             let bucketEnd = t + hopDuration / 2
 
-            // Advance to first detection in this bucket
             while captureIdx < sorted.count, sorted[captureIdx].time < bucketStart {
                 captureIdx += 1
             }
 
-            // Collect detections in bucket
             var bucketHz: [Float] = []
             var j = captureIdx
             while j < sorted.count, sorted[j].time < bucketEnd {
@@ -145,9 +197,5 @@ extension ReferenceEditorViewModel {
             }
         }
         return frames
-    }
-
-    private func singCleanup() {
-        // No persistent state to clean — AudioEngine is created/destroyed per recording
     }
 }

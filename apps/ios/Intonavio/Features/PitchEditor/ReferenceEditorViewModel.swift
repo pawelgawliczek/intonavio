@@ -50,9 +50,11 @@ final class ReferenceEditorViewModel {
     @ObservationIgnored var audioPlayer: AVAudioPlayer?
     @ObservationIgnored var pollTask: Task<Void, Never>?
 
-    // Phase D: sing-to-record state
-    var isRecording: Bool = false
-    var recordingCountdown: Int = 0
+    // Sing loop state
+    var singLoopPhase: SingLoopPhase = .idle
+    var singLoopFrames: [ReferencePitchFrame]?
+    var singLoopRange: TimeRange?
+    var singLoopCount: Int = 0
     var recordingProgress: Double = 0
 
     // Layer visibility

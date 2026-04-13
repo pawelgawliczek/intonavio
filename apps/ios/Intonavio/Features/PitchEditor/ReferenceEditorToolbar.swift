@@ -58,10 +58,14 @@ struct ReferenceEditorToolbar: View {
             opCell("Fill", icon: "line.diagonal") {
                 addRangeOp { range in .fillGaps(id: UUID(), range: range) }
             }
-            opCell("Sing", icon: "mic", tint: viewModel.isRecording ? .red : nil) {
-                viewModel.startSinging()
+            opCell("Refine", icon: "wand.and.stars") {
+                addRangeOp { range in .refine(id: UUID(), range: range) }
             }
-            .disabled(viewModel.isRecording)
+            .disabled(viewModel.operations.isEmpty)
+            opCell("Sing", icon: "mic", tint: viewModel.isSingLooping ? .red : nil) {
+                viewModel.startSingLoop()
+            }
+            .disabled(viewModel.isSingLooping)
             opCell("+1 st", icon: "arrow.up") {
                 addRangeOp { range in .shiftSemitones(id: UUID(), range: range, semitones: 1) }
             }
