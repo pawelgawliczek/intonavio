@@ -21,10 +21,12 @@ targets:
     sources:
       - path: Intonavio
         excludes:
+          - '**/GeneralUser-GS/**'
           - '**/GeneralUser-GS/README.md'
           - '**/GeneralUser-GS/documentation/**'
           - '**/GeneralUser-GS/support/**'
           - Info-macOS.plist
+      - path: GeneralUser-GS.sf2
     info:
       path: Intonavio/Info.plist
       properties:
@@ -49,6 +51,8 @@ targets:
         CURRENT_PROJECT_VERSION: 1
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         SUPPORTED_PLATFORMS: 'iphoneos iphonesimulator'
+        CODE_SIGNING_ALLOWED[sdk=iphonesimulator*]: NO
+        CODE_SIGNING_REQUIRED[sdk=iphonesimulator*]: NO
         SUPPORTS_MACCATALYST: false
         SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: false
       configs:
@@ -63,9 +67,11 @@ targets:
     sources:
       - path: Intonavio
         excludes:
+          - '**/GeneralUser-GS/**'
           - '**/GeneralUser-GS/README.md'
           - '**/GeneralUser-GS/documentation/**'
           - '**/GeneralUser-GS/support/**'
+      - path: GeneralUser-GS.sf2
     info:
       path: Intonavio/Info-macOS.plist
       properties:
