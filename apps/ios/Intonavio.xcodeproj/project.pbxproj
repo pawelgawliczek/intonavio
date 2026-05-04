@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		00EEE68720960E08F7DF6855 /* PitchAccuracy.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6E3866A26CEA25A5361E33C /* PitchAccuracy.swift */; };
 		018FDB9EB144C35A12F2B395 /* SongStatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D838B316EBD35DBA8F5C732 /* SongStatusBadge.swift */; };
+		01A4F7BE7C0D4E5F8192A3B4 /* SongArchiveStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A4F7BE7C0D4E5F8192A3B3 /* SongArchiveStore.swift */; };
+		01A4F7BE7C0D4E5F8192A3B6 /* LibraryViewModel+Archive.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A4F7BE7C0D4E5F8192A3B5 /* LibraryViewModel+Archive.swift */; };
 		041194E9D875882E304AA4F8 /* PracticeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD158E2B7A33E186A33FF9E4 /* PracticeViewModel.swift */; };
 		059CF4EC25AECED296BF2E1A /* RecordingsSectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DE5DE98326E8165F990D204 /* RecordingsSectionView.swift */; };
 		063BC7053F48B733905F3BDF /* PitchDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9599FF7799AB1A9E728BE069 /* PitchDetector.swift */; };
@@ -50,6 +52,8 @@
 		277A33854FD0A5D0864E9051 /* AudioRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 883BA2C14304D1F91EFDC69D /* AudioRecorder.swift */; };
 		27FC46495BA9A9FDECDC018D /* WelcomeStepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C16E81C922F66717145E315 /* WelcomeStepView.swift */; };
 		287C8536B5893117206FE636 /* SongGridItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBD375DB01D7DA35A14BEA8F /* SongGridItemView.swift */; };
+		28A4F7BE7C0D4E5F8192A3B4 /* SongArchiveStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A4F7BE7C0D4E5F8192A3B3 /* SongArchiveStore.swift */; };
+		28A4F7BE7C0D4E5F8192A3B6 /* LibraryViewModel+Archive.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A4F7BE7C0D4E5F8192A3B5 /* LibraryViewModel+Archive.swift */; };
 		28E6A22D67AC8061D5D73FA2 /* PianoRollCanvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EC025290DC1018DE1D65290 /* PianoRollCanvas.swift */; };
 		2A4FD576C4A95DDC514A41BC /* PhraseScoreResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1CBA5B48E551E12DEAD1BF7 /* PhraseScoreResult.swift */; };
 		2B96F935482D6E3A305F0377 /* YouTubeURLValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4E440DFF19E6DE4A7B5737D /* YouTubeURLValidator.swift */; };
@@ -438,6 +442,8 @@
 		47475ED7B4E6CB203B798C31 /* PianoRollMomentumEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PianoRollMomentumEngine.swift; sourceTree = "<group>"; };
 		4848A66AB0B34E1703B26528 /* YouTubeHTML.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubeHTML.swift; sourceTree = "<group>"; };
 		4899195EC6381428FCC674C3 /* SongModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SongModels.swift; sourceTree = "<group>"; };
+		01A4F7BE7C0D4E5F8192A3B3 /* SongArchiveStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SongArchiveStore.swift; sourceTree = "<group>"; };
+		01A4F7BE7C0D4E5F8192A3B5 /* LibraryViewModel+Archive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LibraryViewModel+Archive.swift"; sourceTree = "<group>"; };
 		49F0EB98AF09CE68843B9FC3 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
 		4B61153C08EBE37FC59EF91C /* LibraryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryViewModel.swift; sourceTree = "<group>"; };
 		4B6F21F780CEC51E0A9E156F /* OnboardingContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingContainerView.swift; sourceTree = "<group>"; };
@@ -644,7 +650,9 @@
 				B2FB6568C2828D80413A5B24 /* ExerciseBrowserView.swift */,
 				309F663BE9A701E43FDC32BD /* ExerciseSectionView.swift */,
 				CF72D25F9B2CE003A8CC1589 /* HomeView.swift */,
+				01A4F7BE7C0D4E5F8192A3B5 /* LibraryViewModel+Archive.swift */,
 				4B61153C08EBE37FC59EF91C /* LibraryViewModel.swift */,
+				01A4F7BE7C0D4E5F8192A3B3 /* SongArchiveStore.swift */,
 				DBD375DB01D7DA35A14BEA8F /* SongGridItemView.swift */,
 				6D838B316EBD35DBA8F5C732 /* SongStatusBadge.swift */,
 			);
@@ -1224,6 +1232,8 @@
 				C6A862208DB98DAB56DD5C32 /* IntonavioApp.swift in Sources */,
 				D29D4915C44701ECF1B795D1 /* LRCParser.swift in Sources */,
 				3542BD3F32FE3A60186475BD /* LibraryViewModel.swift in Sources */,
+				01A4F7BE7C0D4E5F8192A3B6 /* LibraryViewModel+Archive.swift in Sources */,
+				01A4F7BE7C0D4E5F8192A3B4 /* SongArchiveStore.swift in Sources */,
 				18239F3DCE0A3FD281D951F4 /* Logger.swift in Sources */,
 				B71DCC9D91AF341C853CFC1E /* LoopControlsView.swift in Sources */,
 				22403B6DC6484694DDF81E04 /* LoopScoreToastView.swift in Sources */,
@@ -1465,6 +1475,8 @@
 				738FFF89E2FD5816E21813F2 /* SignInView.swift in Sources */,
 				E68FF03D60E9749337C3ADEC /* SignUpView.swift in Sources */,
 				287C8536B5893117206FE636 /* SongGridItemView.swift in Sources */,
+				28A4F7BE7C0D4E5F8192A3B6 /* LibraryViewModel+Archive.swift in Sources */,
+				28A4F7BE7C0D4E5F8192A3B4 /* SongArchiveStore.swift in Sources */,
 				F9BD18D67954FADBA5588763 /* SongModels.swift in Sources */,
 				CF13936FD27257B88410B724 /* SongPracticeView.swift in Sources */,
 				8B83CF784EC1048E94334FA2 /* SongStatusBadge.swift in Sources */,

@@ -10,6 +10,8 @@ enum AddSongMode: Int {
 final class LibraryViewModel {
     var songs: [SongResponse] = []
     var editedSongIds: Set<String> = []
+    var archivedSongIds: Set<String> = []
+    var isShowingArchive = false
     var isLoading = false
     var isAddingSong = false
     var errorMessage: String?
@@ -35,6 +37,7 @@ final class LibraryViewModel {
     init(apiClient: any APIClientProtocol = APIClient()) {
         self.apiClient = apiClient
         loadSongsFromCache()
+        archivedSongIds = SongArchiveStore.archivedSongIds()
     }
 
     deinit {

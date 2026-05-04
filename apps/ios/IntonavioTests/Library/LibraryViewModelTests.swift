@@ -13,6 +13,7 @@ final class LibraryViewModelTests: XCTestCase {
             .appendingPathComponent("library", isDirectory: true)
             .appendingPathComponent("songs.json")
         try? FileManager.default.removeItem(at: cacheURL)
+        SongArchiveStore.clear()
         mockClient = MockAPIClient()
         viewModel = LibraryViewModel(apiClient: mockClient)
     }
@@ -66,5 +67,28 @@ final class LibraryViewModelTests: XCTestCase {
 
         XCTAssertFalse(viewModel.isAddingSong)
         XCTAssertFalse(viewModel.songs.isEmpty)
+    }
+
+    @MainActor
+    func testArchiveSongMovesSongOutOfActiveList() async {
+        await viewModel.loadSongs()
+        let song = Fixtures.readySong
+
+        viewModel.archiveSong(song)
+
+        XCTAssertFalse(viewModel.activeSongs.contains { $0.id == song.id })
+        XCTAssertTrue(viewModel.archivedSongs.contains { $0.id == song.id })
+    }
+
+    @MainActor
+    func testUnarchiveSongRestoresSongToActiveList() async {
+        await viewModel.loadSongs()
+        let song = Fixtures.readySong
+
+        viewModel.archiveSong(song)
+        viewModel.unarchiveSong(song)
+
+        XCTAssertTrue(viewModel.activeSongs.contains { $0.id == song.id })
+        XCTAssertFalse(viewModel.archivedSongs.contains { $0.id == song.id })
     }
 }

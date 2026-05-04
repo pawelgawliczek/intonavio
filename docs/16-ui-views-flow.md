@@ -16,7 +16,7 @@ Defining all views, navigation, and layout decisions for the Intonavio singing p
 ### Home (Tab 1: Library)
 
 3. **Home** — Three sections stacked vertically:
-   - **Song Library** — Grid of user's songs (thumbnail, title, artist, status badge). "Add Song" button.
+   - **Song Library** — Grid of user's active songs (thumbnail, title, artist, status badge). "Add Song" button. Song cards expose an archive action for songs the user no longer practices. The section can switch to an Archive view where archived songs are visible and can be restored.
    - **Exercises** — Horizontal scrollable categories (Scales, Arpeggios, Intervals, Vibrato, Breathing). Pre-built exercises ship with app; community-shared exercises available via browse/search.
    - **Recordings** — Horizontal scroll of user-recorded instrument notes/phrases. Each card shows name, note count, duration, date. `[+ Record]` card opens RecordView. See `docs/17-instrument-recording.md`.
 

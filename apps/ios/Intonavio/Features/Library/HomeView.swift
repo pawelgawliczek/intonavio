@@ -75,6 +75,7 @@ private extension HomeView {
                 Text("My Songs")
                     .font(.title2.bold())
                 Spacer()
+                archiveToggle
                 if viewModel.isLoading {
                     ProgressView()
                 }
@@ -99,6 +100,9 @@ private extension HomeView {
                         isOfflineUnavailable: true,
                         isEdited: viewModel.editedSongIds.contains(song.id)
                     )
+                    .contextMenu {
+                        songArchiveButton(song)
+                    }
                 } else {
                     NavigationLink(value: song.id) {
                         SongGridItemView(
@@ -107,6 +111,9 @@ private extension HomeView {
                         )
                     }
                     .buttonStyle(.plain)
+                    .contextMenu {
+                        songArchiveButton(song)
+                    }
                 }
             }
         }
@@ -139,13 +146,13 @@ private extension HomeView {
 
     var emptyState: some View {
         VStack(spacing: 12) {
-            Image(systemName: "music.note.list")
+            Image(systemName: viewModel.isShowingArchive ? "archivebox" : "music.note.list")
                 .font(.largeTitle)
                 .foregroundStyle(Color.intonavioIce)
-            Text("No songs yet")
+            Text(viewModel.isShowingArchive ? "Archive is empty" : "No songs yet")
                 .font(.headline)
                 .foregroundStyle(.white)
-            Text("Tap + to add a YouTube song")
+            Text(emptyStateMessage)
                 .font(.subheadline)
                 .foregroundStyle(Color.intonavioTextSecondary)
         }
@@ -168,7 +175,45 @@ private extension HomeView {
     }
 
     var songs: [SongResponse] {
-        viewModel.songs
+        viewModel.isShowingArchive ? viewModel.archivedSongs : viewModel.activeSongs
+    }
+
+    var archiveToggle: some View {
+        Button {
+            viewModel.isShowingArchive.toggle()
+        } label: {
+            Label(
+                viewModel.isShowingArchive ? "Songs" : "Archive",
+                systemImage: viewModel.isShowingArchive ? "music.note.list" : "archivebox"
+            )
+            .labelStyle(.iconOnly)
+        }
+        .foregroundStyle(Color.intonavioIce)
+        .accessibilityLabel(viewModel.isShowingArchive ? "Show my songs" : "Show archive")
+    }
+
+    var emptyStateMessage: String {
+        if viewModel.isShowingArchive {
+            return "Archived songs stay here until you restore them"
+        }
+        return "Tap + to add a YouTube song"
+    }
+
+    @ViewBuilder
+    func songArchiveButton(_ song: SongResponse) -> some View {
+        if viewModel.archivedSongIds.contains(song.id) {
+            Button {
+                viewModel.unarchiveSong(song)
+            } label: {
+                Label("Unarchive", systemImage: "tray.and.arrow.up")
+            }
+        } else {
+            Button {
+                viewModel.archiveSong(song)
+            } label: {
+                Label("Archive", systemImage: "archivebox")
+            }
+        }
     }
 }
 
