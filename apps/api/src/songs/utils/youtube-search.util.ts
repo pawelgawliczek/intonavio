@@ -85,19 +85,28 @@ export async function checkLyricsAvailable(title: string, artist: string): Promi
 
 async function checkLRCLib(title: string, artist: string): Promise<boolean> {
   const cleanedTitle = cleanYouTubeTitle(title);
-  const query = [cleanedTitle, artist].filter(Boolean).join(' ');
+  const titleParts = splitArtistTitle(cleanedTitle);
+  const queries = [
+    [cleanedTitle, artist].filter(Boolean).join(' '),
+    titleParts ? [titleParts.artist, titleParts.title].join(' ') : '',
+    cleanedTitle,
+  ].filter(Boolean);
 
-  try {
-    const url = `https://lrclib.net/api/search?q=${encodeURIComponent(query)}`;
-    const response = await fetch(url, { signal: AbortSignal.timeout(3000) });
-    if (!response.ok) return false;
+  for (const query of [...new Set(queries)]) {
+    try {
+      const url = `https://lrclib.net/api/search?q=${encodeURIComponent(query)}`;
+      const response = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+      if (!response.ok) continue;
 
-    const results = (await response.json()) as LRCLibSearchResult[];
-    return results.some((r) => r.syncedLyrics != null && r.syncedLyrics.length > 0);
-  } catch {
-    logger.debug(`LRCLIB check failed for "${query}"`);
-    return false;
+      const results = (await response.json()) as LRCLibSearchResult[];
+      if (results.some((r) => r.syncedLyrics != null && r.syncedLyrics.length > 0)) {
+        return true;
+      }
+    } catch {
+      logger.debug(`LRCLIB check failed for "${query}"`);
+    }
   }
+  return false;
 }
 
 const YOUTUBE_TITLE_NOISE_STRINGS = [
@@ -132,4 +141,16 @@ function cleanYouTubeTitle(title: string): string {
     }
   }
   return cleaned.trim();
+}
+
+function splitArtistTitle(title: string): { artist: string; title: string } | null {
+  const separator = ' - ';
+  const separatorIndex = title.indexOf(separator);
+  if (separatorIndex === -1) return null;
+
+  const artist = title.slice(0, separatorIndex).trim();
+  const trackTitle = title.slice(separatorIndex + separator.length).trim();
+  if (!artist || !trackTitle) return null;
+
+  return { artist, title: trackTitle };
 }

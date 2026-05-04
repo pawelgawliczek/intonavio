@@ -42,9 +42,9 @@ For deployment infrastructure details, see `docs/08-infrastructure.md`.
 
 ### Deploy workflow (`deploy.yml`) — runs on merge to `main`
 
-Currently builds API and worker (web not yet implemented):
+Currently builds API, pitch worker, and stem-splitter worker (web not yet implemented):
 
-1. Build Docker images for `api` and `worker`, push to GitHub Container Registry (ghcr.io)
+1. Build Docker images for `api`, `worker`, and `stem-splitter`, push to GitHub Container Registry (ghcr.io)
 2. SSH into production server
 3. Pull latest images and restart containers
 4. Run database migrations (`prisma migrate deploy`)

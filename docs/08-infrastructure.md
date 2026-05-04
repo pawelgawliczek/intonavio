@@ -151,9 +151,7 @@ Currently deployed: **API + Pitch Worker + Stem-Splitter Worker + PostgreSQL + R
 # docker-compose.yml (production)
 services:
   api:
-    build:
-      context: .
-      dockerfile: apps/api/Dockerfile
+    image: ghcr.io/pawelgawliczek/intonavio/api:latest
     env_file: .env.production
     depends_on:
       postgres:
@@ -164,9 +162,7 @@ services:
     networks: [default, stack_appnet]
 
   worker:
-    build:
-      context: ./workers/pitch-analyzer
-      dockerfile: Dockerfile
+    image: ghcr.io/pawelgawliczek/intonavio/worker:latest
     env_file: .env.production
     depends_on:
       postgres:
@@ -177,10 +173,27 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '2.0'
-          memory: 2G
+          cpus: '1.5'
+          memory: 3G
 
-  # web: not yet implemented
+  stem-splitter:
+    image: ghcr.io/pawelgawliczek/intonavio/stem-splitter:latest
+    env_file: .env.production
+    environment:
+      YOUTUBE_COOKIES_FILE: /run/secrets/youtube-cookies.txt
+    volumes:
+      - ./youtube-cookies.txt:/run/secrets/youtube-cookies.txt:ro
+    depends_on:
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
 
   postgres:
     image: postgres:16-alpine
