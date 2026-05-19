@@ -1,8 +1,6 @@
 name: Database Backup
 
 on:
-  schedule:
-    - cron: '0 3 * * *'
   workflow_dispatch:
 
 # Uses the same DEPLOY_* secrets as deploy.yml — see that file for docs.
